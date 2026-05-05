@@ -506,7 +506,7 @@ export default function Home() {
 
         {/* Rounds */}
         {orderedRounds.map((n) => (
-          <RoundSection key={n} round={n} label={rounds[n].label} outputs={rounds[n].outputs} doneSet={rounds[n].doneSet} personaMap={personaMap} />
+          <RoundSection key={n} round={n} label={rounds[n].label} outputs={rounds[n].outputs} doneSet={rounds[n].doneSet} personaMap={personaMap} previousRoundOutputs={n > 1 ? rounds[n - 1].outputs : {}} />
         ))}
 
         {/* Convergence Banner */}

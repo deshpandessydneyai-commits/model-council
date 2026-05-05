@@ -4,6 +4,7 @@ import type { CouncilModel } from "@/lib/models";
 import { Copy, Maximize2 } from "lucide-react";
 import { useState } from "react";
 import { MarkdownContent } from "./MarkdownContent";
+import { PERSONAS } from "@/lib/models";
 
 type Props = {
   model: CouncilModel;
@@ -12,10 +13,41 @@ type Props = {
   round: number;
   done: boolean;
   personaEmoji?: string;
+  personaId?: string;
+  previousRoundText?: string;
 };
 
-export function ModelCard({ model, text, variant, round, done, personaEmoji = "🤖" }: Props) {
+export function ModelCard({ model, text, variant, round, done, personaEmoji = "🤖", personaId = "default", previousRoundText }: Props) {
   const [copied, setCopied] = useState(false);
+
+  // Determine status indicator
+  const getStatusIndicator = () => {
+    if (round === 1) return { label: "New", color: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400", symbol: "●" };
+    if (!text || !previousRoundText) return { label: "New", color: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400", symbol: "●" };
+
+    const textLower = text.toLowerCase();
+    const prevLower = (previousRoundText || "").toLowerCase();
+
+    // Check for agreement/convergence signals
+    const agreeSignals = ["agree", "valid point", "concur", "correct", "sound", "convincing", "you're right"];
+    const agreedSignals = agreeSignals.filter(signal => textLower.includes(signal));
+
+    // Check for revision signals
+    const reviseSignals = ["revise", "update", "change my", "reconsider", "actually,", "upon reflection", "i was wrong"];
+    const revisedSignals = reviseSignals.filter(signal => textLower.includes(signal));
+
+    if (agreedSignals.length > 0) {
+      return { label: "Agreed", color: "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400", symbol: "✓" };
+    } else if (revisedSignals.length > 0) {
+      return { label: "Revised", color: "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400", symbol: "!" };
+    }
+
+    return { label: "New", color: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400", symbol: "●" };
+  };
+
+  const status = getStatusIndicator();
+  const persona = PERSONAS.find(p => p.id === personaId);
+  const personaName = persona?.label || model.displayName;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(text);
@@ -24,14 +56,20 @@ export function ModelCard({ model, text, variant, round, done, personaEmoji = "�
   };
 
   return (
-    <article className="border border-glass bg-[#0F0F1A] rounded-lg overflow-hidden hover:bg-[#121220] transition-colors flex flex-col h-full">
+    <article className="border border-glass bg-[#0F0F1A] dark:bg-[#0F0F1A] rounded-lg overflow-hidden hover:bg-[#121220] dark:hover:bg-[#121220] transition-colors flex flex-col h-full">
       {/* Header */}
       <header className="border-b border-glass px-4 py-3 flex items-center justify-between bg-dark-overlay/50">
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 flex-1">
           <span className="text-xl">{personaEmoji}</span>
-          <div>
-            <h3 className="text-sm font-medium text-white">{model.displayName}</h3>
-            <div className="text-xs text-gray-500 mono-meta">{model.provider}</div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="text-sm font-semibold text-white">{personaName}</h3>
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold ${status.color}`}>
+                <span>{status.symbol}</span>
+                <span>{status.label}</span>
+              </span>
+            </div>
+            <div className="text-xs text-gray-500 mono-meta">{model.displayName} · {model.provider}</div>
           </div>
         </div>
         <div className="flex items-center gap-2">

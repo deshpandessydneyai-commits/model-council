@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Model Council - Presentation Layer Prototype</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin-bottom: 8px;
+      color: #1f2937;
+    }
+
+    .subtitle {
+      color: #6b7280;
+      margin-bottom: 32px;
+      font-size: 14px;
+    }
+
+    .section {
+      background: white;
+      border-radius: 12px;
+      padding: 32px;
+      margin-bottom: 32px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .section h2 {
+      font-size: 20px;
+      margin-bottom: 24px;
+      color: #1f2937;
+      border-bottom: 2px solid #e5e7eb;
+      padding-bottom: 12px;
+    }
+
+    /* VERDICT TABLE WITH COLOR-CODED ZONES */
+    .verdict-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 24px;
+    }
+
+    .verdict-table thead {
+      background: #f9fafb;
+    }
+
+    .verdict-table th {
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 600;
+      color: #6b7280;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+
+    .verdict-table td {
+      padding: 16px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .verdict-table tbody tr:hover {
+      background: #f9fafb;
+    }
+
+    /* Consensus Badge Indicators */
+    .consensus-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .consensus-full {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .consensus-partial {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .consensus-disagreement {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .model-name {
+      font-weight: 600;
+      color: #1f2937;
+      font-size: 14px;
+    }
+
+    .alignment-bar {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .alignment-percentage {
+      font-weight: 600;
+      color: #1f2937;
+      min-width: 35px;
+    }
+
+    .bar {
+      width: 100px;
+      height: 6px;
+      background: #e5e7eb;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    .bar-green { background: #10b981; }
+    .bar-yellow { background: #f59e0b; }
+    .bar-red { background: #ef4444; }
+
+    /* ROUND SECTIONS WITH MODEL BADGES */
+    .round-section {
+      margin-bottom: 32px;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .round-header {
+      background: #f9fafb;
+      padding: 16px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .round-title {
+      font-weight: 600;
+      color: #1f2937;
+      font-size: 14px;
+    }
+
+    .models-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      padding: 16px;
+    }
+
+    .model-card {
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 16px;
+      background: white;
+      transition: all 0.2s ease;
+    }
+
+    .model-card:hover {
+      border-color: #d1d5db;
+      background: #f9fafb;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .model-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .model-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      background: #f0f4ff;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #4f46e5;
+    }
+
+    .persona-emoji {
+      font-size: 20px;
+      display: inline-block;
+    }
+
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: auto;
+    }
+
+    .status-agreed {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .status-revised {
+      background: #fef08a;
+      color: #713f12;
+    }
+
+    .status-new {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .model-content {
+      font-size: 13px;
+      line-height: 1.6;
+      color: #4b5563;
+    }
+
+    .key-points {
+      background: #f0fdf4;
+      border-left: 4px solid #10b981;
+      padding: 12px;
+      border-radius: 4px;
+      margin-top: 8px;
+      font-size: 12px;
+      color: #166534;
+    }
+
+    /* LEGEND */
+    .legend {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      background: #f9fafb;
+      padding: 16px;
+      border-radius: 8px;
+      margin-top: 24px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .legend-color {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+
+    .comparison-note {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #1e40af;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎨 Model Council Presentation Layer Prototype</h1>
+    <p class="subtitle">Three UI improvements from Perplexity Model Council</p>
+
+    <!-- IMPROVEMENT 1: Color-Coded Agreement Zones -->
+    <div class="section">
+      <h2>1️⃣ Color-Coded Agreement Zones (Verdict Table)</h2>
+
+      <p style="margin-bottom: 16px; color: #6b7280; font-size: 13px;">
+        Each row shows a consensus badge at a glance. Green = full agreement, Yellow = partial, Red = disagreement.
+      </p>
+
+      <table class="verdict-table">
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>Consensus Level</th>
+            <th>Key Position</th>
+            <th>Alignment %</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="model-name">🧠 Claude</td>
+            <td>
+              <span class="consensus-badge consensus-full">
+                ✓ Full Consensus
+              </span>
+            </td>
+            <td>Agrees with core thesis</td>
+            <td>
+              <div class="alignment-bar">
+                <span class="alignment-percentage">92%</span>
+                <div class="bar"><div class="bar-fill bar-green" style="width: 92%;"></div></div>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td class="model-name">🚀 GPT-4</td>
+            <td>
+              <span class="consensus-badge consensus-full">
+                ✓ Full Consensus
+              </span>
+            </td>
+            <td>Agrees with core thesis</td>
+            <td>
+              <div class="alignment-bar">
+                <span class="alignment-percentage">88%</span>
+                <div class="bar"><div class="bar-fill bar-green" style="width: 88%;"></div></div>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td class="model-name">🌟 Gemini</td>
+            <td>
+              <span class="consensus-badge consensus-partial">
+                ⚠ Partial Consensus
+              </span>
+            </td>
+            <td>Agrees on methodology but questions conclusion</td>
+            <td>
+              <div class="alignment-bar">
+                <span class="alignment-percentage">64%</span>
+                <div class="bar"><div class="bar-fill bar-yellow" style="width: 64%;"></div></div>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td class="model-name">💫 Grok</td>
+            <td>
+              <span class="consensus-badge consensus-disagreement">
+                ✗ Disagreement
+              </span>
+            </td>
+            <td>Takes contrarian position</td>
+            <td>
+              <div class="alignment-bar">
+                <span class="alignment-percentage">38%</span>
+                <div class="bar"><div class="bar-fill bar-red" style="width: 38%;"></div></div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="legend">
+        <div class="legend-item">
+          <div class="legend-color" style="background: #d1fae5;"></div>
+          <div>Full Consensus (80%+)</div>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #fef3c7;"></div>
+          <div>Partial Consensus (50-79%)</div>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #fee2e2;"></div>
+          <div>Disagreement (&lt;50%)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- IMPROVEMENT 2 & 3: Round Sections with Model Badges -->
+    <div class="section">
+      <h2>2️⃣ & 3️⃣ Model Badges in Rounds + Visual Status Indicators</h2>
+
+      <p style="margin-bottom: 24px; color: #6b7280; font-size: 13px;">
+        Each model response shows persona emoji, name, and a status indicator (Agreed, Revised, New). Visual feedback on model consensus.
+      </p>
+
+      <div class="round-section">
+        <div class="round-header">
+          <div class="round-title">📋 Round 1 — Initial Responses</div>
+        </div>
+        <div class="models-grid">
+          <div class="model-card">
+            <div class="model-header">
+              <span class="persona-emoji">🧠</span>
+              <span class="model-badge">Claude Logician</span>
+              <span class="status-indicator status-new">
+                <span>●</span> New
+              </span>
+            </div>
+            <div class="model-content">
+              <p>The evidence suggests a logical progression: A leads to B, which enables C. This is a robust chain of reasoning.</p>
+              <div class="key-points">Key insight: Focuses on logical rigor</div>
+            </div>
+          </div>
+
+          <div class="model-card">
+            <div class="model-header">
+              <span class="persona-emoji">🚀</span>
+              <span class="model-badge">GPT Analyst</span>
+              <span class="status-indicator status-new">
+                <span>●</span> New
+              </span>
+            </div>
+            <div class="model-content">
+              <p>From my analysis, the data shows similar patterns. A→B→C appears consistent, though C may have secondary factors.</p>
+              <div class="key-points">Key insight: Considers secondary variables</div>
+            </div>
+          </div>
+
+          <div class="model-card">
+            <div class="model-header">
+              <span class="persona-emoji">🌟</span>
+              <span class="model-badge">Gemini Explorer</span>
+              <span class="status-indicator status-new">
+                <span>●</span> New
+              </span>
+            </div>
+            <div class="model-content">
+              <p>Interesting framework. I'd add that B→C might be bidirectional, suggesting a more complex relationship than linear.</p>
+              <div class="key-points">Key insight: Proposes alternative model</div>
+            </div>
+          </div>
+
+          <div class="model-card">
+            <div class="model-header">
+              <span class="persona-emoji">💫</span>
+              <span class="model-badge">Grok Skeptic</span>
+              <span class="status-indicator status-new">
+                <span>●</span> New
+              </span>
+            </div>
+            <div class="model-content">
+              <p>Hold on—what's the evidence for B actually existing? The jump from A to C might be direct, making B speculative.</p>
+              <div class="key-points">Key insight: Questions foundational assumptions</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="round-section">
+        <div class="round-header">
+          <div class="round-title">🔄 Round 2 — Critique & Update</div>
+        </div>
+        <div class="models-grid">
+          <div class="model-card">
+            <div class="model-header">
+              <span class="persona-emoji">🧠</span>
+              <span class="model-badge">Claude Logician</span>
+              <span class="status-indicator status-agreed">
+                <span>✓</span> Agreed
+              </span>
+            </div>
+            <div class="model-content">
+              <p>Fair point on B's existence. Re-examining the evidence... I concede B might be speculative. The A→C link could be more direct than assumed.</p>
+            </div>
+          </div>
+
+          <div class="model-card">
+            <div class="model-header">
+              <span class="persona-emoji">🚀</span>
+              <span class="model-badge">GPT Analyst</span>
+              <span class="status-indicator status-agreed">
+                <span>✓</span> Agreed
+              </span>
+            </div>
+            <div class="model-content">
+              <p>Grok's critique is valid. My data shows the A→C correlation is stronger than A→B→C. I'm revising my position accordingly.</p>
+            </div>
+          </div>
+
+          <div class="model-card">
+            <div class="model-header">
+              <span class="persona-emoji">🌟</span>
+              <span class="model-badge">Gemini Explorer</span>
+              <span class="status-indicator status-revised">
+                <span>!</span> Revised
+              </span>
+            </div>
+            <div class="model-content">
+              <p>You're right to be skeptical. My bidirectional model might overcomplicate it. But some B-like factors still seem present, just secondary.</p>
+            </div>
+          </div>
+
+          <div class="model-card">
+            <div class="model-header">
+              <span class="persona-emoji">💫</span>
+              <span class="model-badge">Grok Skeptic</span>
+              <span class="status-indicator status-agreed">
+                <span>✓</span> Agreed
+              </span>
+            </div>
+            <div class="model-content">
+              <p>Good. Now we're getting somewhere. Let's solidify: A→C is primary. Any B factors are contextual, not causal.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="comparison-note">
+          <strong>💡 Observation:</strong> 3 of 4 models now agree. Gemini still exploring alternative framing. High convergence detected.
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="section" style="background: #f0fdf4; border: 1px solid #86efac;">
+      <h2 style="border-bottom: 2px solid #86efac;">✅ What These Changes Improve</h2>
+
+      <ul style="list-style: none; space-y: 12px;">
+        <li style="margin-bottom: 12px;">
+          <strong>Scannability:</strong> Users instantly see consensus patterns without reading every word
+        </li>
+        <li style="margin-bottom: 12px;">
+          <strong>Visual Hierarchy:</strong> Color and badges guide attention to what's important
+        </li>
+        <li style="margin-bottom: 12px;">
+          <strong>Model Clarity:</strong> Persona emojis + names + status make it obvious which model said what and how their view changed
+        </li>
+        <li style="margin-bottom: 12px;">
+          <strong>Perplexity Alignment:</strong> Adopts their "make agreement visible" principle but with your debate format
+        </li>
+        <li style="margin-bottom: 12px;">
+          <strong>No Content Loss:</strong> All detail still available, just better organized visually
+        </li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>
