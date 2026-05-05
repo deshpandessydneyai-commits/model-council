@@ -9,6 +9,8 @@ import { VerdictTable } from "@/components/VerdictTable";
 import { Toast, type Toast as ToastType } from "@/components/Toast";
 import { ModelStatusDisplay } from "@/components/ModelStatusDisplay";
 import { PersonaSelector } from "@/components/PersonaSelector";
+import { DebateSetupModal, type DebateConfig } from "@/components/DebateSetupModal";
+import { useSetupModal } from "@/lib/setup-modal-context";
 import type { CouncilEvent, VerdictRow } from "@/lib/council";
 import { buildMarkdown } from "@/lib/export";
 import { saveSession, listSessions, deleteSession, hasQuotaWarning, clearQuotaWarning } from "@/lib/history";
@@ -133,6 +135,8 @@ export default function Home() {
   const [quotaWarning, setQuotaWarning] = useState("");
   const [personaMap, setPersonaMap] = useState<Record<string, string>>({});
   const [personaExpanded, setPersonaExpanded] = useState(false);
+  const { isOpen: setupModalOpen, setIsOpen: setSetupModalOpen } = useSetupModal();
+  const [docContextExpanded, setDocContextExpanded] = useState(false);
   const prevRunningRef = useRef(false);
 
   const addToast = (message: string, type: "success" | "error" | "info" = "info", duration?: number) => {
@@ -143,6 +147,7 @@ export default function Home() {
   const removeToast = (id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
+
 
   useEffect(() => {
     setHistory(listSessions());
@@ -272,8 +277,13 @@ export default function Home() {
     }
   }, []);
 
-  const convene = async () => {
-    if (!prompt.trim() || running) return;
+  const convene = useCallback(async (overrideConfig?: Partial<DebateConfig>) => {
+    const finalPrompt = overrideConfig?.prompt ?? prompt;
+    const finalForceR3 = overrideConfig?.forceRound3 ?? forceR3;
+    const finalWebSearch = overrideConfig?.webSearch ?? webSearch;
+    const finalPersonaMap = overrideConfig?.personaMap ?? personaMap;
+
+    if (!finalPrompt.trim() || (running && !overrideConfig)) return;
     setError(null);
     setRounds({});
     setVerdict(null);
@@ -292,7 +302,7 @@ export default function Home() {
         const res = await fetch("/api/council", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt, forceRound3: forceR3, webSearch, documentContext, personaMap }),
+          body: JSON.stringify({ prompt: finalPrompt, forceRound3: finalForceR3, webSearch: finalWebSearch, documentContext, personaMap: finalPersonaMap }),
           signal: ctrl.signal,
         });
 
@@ -345,7 +355,7 @@ export default function Home() {
     } finally {
       setRunning(false);
     }
-  };
+  }, [prompt, forceR3, webSearch, personaMap, documentContext, running]);
 
   const orderedRounds = useMemo(
     () => Object.keys(rounds).map((k) => Number(k)).sort((a, b) => a - b),
@@ -363,9 +373,33 @@ export default function Home() {
     URL.revokeObjectURL(url);
   };
 
+  const handleDebateStart = useCallback((config: DebateConfig) => {
+    setSetupModalOpen(false);
+    // Update state with config values for display
+    setPrompt(config.prompt);
+    setWebSearch(config.webSearch);
+    setForceR3(config.forceRound3);
+    setPersonaMap(config.personaMap);
+    // Clear previous results
+    setError(null);
+    setRounds({});
+    setVerdict(null);
+    setModelStatuses({});
+    setConvergenceInfo(null);
+    setCurrentRound(0);
+    // Start the debate with this config via convene
+    // We pass the config as override so convene uses these exact values
+    convene(config);
+  }, [convene]);
+
   return (
     <>
-      {/* Remove NavHeader since we now have sidebar */}
+      <DebateSetupModal
+        isOpen={setupModalOpen}
+        onClose={() => setSetupModalOpen(false)}
+        onStart={handleDebateStart}
+        isLoading={running}
+      />
 
       <HistoryPanel
         open={historyOpen}
@@ -386,104 +420,122 @@ export default function Home() {
         </div>
       )}
 
-      <div className="max-w-[1600px] mx-auto px-6 pt-24 pb-32">
+      <div className="max-w-[1600px] mx-auto px-6 pt-16 pb-32">
         {/* Hero */}
-        <section style={{ padding: "48px 0 32px", textAlign: "center" }}>
-          <div className="mono-meta text-gray-400" style={{ marginBottom: "20px" }}>
+        <section style={{ padding: "24px 0 20px", textAlign: "center" }}>
+          <div className="mono-meta text-gray-400" style={{ marginBottom: "12px", fontSize: "12px" }}>
             A Debate Chamber For Frontier Models
           </div>
-          <h1 style={{ fontSize: "clamp(28px, 3.5vw, 42px)", fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1.15, color: "#FFFFFF" }}>
+          <h1 style={{ fontSize: "clamp(24px, 3vw, 36px)", fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1.15, color: "#FFFFFF", marginBottom: "12px" }}>
             Model Council.
           </h1>
-          <p style={{ marginTop: "16px", maxWidth: "480px", marginLeft: "auto", marginRight: "auto", fontSize: "15px", lineHeight: 1.65, color: "#9CA3AF" }}>
-            One prompt. Four models. A structured debate. One final verdict,
-            synthesized by Claude Opus 4.6.
+          <p style={{ marginBottom: "16px", maxWidth: "480px", marginLeft: "auto", marginRight: "auto", fontSize: "14px", lineHeight: 1.6, color: "#9CA3AF" }}>
+            One prompt. Four models. A structured debate. One final verdict.
           </p>
+          <button
+            onClick={() => setSetupModalOpen(true)}
+            className="bg-violet-600 hover:bg-violet-700 text-white font-medium px-6 py-2.5 rounded-lg transition-colors text-sm"
+          >
+            Start a New Council
+          </button>
         </section>
 
-        {/* Document Context */}
-        <section className="mt-16">
-          <div className="flex items-center justify-between mb-3">
-            <div className="mono-meta text-gray-400">
-              Document Context <span className="opacity-50">(optional)</span>
+        {/* Document Context - Collapsible */}
+        <section className="mt-8">
+          <button
+            onClick={() => setDocContextExpanded(!docContextExpanded)}
+            className="w-full flex items-center justify-between p-3 hover:bg-white/5 rounded transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <span className="mono-meta text-sm text-gray-400">Document Context <span className="opacity-50">(optional)</span></span>
+              {documentContext && (
+                <span className="text-xs text-violet-400 ml-2">
+                  {estimateTokens(documentContext).toLocaleString()} tokens
+                </span>
+              )}
             </div>
-            {documentContext && (
-              <div className="flex items-center gap-4">
-                {(() => {
-                  const tokens = estimateTokens(documentContext);
-                  const { warning } = checkContextWarning(prompt.length, documentContext.length);
-                  let statusColor = "text-green-600";
-                  let statusBg = "bg-green-50";
-                  if (tokens > 180000) { statusColor = "text-red-600"; statusBg = "bg-red-50"; }
-                  else if (tokens > 100000) { statusColor = "text-amber-600"; statusBg = "bg-amber-50"; }
-                  return (
-                    <div className={`px-3 py-1 rounded border border-black/10 ${statusBg}`}>
-                      <span className={`mono-meta text-xs ${statusColor} font-medium`}>
-                        ~{tokens.toLocaleString()} tokens
-                      </span>
-                      {warning && <span className={`mono-meta text-xs ml-2 ${statusColor}`}>{warning}</span>}
-                    </div>
-                  );
-                })()}
-                <button onClick={clearDocument} className="flex items-center gap-1 mono-meta text-xs text-muted hover:text-black transition-colors">
-                  <X size={12} /> Clear
-                </button>
-              </div>
-            )}
-          </div>
+            <ChevronDown size={16} className={`text-gray-400 transition-transform ${docContextExpanded ? "rotate-180" : ""}`} />
+          </button>
 
-          {!documentContext && (
-            <div
-              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={handleDrop}
-              className="border-2 border-dashed px-8 py-10 flex flex-col items-center gap-4 transition-colors duration-300"
-              style={{ borderColor: dragOver ? "rgba(139, 92, 246, 0.5)" : "rgba(255,255,255,0.1)", background: dragOver ? "rgba(139, 92, 246, 0.05)" : "transparent" }}
-            >
-              <FileText size={28} strokeWidth={1} className="text-gray-500" />
-              <div className="text-center">
-                <div className="mono-meta text-sm text-white">Drop a file here</div>
-                <div className="mono-meta text-xs text-gray-500 mt-1">PDF, DOCX, TXT, MD</div>
-              </div>
-              <div className="flex items-center gap-3">
-                <input ref={fileInputRef} type="file" accept=".txt,.md,.pdf,.docx" onChange={handleFileInput} className="hidden" id="doc-upload" />
-                <label htmlFor="doc-upload" className="border border-violet-500 px-4 py-2 mono-meta text-xs cursor-pointer hover:bg-violet-500/10 hover:text-violet-400 transition-colors duration-300 text-violet-400">
-                  Browse file
-                </label>
-                <span className="mono-meta text-xs text-gray-500">or paste text below</span>
-              </div>
-              {docParsing && <div className="mono-meta text-xs text-gray-500">Parsing...</div>}
-              {docError && <div className="mono-meta text-xs text-red-600">{docError}</div>}
-            </div>
-          )}
+          {docContextExpanded && (
+            <div className="mt-3 space-y-3">
+              {!documentContext && (
+                <div
+                  onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={handleDrop}
+                  className="border-2 border-dashed px-6 py-8 flex flex-col items-center gap-3 rounded-lg transition-colors"
+                  style={{ borderColor: dragOver ? "rgba(139, 92, 246, 0.5)" : "rgba(255,255,255,0.1)", background: dragOver ? "rgba(139, 92, 246, 0.05)" : "transparent" }}
+                >
+                  <FileText size={24} strokeWidth={1} className="text-gray-500" />
+                  <div className="text-center">
+                    <div className="mono-meta text-sm text-white">Drop a file here</div>
+                    <div className="mono-meta text-xs text-gray-500">PDF, DOCX, TXT, MD</div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <input ref={fileInputRef} type="file" accept=".txt,.md,.pdf,.docx" onChange={handleFileInput} className="hidden" id="doc-upload" />
+                    <label htmlFor="doc-upload" className="border border-violet-500 px-3 py-1.5 mono-meta text-xs cursor-pointer hover:bg-violet-500/10 hover:text-violet-400 transition-colors text-violet-400">
+                      Browse
+                    </label>
+                    <span className="mono-meta text-xs text-gray-500">or paste below</span>
+                  </div>
+                  {docParsing && <div className="mono-meta text-xs text-gray-500">Parsing...</div>}
+                  {docError && <div className="mono-meta text-xs text-red-600">{docError}</div>}
+                </div>
+              )}
 
-          {documentContext && (
-            <div className="border border-glass overflow-hidden glass-card">
-              <div className="bg-dark-overlay border-b border-glass px-4 py-2 flex items-center gap-2">
-                <FileText size={13} className="text-gray-400" />
-                <span className="mono-meta text-xs text-gray-400">{docFileName ?? "pasted text"}</span>
-              </div>
-              <textarea
-                value={documentContext}
-                onChange={(e) => setDocumentContext(e.target.value)}
-                rows={8}
-                disabled={running}
-                className="w-full bg-[#1A1A2E] p-4 text-sm focus:outline-none focus:border-violet-500 resize-y font-mono text-white placeholder-gray-500"
-              />
+              {documentContext && (
+                <div className="flex items-center gap-2 mb-2">
+                  {(() => {
+                    const tokens = estimateTokens(documentContext);
+                    const { warning } = checkContextWarning(prompt.length, documentContext.length);
+                    let statusColor = "text-green-400";
+                    if (tokens > 180000) statusColor = "text-red-400";
+                    else if (tokens > 100000) statusColor = "text-amber-400";
+                    return (
+                      <>
+                        <span className={`mono-meta text-xs ${statusColor}`}>
+                          ~{tokens.toLocaleString()} tokens
+                        </span>
+                        {warning && <span className={`mono-meta text-xs ${statusColor}`}>{warning}</span>}
+                        <button onClick={clearDocument} className="mono-meta text-xs text-gray-400 hover:text-white ml-auto">
+                          Clear
+                        </button>
+                      </>
+                    );
+                  })()}
+                </div>
+              )}
+
+              {documentContext && (
+                <div className="border border-glass overflow-hidden glass-card rounded-lg">
+                  <div className="bg-dark-overlay border-b border-glass px-3 py-2 flex items-center gap-2">
+                    <FileText size={13} className="text-gray-400" />
+                    <span className="mono-meta text-xs text-gray-400">{docFileName ?? "pasted text"}</span>
+                  </div>
+                  <textarea
+                    value={documentContext}
+                    onChange={(e) => setDocumentContext(e.target.value)}
+                    rows={6}
+                    disabled={running}
+                    className="w-full bg-[#1A1A2E] p-3 text-sm focus:outline-none focus:border-violet-500 resize-y font-mono text-white placeholder-gray-500"
+                  />
+                </div>
+              )}
             </div>
           )}
         </section>
 
         {/* Prompt bar */}
-        <section className="mt-16">
-          <div className="mono-meta text-gray-400 mb-3">Prompt</div>
+        <section className="mt-8">
+          <div className="mono-meta text-gray-400 mb-2 text-sm">Your Question</div>
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="Ask the council anything..."
-            rows={4}
+            rows={3}
             disabled={running}
-            className="w-full border border-glass bg-[#1A1A2E] p-6 text-xl focus:outline-none focus:border-violet-500 focus:bg-[#222235] resize-none text-white placeholder-gray-500 rounded-lg transition-colors"
+            className="w-full border border-glass bg-[#1A1A2E] p-4 text-base focus:outline-none focus:border-violet-500 focus:bg-[#222235] resize-none text-white placeholder-gray-500 rounded-lg transition-colors"
           />
           {error && (
             <div className="mt-6 border border-red-500/30 bg-red-500/5 p-6 text-sm rounded-lg">
@@ -540,7 +592,7 @@ export default function Home() {
 
         {/* Rounds */}
         {orderedRounds.map((n) => (
-          <RoundSection key={n} round={n} label={rounds[n].label} outputs={rounds[n].outputs} doneSet={rounds[n].doneSet} />
+          <RoundSection key={n} round={n} label={rounds[n].label} outputs={rounds[n].outputs} doneSet={rounds[n].doneSet} personaMap={personaMap} />
         ))}
 
         {/* Convergence Banner */}
@@ -647,7 +699,7 @@ export default function Home() {
             </label>
           </div>
           <button
-            onClick={convene}
+            onClick={() => convene()}
             disabled={running || !prompt.trim()}
             className="group flex items-center gap-3 border border-violet-500 px-8 py-4 mono-meta text-violet-400 disabled:opacity-30 hover:bg-violet-500/10 transition-all disabled:hover:bg-transparent disabled:border-gray-600 disabled:text-gray-500"
           >
@@ -680,7 +732,7 @@ export default function Home() {
             </label>
           </div>
           <button
-            onClick={convene}
+            onClick={() => convene()}
             disabled={running || !prompt.trim()}
             className="w-full flex items-center justify-center gap-2 border border-violet-500 px-4 py-3 mono-meta text-sm text-violet-400 disabled:opacity-30 hover:bg-violet-500/10 transition-all disabled:hover:bg-transparent disabled:border-gray-600 disabled:text-gray-500"
           >

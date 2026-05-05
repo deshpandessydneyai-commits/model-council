@@ -2,15 +2,44 @@
 
 import { Clock, Settings, HelpCircle, Plus, MoreVertical } from "lucide-react";
 import Link from "next/link";
+import { Suspense } from "react";
+import { useSetupModal } from "@/lib/setup-modal-context";
 
 type SidebarProps = {
   onNewCouncil?: () => void;
   currentPage?: "home" | "history" | "settings";
 };
 
+async function CreditsData() {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) return <div className="text-sm font-bold text-green-400">$0.00</div>;
+
+  try {
+    const res = await fetch("https://openrouter.ai/api/v1/credits", {
+      headers: { Authorization: `Bearer ${apiKey}` },
+      next: { revalidate: 60 },
+    });
+    if (!res.ok) throw new Error("fetch failed");
+    const json = await res.json();
+    const { total_credits, total_usage } = json.data ?? {};
+    const remaining = (total_credits ?? 0) - (total_usage ?? 0);
+    const color =
+      remaining < 1 ? "#dc2626" : remaining < 3 ? "#d97706" : "#16a34a";
+    return (
+      <div className="text-sm font-bold" style={{ color }}>
+        ${remaining.toFixed(2)}
+      </div>
+    );
+  } catch {
+    return <div className="text-sm font-bold text-gray-400">unavailable</div>;
+  }
+}
+
 export function Sidebar({ onNewCouncil, currentPage = "home" }: SidebarProps) {
+  const { setIsOpen } = useSetupModal();
+
   const navItems = [
-    { id: "new", label: "New Council", icon: Plus, onClick: onNewCouncil },
+    { id: "new", label: "New Council", icon: Plus, onClick: () => setIsOpen(true) },
     { id: "home", label: "Recent", icon: Clock, href: "/" },
     { id: "settings", label: "Settings", icon: Settings, href: "/settings" },
     { id: "help", label: "Help", icon: HelpCircle, href: "/help" },
@@ -70,9 +99,11 @@ export function Sidebar({ onNewCouncil, currentPage = "home" }: SidebarProps) {
 
       {/* Footer */}
       <div className="border-t border-glass px-3 py-4">
-        <div className="glass-card px-4 py-3">
-          <div className="text-xs text-gray-500 mb-2">Credits</div>
-          <div className="text-lg font-bold text-green-400">$9.19</div>
+        <div className="glass-card px-4 py-3 space-y-2">
+          <div className="text-xs text-gray-500">Credits</div>
+          <Suspense fallback={<div className="text-sm font-bold text-gray-500">Loading...</div>}>
+            <CreditsData />
+          </Suspense>
         </div>
       </div>
     </aside>

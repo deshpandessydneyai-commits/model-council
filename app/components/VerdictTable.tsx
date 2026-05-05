@@ -39,11 +39,14 @@ export function VerdictTable({ rows }: { rows: VerdictRow[] }) {
           </tr>
         </thead>
         <tbody>
-          {rows.map((r, idx) => (
+          {rows.map((r, idx) => {
+            const isWhiteRow = idx % 2 === 0;
+            const textColor = isWhiteRow ? "text-black" : "text-black";
+            return (
             <tr
               key={r.modelId}
               className={`border-b border-black/10 align-top transition-colors hover:bg-black/3 cursor-pointer ${
-                idx % 2 === 0 ? "bg-white" : "bg-black/[0.02]"
+                isWhiteRow ? "bg-white" : "bg-black/[0.02]"
               }`}
               onClick={() => toggleRow(r.modelId)}
             >
@@ -58,10 +61,10 @@ export function VerdictTable({ rows }: { rows: VerdictRow[] }) {
                   {r.model}
                 </div>
               </td>
-              <td className="py-6 pr-4 text-sm leading-relaxed max-w-[260px]">
+              <td className={`py-6 pr-4 text-sm leading-relaxed max-w-[260px] ${textColor}`}>
                 {r.agree}
               </td>
-              <td className="py-6 pr-4 text-sm leading-relaxed max-w-[260px]">
+              <td className={`py-6 pr-4 text-sm leading-relaxed max-w-[260px] ${textColor}`}>
                 {r.disagree}
               </td>
               <td className="py-6 pr-4 text-center">
@@ -97,7 +100,8 @@ export function VerdictTable({ rows }: { rows: VerdictRow[] }) {
                 )}
               </td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
     </div>
