@@ -26,7 +26,6 @@ html,
 body {
   background: var(--background);
   color: var(--foreground);
-  cursor: none;
 }
 
 body {
@@ -39,7 +38,7 @@ body {
 
 a,
 button {
-  cursor: none;
+  cursor: pointer;
 }
 
 .headline {

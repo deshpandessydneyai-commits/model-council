@@ -5,7 +5,13 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 export async function POST(req: Request) {
-  let body: { prompt?: string; forceRound3?: boolean; webSearch?: boolean };
+  let body: {
+    prompt?: string;
+    forceRound3?: boolean;
+    webSearch?: boolean;
+    documentContext?: string;
+    personaMap?: Record<string, string>;
+  };
   try {
     body = await req.json();
   } catch {
@@ -15,6 +21,8 @@ export async function POST(req: Request) {
   const prompt = (body.prompt ?? "").trim();
   const forceRound3 = !!body.forceRound3;
   const webSearch = !!body.webSearch;
+  const documentContext = (body.documentContext ?? "").trim();
+  const personaMap = body.personaMap ?? {}; // Map of modelId -> personaId
 
   if (!prompt) {
     return new Response("prompt is required", { status: 400 });
@@ -30,7 +38,7 @@ export async function POST(req: Request) {
       };
 
       try {
-        await runCouncil(prompt, forceRound3, webSearch, send);
+        await runCouncil(prompt, forceRound3, webSearch, documentContext, personaMap, send);
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         send({ type: "error", message: msg });
