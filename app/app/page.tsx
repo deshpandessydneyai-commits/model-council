@@ -365,7 +365,7 @@ export default function Home() {
 
   return (
     <>
-      <NavHeader onHistoryClick={() => setHistoryOpen(true)} />
+      {/* Remove NavHeader since we now have sidebar */}
 
       <HistoryPanel
         open={historyOpen}
@@ -389,13 +389,13 @@ export default function Home() {
       <div className="max-w-[1600px] mx-auto px-6 pt-24 pb-32">
         {/* Hero */}
         <section style={{ padding: "48px 0 32px", textAlign: "center" }}>
-          <div className="mono-meta text-muted" style={{ marginBottom: "20px" }}>
+          <div className="mono-meta text-gray-400" style={{ marginBottom: "20px" }}>
             A Debate Chamber For Frontier Models
           </div>
-          <h1 style={{ fontSize: "clamp(28px, 3.5vw, 42px)", fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1.15, color: "#000000" }}>
+          <h1 style={{ fontSize: "clamp(28px, 3.5vw, 42px)", fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1.15, color: "#FFFFFF" }}>
             Model Council.
           </h1>
-          <p style={{ marginTop: "16px", maxWidth: "480px", marginLeft: "auto", marginRight: "auto", fontSize: "15px", lineHeight: 1.65, color: "#525252" }}>
+          <p style={{ marginTop: "16px", maxWidth: "480px", marginLeft: "auto", marginRight: "auto", fontSize: "15px", lineHeight: 1.65, color: "#9CA3AF" }}>
             One prompt. Four models. A structured debate. One final verdict,
             synthesized by Claude Opus 4.6.
           </p>
@@ -404,7 +404,7 @@ export default function Home() {
         {/* Document Context */}
         <section className="mt-16">
           <div className="flex items-center justify-between mb-3">
-            <div className="mono-meta text-muted">
+            <div className="mono-meta text-gray-400">
               Document Context <span className="opacity-50">(optional)</span>
             </div>
             {documentContext && (
@@ -438,37 +438,37 @@ export default function Home() {
               onDragLeave={() => setDragOver(false)}
               onDrop={handleDrop}
               className="border-2 border-dashed px-8 py-10 flex flex-col items-center gap-4 transition-colors duration-300"
-              style={{ borderColor: dragOver ? "#000" : "rgba(0,0,0,0.3)", background: dragOver ? "rgba(0,0,0,0.02)" : "transparent" }}
+              style={{ borderColor: dragOver ? "rgba(139, 92, 246, 0.5)" : "rgba(255,255,255,0.1)", background: dragOver ? "rgba(139, 92, 246, 0.05)" : "transparent" }}
             >
-              <FileText size={28} strokeWidth={1} className="text-muted" />
+              <FileText size={28} strokeWidth={1} className="text-gray-500" />
               <div className="text-center">
-                <div className="mono-meta text-sm">Drop a file here</div>
-                <div className="mono-meta text-xs text-muted mt-1">PDF, DOCX, TXT, MD</div>
+                <div className="mono-meta text-sm text-white">Drop a file here</div>
+                <div className="mono-meta text-xs text-gray-500 mt-1">PDF, DOCX, TXT, MD</div>
               </div>
               <div className="flex items-center gap-3">
                 <input ref={fileInputRef} type="file" accept=".txt,.md,.pdf,.docx" onChange={handleFileInput} className="hidden" id="doc-upload" />
-                <label htmlFor="doc-upload" className="border border-black px-4 py-2 mono-meta text-xs cursor-pointer hover:bg-black hover:text-white transition-colors duration-300">
+                <label htmlFor="doc-upload" className="border border-violet-500 px-4 py-2 mono-meta text-xs cursor-pointer hover:bg-violet-500/10 hover:text-violet-400 transition-colors duration-300 text-violet-400">
                   Browse file
                 </label>
-                <span className="mono-meta text-xs text-muted">or paste text below</span>
+                <span className="mono-meta text-xs text-gray-500">or paste text below</span>
               </div>
-              {docParsing && <div className="mono-meta text-xs text-muted">Parsing...</div>}
+              {docParsing && <div className="mono-meta text-xs text-gray-500">Parsing...</div>}
               {docError && <div className="mono-meta text-xs text-red-600">{docError}</div>}
             </div>
           )}
 
           {documentContext && (
-            <div className="border border-black/20 overflow-hidden">
-              <div className="bg-black/[0.03] border-b border-black/10 px-4 py-2 flex items-center gap-2">
-                <FileText size={13} className="text-muted" />
-                <span className="mono-meta text-xs text-muted">{docFileName ?? "pasted text"}</span>
+            <div className="border border-glass overflow-hidden glass-card">
+              <div className="bg-dark-overlay border-b border-glass px-4 py-2 flex items-center gap-2">
+                <FileText size={13} className="text-gray-400" />
+                <span className="mono-meta text-xs text-gray-400">{docFileName ?? "pasted text"}</span>
               </div>
               <textarea
                 value={documentContext}
                 onChange={(e) => setDocumentContext(e.target.value)}
                 rows={8}
                 disabled={running}
-                className="w-full bg-white p-4 text-sm focus:outline-none resize-y font-mono"
+                className="w-full bg-[#1A1A2E] p-4 text-sm focus:outline-none focus:border-violet-500 resize-y font-mono text-white placeholder-gray-500"
               />
             </div>
           )}
@@ -476,19 +476,19 @@ export default function Home() {
 
         {/* Prompt bar */}
         <section className="mt-16">
-          <div className="mono-meta text-muted mb-3">Prompt</div>
+          <div className="mono-meta text-gray-400 mb-3">Prompt</div>
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="Ask the council anything..."
             rows={4}
             disabled={running}
-            className="w-full border border-black/10 bg-white p-6 text-xl focus:outline-none focus:border-black resize-none"
+            className="w-full border border-glass bg-[#1A1A2E] p-6 text-xl focus:outline-none focus:border-violet-500 focus:bg-[#222235] resize-none text-white placeholder-gray-500 rounded-lg transition-colors"
           />
           {error && (
-            <div className="mt-6 border border-black/10 p-6 text-sm">
-              <div className="mono-meta text-muted mb-2">Error</div>
-              <div className="whitespace-pre-wrap">{error}</div>
+            <div className="mt-6 border border-red-500/30 bg-red-500/5 p-6 text-sm rounded-lg">
+              <div className="mono-meta text-red-400 mb-2">Error</div>
+              <div className="whitespace-pre-wrap text-red-300">{error}</div>
             </div>
           )}
         </section>
@@ -631,25 +631,25 @@ export default function Home() {
       {/* Toast Notifications */}
       <Toast toasts={toasts} onRemove={removeToast} />
 
-      {/* Sticky Submit Button Bar — Desktop */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-black/10 z-40 hidden md:block">
+      {/* Sticky Submit Button Bar — Desktop (Dark Mode) */}
+      <div className="fixed bottom-0 left-64 right-0 bg-[#121212] border-t border-glass z-40 hidden md:block">
         <div className="max-w-[1600px] mx-auto px-6 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-6">
-            <label className="flex items-center gap-3 px-3 py-2 rounded transition-colors" style={{ backgroundColor: webSearch ? "rgba(59,130,246,0.1)" : "transparent" }}>
-              <input type="checkbox" checked={webSearch} onChange={(e) => setWebSearch(e.target.checked)} disabled={running} className="h-4 w-4 accent-black" />
-              <span className="text-sm font-medium text-black cursor-pointer">
-                Web Search {webSearch && <span className="text-xs text-blue-600 ml-1">Active</span>}
+            <label className="flex items-center gap-3 px-3 py-2 rounded transition-colors" style={{ backgroundColor: webSearch ? "rgba(139, 92, 246, 0.1)" : "transparent" }}>
+              <input type="checkbox" checked={webSearch} onChange={(e) => setWebSearch(e.target.checked)} disabled={running} className="h-4 w-4 accent-violet-500" />
+              <span className="text-sm font-medium text-white cursor-pointer">
+                Web Search {webSearch && <span className="text-xs text-violet-400 ml-1">Active</span>}
               </span>
             </label>
             <label className="flex items-center gap-3">
-              <input type="checkbox" checked={forceR3} onChange={(e) => setForceR3(e.target.checked)} disabled={running} className="h-4 w-4 accent-black" />
-              <span className="text-sm font-medium text-black cursor-pointer">Force Round 3</span>
+              <input type="checkbox" checked={forceR3} onChange={(e) => setForceR3(e.target.checked)} disabled={running} className="h-4 w-4 accent-violet-500" />
+              <span className="text-sm font-medium text-white cursor-pointer">Force Round 3</span>
             </label>
           </div>
           <button
             onClick={convene}
             disabled={running || !prompt.trim()}
-            className="group flex items-center gap-3 border border-black px-8 py-4 mono-meta disabled:opacity-30 hover:bg-black hover:text-white transition-colors disabled:hover:bg-white disabled:hover:text-black"
+            className="group flex items-center gap-3 border border-violet-500 px-8 py-4 mono-meta text-violet-400 disabled:opacity-30 hover:bg-violet-500/10 transition-all disabled:hover:bg-transparent disabled:border-gray-600 disabled:text-gray-500"
           >
             {running ? (
               <>
@@ -666,23 +666,23 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Sticky Submit Button Bar — Mobile */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-black/10 z-40 md:hidden">
+      {/* Sticky Submit Button Bar — Mobile (Dark Mode) */}
+      <div className="fixed bottom-0 left-0 right-0 bg-[#121212] border-t border-glass z-40 md:hidden">
         <div className="px-4 py-3 space-y-3">
           <div className="flex items-center gap-4">
             <label className="flex items-center gap-2">
-              <input type="checkbox" checked={webSearch} onChange={(e) => setWebSearch(e.target.checked)} disabled={running} className="h-4 w-4 accent-black" />
-              <span className="text-xs font-medium text-black">Web Search</span>
+              <input type="checkbox" checked={webSearch} onChange={(e) => setWebSearch(e.target.checked)} disabled={running} className="h-4 w-4 accent-violet-500" />
+              <span className="text-xs font-medium text-white">Web Search</span>
             </label>
             <label className="flex items-center gap-2">
-              <input type="checkbox" checked={forceR3} onChange={(e) => setForceR3(e.target.checked)} disabled={running} className="h-4 w-4 accent-black" />
-              <span className="text-xs font-medium text-black">Round 3</span>
+              <input type="checkbox" checked={forceR3} onChange={(e) => setForceR3(e.target.checked)} disabled={running} className="h-4 w-4 accent-violet-500" />
+              <span className="text-xs font-medium text-white">Round 3</span>
             </label>
           </div>
           <button
             onClick={convene}
             disabled={running || !prompt.trim()}
-            className="w-full flex items-center justify-center gap-2 border border-black px-4 py-3 mono-meta text-sm disabled:opacity-30 hover:bg-black hover:text-white transition-colors"
+            className="w-full flex items-center justify-center gap-2 border border-violet-500 px-4 py-3 mono-meta text-sm text-violet-400 disabled:opacity-30 hover:bg-violet-500/10 transition-all disabled:hover:bg-transparent disabled:border-gray-600 disabled:text-gray-500"
           >
             {running ? "convening..." : "Convene Council"}
           </button>

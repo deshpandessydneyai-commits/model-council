@@ -1,12 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #000000;
-  --muted: #525252;
-  --muted-2: #737373;
-  --border: rgba(0, 0, 0, 0.1);
+  --background: #0A0A0A;
+  --foreground: #FFFFFF;
+  --muted: #9CA3AF;
+  --muted-2: #6B7280;
+  --border: rgba(255, 255, 255, 0.1);
   --footer: #0a0a0a;
+  --accent: #8B5CF6;
+  --accent-hover: #A78BFA;
   --ease-studio: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -17,6 +19,7 @@
   --color-muted-2: var(--muted-2);
   --color-border-studio: var(--border);
   --color-footer: var(--footer);
+  --color-accent: var(--accent);
   --font-sans: var(--font-inter);
   --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
   --ease-studio: var(--ease-studio);
@@ -132,6 +135,41 @@ button {
 }
 
 ::selection {
-  background: #000000;
+  background: var(--accent);
   color: #ffffff;
+}
+
+/* Glass effect for cards and panels */
+.glass-card {
+  backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+}
+
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  transition: all 200ms var(--ease-studio);
+}
+
+/* Dark mode for all elements */
+.dark-theme {
+  background-color: #0A0A0A;
+  color: #FFFFFF;
+}
+
+.dark-theme a {
+  color: var(--accent);
+}
+
+.dark-theme button:hover {
+  background-color: rgba(139, 92, 246, 0.1);
+}
+
+/* Smooth transitions */
+* {
+  transition-property: background-color, border-color, color;
+  transition-timing-function: var(--ease-studio);
+  transition-duration: 200ms;
 }
