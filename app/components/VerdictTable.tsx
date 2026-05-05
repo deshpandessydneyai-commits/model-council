@@ -9,23 +9,23 @@ function getConsensusLevel(alignment: number): { label: string; bgColor: string;
   if (alignment >= 80) {
     return {
       label: "Full Consensus",
-      bgColor: "bg-green-100 dark:bg-green-900/30",
-      textColor: "text-green-700 dark:text-green-400",
-      icon: <Check size={14} className="text-green-600 dark:text-green-400" />,
+      bgColor: "bg-green-100 dark:bg-green-950",
+      textColor: "text-green-900 dark:text-green-100",
+      icon: <Check size={14} className="text-green-700 dark:text-green-300" />,
     };
   } else if (alignment >= 50) {
     return {
       label: "Partial Consensus",
-      bgColor: "bg-yellow-100 dark:bg-yellow-900/30",
-      textColor: "text-yellow-700 dark:text-yellow-400",
-      icon: <AlertCircle size={14} className="text-yellow-600 dark:text-yellow-400" />,
+      bgColor: "bg-yellow-100 dark:bg-yellow-950",
+      textColor: "text-yellow-900 dark:text-yellow-100",
+      icon: <AlertCircle size={14} className="text-yellow-700 dark:text-yellow-300" />,
     };
   } else {
     return {
       label: "Disagreement",
-      bgColor: "bg-red-100 dark:bg-red-900/30",
-      textColor: "text-red-700 dark:text-red-400",
-      icon: <X size={14} className="text-red-600 dark:text-red-400" />,
+      bgColor: "bg-red-100 dark:bg-red-950",
+      textColor: "text-red-900 dark:text-red-100",
+      icon: <X size={14} className="text-red-700 dark:text-red-300" />,
     };
   }
 }

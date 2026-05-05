@@ -22,8 +22,8 @@ export function ModelCard({ model, text, variant, round, done, personaEmoji = "�
 
   // Determine status indicator
   const getStatusIndicator = () => {
-    if (round === 1) return { label: "New", color: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400", symbol: "●" };
-    if (!text || !previousRoundText) return { label: "New", color: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400", symbol: "●" };
+    if (round === 1) return { label: "New", color: "bg-blue-100 dark:bg-blue-950 text-blue-900 dark:text-blue-100", symbol: "●" };
+    if (!text || !previousRoundText) return { label: "New", color: "bg-blue-100 dark:bg-blue-950 text-blue-900 dark:text-blue-100", symbol: "●" };
 
     const textLower = text.toLowerCase();
     const prevLower = (previousRoundText || "").toLowerCase();
@@ -37,12 +37,12 @@ export function ModelCard({ model, text, variant, round, done, personaEmoji = "�
     const revisedSignals = reviseSignals.filter(signal => textLower.includes(signal));
 
     if (agreedSignals.length > 0) {
-      return { label: "Agreed", color: "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400", symbol: "✓" };
+      return { label: "Agreed", color: "bg-green-100 dark:bg-green-950 text-green-900 dark:text-green-100", symbol: "✓" };
     } else if (revisedSignals.length > 0) {
-      return { label: "Revised", color: "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400", symbol: "!" };
+      return { label: "Revised", color: "bg-yellow-100 dark:bg-yellow-950 text-yellow-900 dark:text-yellow-100", symbol: "!" };
     }
 
-    return { label: "New", color: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400", symbol: "●" };
+    return { label: "New", color: "bg-blue-100 dark:bg-blue-950 text-blue-900 dark:text-blue-100", symbol: "●" };
   };
 
   const status = getStatusIndicator();
