@@ -124,6 +124,106 @@ Open **http://localhost:3000** in your browser.
 
 ---
 
+## 💡 Use Cases & Examples
+
+Model Council works for anyone who needs **multiple perspectives** on a hard question. Here's how different users leverage it:
+
+### 🔬 Research & Academia
+**Explore topics rigorously, test hypotheses, document thinking.**
+
+Example prompts:
+- `"Compare quantitative vs. qualitative research methods for studying human behavior"`
+- `"Evaluate different interpretations of this historical event"`
+- `"What are the strongest arguments for and against this theory?"`
+
+**Export:** Markdown (for papers) + JSON (for data analysis)
+
+---
+
+### 💼 Product & Business
+**Make better decisions by considering multiple angles.**
+
+Example prompts:
+- `"Should we build mobile-first or web-first? Consider our target users, dev resources, and market trends"`
+- `"Evaluate these 4 business models for our SaaS product"`
+- `"What are the risks of pivoting into market X?"`
+
+**Export:** Summary + verdict table (for decision memos)
+
+---
+
+### 🔧 Engineering & Development
+**Debate technical decisions with structured reasoning.**
+
+Example prompts:
+- `"React vs. Vue vs. Svelte—which is best for our use case?"`
+- `"Microservices or monolith architecture? Consider scalability, complexity, and team size"`
+- `"Compare SQL vs. NoSQL databases for our application"`
+
+**Export:** JSON (for parsing into decision docs)
+
+---
+
+### ✍️ Content & Marketing
+**Generate multiple angles for articles, explore ideas, validate messaging.**
+
+Example prompts:
+- `"What will be the future of remote work post-pandemic?"`
+- `"Explore 4 different perspectives on AI's impact on creative industries"`
+- `"Compare these 3 marketing strategies for reaching Gen Z"`
+
+**Export:** Markdown (for blog posts) + highlight disagreements (for engaging content)
+
+---
+
+### 🎓 Education & Learning
+**Teach critical thinking, explore topics from multiple angles.**
+
+Example prompts:
+- `"Debate the causes and proposed solutions for climate change"`
+- `"Should AI be regulated? What are the strongest arguments on each side?"`
+- `"Compare different approaches to solving income inequality"`
+
+**Export:** Full debate (for classroom discussion)
+
+---
+
+### 🤔 Personal Exploration & Decisions
+**Test assumptions, explore tough questions, make better decisions.**
+
+Example prompts:
+- `"Career decision: should I prioritize financial security or personal passion?"`
+- `"Is it worth starting a business? Compare pros/cons rigorously"`
+- `"Should I relocate? Consider career, lifestyle, relationships, finances"`
+
+**Export:** Full debate (for reflection)
+
+---
+
+### 🏢 Consulting & Strategy
+**Justify recommendations with rigorous multi-perspective analysis.**
+
+Example prompts:
+- `"Should our client enter the European market? Compare acquisition vs. partnership vs. greenfield"`
+- `"Evaluate the viability of this acquisition target"`
+- `"What are the risks and opportunities in this merger?"`
+
+**Export:** Summary + recommendations (for client pitches)
+
+---
+
+## 🎯 Quick Tips for Better Debates
+
+| Tip | Example |
+|---|---|
+| **Be specific** | ❌ "Is AI good?" → ✅ "Should AI regulation be broad or focused?" |
+| **Include context** | Add relevant constraints: budget, timeline, audience, constraints |
+| **Ask "why"** | ❌ "Compare A vs B" → ✅ "Compare A vs B for a startup with limited budget" |
+| **Iterate** | Run the same prompt multiple times, toggle Web Search on/off |
+| **Export & share** | Markdown exports make it easy to share with teams |
+
+---
+
 ## 📁 Project Structure
 
 ```
