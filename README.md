@@ -2,167 +2,269 @@
 
 > One prompt. Four frontier models. A structured debate. One synthesized verdict.
 
-Model Council is a personal research tool that convenes four AI models, has them debate each other across 2–3 rounds, and uses Claude Opus 4.6 as a synthesizer to produce a final verdict with a side-by-side comparison table. It is built on top of [OpenRouter](https://openrouter.ai) so every model is reachable through a single API key.
+**Model Council** is a research tool that convenes four AI frontier models, runs them through a structured 2–3 round debate, and uses Claude Opus 4.6 as a synthesizer to produce a final verdict with detailed reasoning and a comparison table.
 
-The goal is simple: surface disagreement between frontier models on hard questions, rather than getting one confident answer from a single model and calling it a day.
+Designed to surface **disagreement between models** on hard questions rather than defaulting to a single model's confident answer.
 
 ---
 
-## The Council
+## ✨ Features
+
+- **Live Debate Streaming** — Watch all four models respond in real-time over Server-Sent Events
+- **Dark Mode UI with Glassmorphism** — Modern, polished interface with smooth animations
+- **Markdown-Rendered Output** — Debate responses with headers, lists, code blocks, and proper typography
+- **Modal-Based Setup** — Configure debate settings from an intuitive modal dialog
+- **Side-by-Side Verdict Table** — Structured comparison of what each model agreed/disagreed on
+- **One-Click Export** — Download entire debate as Markdown with all rounds and verdict
+- **Web Search Integration** — Optional live web context via OpenRouter's `:online` mode
+- **Model Persona System** — Assign emoji-based personas to each debater for visual clarity
+- **Session History** — localStorage-backed debate history with restore capability
+- **Configurable Council** — Swap any model in the lineup via the setup modal
+
+---
+
+## 🎯 How It Works
+
+### Round 01 — Independent
+All four council models see only your prompt and write independent answers (parallel calls).
+
+### Round 02 — Critique & Update
+Models see the three other Round 1 answers and identify agreement/disagreement points, then update their own position if others made valid arguments.
+
+### Round 03 — Final Statements (Conditional)
+Claude Opus checks for substantive disagreement. If found, models write final positions. You can force this round manually.
+
+### Synthesis & Verdict
+Opus 4.6 synthesizes the debate into:
+- A **verdict table** (what each model agreed/disagreed on, confidence, reasoning)
+- A **final prose answer** with synthesis and open questions
+
+---
+
+## 🏛️ The Council
 
 | Seat | Model | Role |
 |---|---|---|
-| 1 | `anthropic/claude-sonnet-4.6` | Debater |
-| 2 | `openai/gpt-5` | Debater |
-| 3 | `google/gemini-3.1-pro-preview` | Debater |
-| 4 | `x-ai/grok-4.20` | Debater |
-| Judge | `anthropic/claude-opus-4.6` | Synthesizer |
+| 1 | Claude Sonnet 4.6 | Debater |
+| 2 | GPT-5 | Debater |
+| 3 | Gemini 3.1 Pro | Debater |
+| 4 | Grok 4.20 | Debater |
+| Judge | Claude Opus 4.6 | Synthesizer |
 
-All five are routed through OpenRouter. Swap a slug in `app/lib/models.ts` to change the lineup.
-
-## How a Debate Works
-
-1. **Round 01 — Independent.** Every council model sees only the prompt and writes its own answer. Parallel calls.
-2. **Round 02 — Critique & Update.** Every model now sees the other three Round 1 answers and is asked to identify where it agrees, where it disagrees, and update its own answer if the others have made valid points.
-3. **Round 03 — Final Statements (conditional).** Claude Opus 4.6 classifies whether substantive disagreement remains after Round 2. If yes, a third round auto-fires — each model writes a final position. A "Force Round 3" checkbox lets you trigger it manually.
-4. **Synthesis.** Opus 4.6 reads every round and produces a JSON verdict: a row per model (what they agreed with, what they held their ground on, their confidence, the arc of their argument), plus a synthesized final answer.
-
-The UI streams the whole thing live over Server-Sent Events so you can watch tokens arrive in all four cards as the debate unfolds.
-
-## Web Search
-
-Every model call can be augmented with OpenRouter's built-in `:online` mode, which uses [Exa](https://exa.ai) to inject fresh web results as context. A "⟡ Web Search" checkbox is on by default. Toggle it off for prompts that do not need current information — each searched call adds roughly $0.004 on top of the model's own token cost.
-
-Synthesis and the disagreement check are never web-searched; they reason purely over the debate transcript.
-
-## The Verdict Table
-
-Produced by the synthesizer in structured JSON (with a retry on parse failure). Rendered in the UI as:
-
-| Model | Agree | Disagree | Confidence | Reasoning Trace |
-|---|---|---|---|---|
-
-Plus a final prose answer in hero type, and a one-click **Export Markdown** button that downloads a self-contained `.md` file with the prompt, every round's outputs, the verdict table, and the final answer.
+**Swap anytime:** Edit `app/lib/models.ts` to customize the lineup with any OpenRouter model.
 
 ---
 
-## Stack
+## 🌐 Web Search
 
-- **Framework:** Next.js 16 (App Router) + React 19 + TypeScript
-- **Styling:** Tailwind CSS v4 + Inter
-- **LLM client:** `openai` SDK pointed at `https://openrouter.ai/api/v1`
-- **Streaming:** native Web Streams + Server-Sent Events
-- **Animation:** CSS keyframes + `cubic-bezier(0.16, 1, 0.3, 1)`
+Toggle "Web Search" in the setup modal to augment model calls with live web results via [Exa](https://exa.ai). Each searched call adds ~$0.004 to model costs.
 
-No database. No auth. Personal tool, runs on localhost.
-
-## Design
-
-The UI follows a **Bold Editorial Studio** aesthetic:
-
-- Strict black-and-white palette. Accent color only from model attribution.
-- Inter at extreme weight and size contrasts. 700 headlines, 400 body, 14px uppercase monospace metadata.
-- Custom 32-pixel difference-blend cursor that scales 2.5× over interactive elements; the native cursor is hidden.
-- Asymmetric model cards with non-uniform border radii (100-pixel corner accents).
-- Every hover transition runs at 700 ms or slower on `cubic-bezier(0.16, 1, 0.3, 1)`. No system easing anywhere.
-
-Full spec lives in `PRD-model-council.md` §7.4.
+Synthesis and disagreement checks never use web search—they reason purely over debate transcripts.
 
 ---
 
-## Quick Start
+## 🛠️ Tech Stack
 
+| Layer | Tech |
+|---|---|
+| **Framework** | Next.js 16 (App Router) + React 19 + TypeScript |
+| **Styling** | Tailwind CSS v4 + Dark Mode + Glassmorphism |
+| **Streaming** | Web Streams + Server-Sent Events |
+| **LLM API** | OpenAI SDK → OpenRouter |
+| **State** | React Context (SetupModal) + localStorage (History) |
+| **Markdown** | Custom parser (MarkdownContent component) |
+
+No database. No auth. Personal tool—runs entirely on localhost.
+
+---
+
+## 🚀 Quick Start
+
+### 1. Clone the Repository
 ```bash
-# 1. Clone
-git clone <your-fork-url> model-council
+git clone https://github.com/deshpandessydneyai-commits/model-council.git
 cd model-council/app
+```
 
-# 2. Install
+### 2. Install Dependencies
+```bash
 npm install
+```
 
-# 3. Add your OpenRouter key
+### 3. Get Your OpenRouter API Key
+- Go to [OpenRouter](https://openrouter.ai) and create a free account
+- Generate an API key at https://openrouter.ai/keys
+- Add credits to your account (debates typically cost $0.10–$0.40 each)
+
+### 4. Set Environment Variables
+```bash
 cp .env.example .env.local
-# Edit .env.local and paste your key from https://openrouter.ai/keys
+```
 
-# 4. Run
+Edit `.env.local` and paste your OpenRouter key:
+```env
+OPENROUTER_API_KEY=your_key_here
+```
+
+### 5. Start the Dev Server
+```bash
 npm run dev
-# Open http://localhost:3000
 ```
 
-You need an [OpenRouter](https://openrouter.ai) account with credit on it. A typical debate runs roughly $0.10 to $0.40 in model costs depending on prompt size and how much each model writes; web search adds a few cents on top.
+Open **http://localhost:3000** in your browser.
 
-## Project Layout
+### 6. Run a Debate
+1. Click "Start a New Council" in the sidebar
+2. Enter your question/prompt
+3. (Optional) Toggle Web Search or Force Round 3
+4. Click "Begin Debate"
+5. Watch the debate unfold in real-time
+6. Review the verdict table and final synthesis
+7. Export as Markdown if you want to save it
+
+---
+
+## 📁 Project Structure
 
 ```
-model_council/
-├── PRD-model-council.md          # Full product spec (8 sections + design)
-├── ASSUMPTIONS-model-council.md  # Risk scan across 8 categories
+model-council/
 ├── README.md                     # This file
+├── PRD-model-council.md          # Full product spec
+├── ASSUMPTIONS-model-council.md  # Risk analysis
 └── app/                          # Next.js application
     ├── app/
-    │   ├── layout.tsx            # Root layout: Inter, cursor, header, footer
-    │   ├── page.tsx              # Hero, prompt bar, rounds, verdict, export
-    │   ├── globals.css           # Bold Editorial base styles
-    │   └── api/council/route.ts  # SSE streaming endpoint
+    │   ├── layout.tsx            # Root layout + Sidebar
+    │   ├── page.tsx              # Home page (hero, prompt, rounds, verdict)
+    │   ├── globals.css           # Base styles + dark theme variables
+    │   └── api/
+    │       └── council/route.ts  # SSE streaming endpoint
     ├── components/
-    │   ├── Cursor.tsx            # 32px difference-blend cursor
-    │   ├── NavHeader.tsx
-    │   ├── Footer.tsx
-    │   ├── ModelCard.tsx         # Asymmetric radii per variant
-    │   ├── RoundSection.tsx      # 2×2 grid per round
-    │   └── VerdictTable.tsx
+    │   ├── Sidebar.tsx           # Left sidebar navigation
+    │   ├── ModelCard.tsx         # Individual model response card
+    │   ├── MarkdownContent.tsx   # Markdown parser/renderer
+    │   ├── DebateSetupModal.tsx  # Modal for debate configuration
+    │   ├── VerdictTable.tsx       # Verdict comparison table
+    │   ├── RoundSection.tsx       # 2×2 grid per debate round
+    │   ├── Footer.tsx            # Footer with model info
+    │   └── [other components]
     └── lib/
         ├── models.ts             # Council + synthesizer config
-        ├── council.ts            # Orchestration, prompts, JSON retry
-        └── export.ts             # Markdown builder
+        ├── council.ts            # Debate orchestration & prompts
+        ├── setup-modal-context.tsx # Global modal state
+        └── [other utilities]
 ```
 
-## Configuration
+---
 
-| Env Var | Required | Description |
+## ⚙️ Configuration
+
+### Environment Variables
+
+| Variable | Required | Purpose |
 |---|---|---|
-| `OPENROUTER_API_KEY` | Yes | Get one at https://openrouter.ai/keys |
-| `OPENROUTER_APP_NAME` | No | Shown in your OpenRouter dashboard |
-| `OPENROUTER_APP_URL` | No | HTTP-Referer header sent to OpenRouter |
+| `OPENROUTER_API_KEY` | Yes | OpenRouter API key from https://openrouter.ai/keys |
+| `OPENROUTER_APP_NAME` | No | Optional: shown in OpenRouter dashboard |
+| `OPENROUTER_APP_URL` | No | Optional: HTTP-Referer header |
 
-## Swapping Models
+### Customize the Council
 
-Edit `app/lib/models.ts`:
+Edit `app/lib/models.ts` to change the debate lineup:
 
-```ts
+```typescript
 export const COUNCIL_MODELS: CouncilModel[] = [
   {
     id: "sonnet",
     slug: "anthropic/claude-sonnet-4.6",
     displayName: "Claude Sonnet 4.6",
     provider: "Anthropic",
-    shortLabel: "sonnet",
   },
-  // ...
+  // Add or swap any OpenRouter model slug
 ];
 ```
 
-Any slug [OpenRouter](https://openrouter.ai/models) exposes will work. The synthesizer is defined just below and can be swapped the same way.
-
-## Known Limitations
-
-- **Self-reported confidence is not calibrated.** When a model says "5/5", that does not mean it is actually right 95% of the time. Treat the numbers as relative, not absolute.
-- **Synthesizer bias.** Using Opus 4.6 as judge when Claude Sonnet 4.6 is a debater is a real bias vector. Rotating the synthesizer occasionally is a good sanity check.
-- **Consensus is not truth.** Four models can be wrong in the same direction. The verdict table shows what the council agreed on, not what is actually correct.
-- **No follow-up threading.** One prompt, one debate, one verdict. Multi-turn refinement is not implemented in v1.
-
-## Roadmap
-
-- Configurable council per run (swap models from the UI)
-- Multi-turn follow-ups on the same debate
-- Cost tracking in the footer
-- localStorage-backed session history
-- Custom system prompts per model
-
-## License
-
-Personal project. MIT, effectively — do whatever you want, no warranty.
+Visit [OpenRouter Models](https://openrouter.ai/models) to see all available options.
 
 ---
 
-Built with [Claude Code](https://claude.ai/code) using the [pm-skills](https://github.com/phuryn/pm-skills) plugin for the PRD and risk analysis.
+## 🎨 UI/UX Highlights
+
+### Dark Mode
+Built-in dark theme with Tailwind CSS v4. All components use CSS variables for consistency.
+
+### Glassmorphism
+Frosted glass effect on cards and modals with `backdrop-filter: blur(20px)` and `rgba` backgrounds.
+
+### Markdown Rendering
+Debate responses render with proper typography:
+- **Headers** (#, ##, ###) with semantic sizing
+- **Code blocks** with dark syntax highlighting
+- **Lists** with proper indentation
+- **Bold text** inline formatting
+
+### Responsive Layout
+- **Desktop:** Sidebar + main content + footer
+- **Mobile:** Collapsible sections and optimized spacing
+
+---
+
+## 📊 Cost Estimate
+
+Typical debate costs depend on:
+- Prompt length
+- Model verbosity
+- Web search (adds ~$0.04 per search)
+
+**Ballpark:** $0.10–$0.40 per debate
+
+You can check remaining credits in the sidebar footer.
+
+---
+
+## ⚠️ Known Limitations
+
+- **Self-reported confidence is uncalibrated.** A model's "5/5" doesn't mean it's right 95% of the time. Treat scores as relative.
+- **Synthesizer bias.** Using Opus 4.6 as judge when Claude Sonnet is a debater introduces bias. Rotate synthesizers occasionally.
+- **Consensus ≠ Truth.** Four models can agree and still be wrong. The verdict shows what the council agreed on, not ground truth.
+- **No follow-up threading.** One prompt, one debate, one verdict. Multi-turn refinement isn't implemented in v1.
+- **Debate quality depends on prompts.** Vague prompts = vague debates. Be specific.
+
+---
+
+## 🗺️ Roadmap
+
+- [ ] Cost tracking and session analytics
+- [ ] Custom system prompts per model
+- [ ] Multi-turn follow-ups on same debate
+- [ ] Export to PDF with formatting
+- [ ] Debate templates (legal, technical, ethical, etc.)
+- [ ] Model outcome tracking (which models were right?)
+
+---
+
+## 🤝 Contributing
+
+This is a personal research project, but if you:
+- **Find bugs** → Open an issue with reproducible steps
+- **Have feature ideas** → Fork and experiment
+- **Improve UX/design** → PRs welcome
+
+---
+
+## 📜 License
+
+MIT. Do whatever you want with it—no warranty.
+
+---
+
+## 👏 Acknowledgments
+
+- Built with [Claude Code](https://claude.ai/code)
+- Powered by [OpenRouter](https://openrouter.ai) for unified API access
+- UI inspired by [Bold Editorial Studio](https://bold.is)
+- Styling with [Tailwind CSS](https://tailwindcss.com)
+
+---
+
+**Questions?** Open an issue on GitHub or reach out.
+
+Happy debating! 🎙️
