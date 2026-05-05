@@ -423,18 +423,18 @@ export default function Home() {
       <div className="max-w-[1600px] mx-auto px-6 pt-16 pb-32">
         {/* Hero */}
         <section style={{ padding: "24px 0 20px", textAlign: "center" }}>
-          <div className="mono-meta text-gray-400" style={{ marginBottom: "12px", fontSize: "12px" }}>
+          <div className="mono-meta text-gray-500 dark:text-gray-400" style={{ marginBottom: "12px", fontSize: "12px" }}>
             A Debate Chamber For Frontier Models
           </div>
-          <h1 style={{ fontSize: "clamp(24px, 3vw, 36px)", fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1.15, color: "#FFFFFF", marginBottom: "12px" }}>
+          <h1 className="text-gray-900 dark:text-white" style={{ fontSize: "clamp(24px, 3vw, 36px)", fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1.15, marginBottom: "12px" }}>
             Model Council.
           </h1>
-          <p style={{ marginBottom: "16px", maxWidth: "480px", marginLeft: "auto", marginRight: "auto", fontSize: "14px", lineHeight: 1.6, color: "#9CA3AF" }}>
+          <p className="text-gray-600 dark:text-gray-400" style={{ marginBottom: "16px", maxWidth: "480px", marginLeft: "auto", marginRight: "auto", fontSize: "14px", lineHeight: 1.6 }}>
             One prompt. Four models. A structured debate. One final verdict.
           </p>
           <button
             onClick={() => setSetupModalOpen(true)}
-            className="bg-violet-600 hover:bg-violet-700 text-white font-medium px-6 py-2.5 rounded-lg transition-colors text-sm"
+            className="bg-indigo-600 dark:bg-violet-600 hover:bg-indigo-700 dark:hover:bg-violet-700 text-white font-medium px-6 py-2.5 rounded-lg transition-colors text-sm"
           >
             Start a New Council
           </button>
@@ -444,17 +444,17 @@ export default function Home() {
         <section className="mt-8">
           <button
             onClick={() => setDocContextExpanded(!docContextExpanded)}
-            className="w-full flex items-center justify-between p-3 hover:bg-white/5 rounded transition-colors"
+            className="w-full flex items-center justify-between p-3 hover:bg-gray-100 dark:hover:bg-white/5 rounded transition-colors"
           >
             <div className="flex items-center gap-2">
-              <span className="mono-meta text-sm text-gray-400">Document Context <span className="opacity-50">(optional)</span></span>
+              <span className="mono-meta text-sm text-gray-600 dark:text-gray-400">Document Context <span className="opacity-50">(optional)</span></span>
               {documentContext && (
-                <span className="text-xs text-violet-400 ml-2">
+                <span className="text-xs text-indigo-600 dark:text-violet-400 ml-2">
                   {estimateTokens(documentContext).toLocaleString()} tokens
                 </span>
               )}
             </div>
-            <ChevronDown size={16} className={`text-gray-400 transition-transform ${docContextExpanded ? "rotate-180" : ""}`} />
+            <ChevronDown size={16} className={`text-gray-600 dark:text-gray-400 transition-transform ${docContextExpanded ? "rotate-180" : ""}`} />
           </button>
 
           {docContextExpanded && (
