@@ -434,7 +434,7 @@ export default function Home() {
           </p>
           <button
             onClick={() => setSetupModalOpen(true)}
-            className="bg-indigo-600 dark:bg-violet-600 hover:bg-indigo-700 dark:hover:bg-violet-700 text-white font-medium px-6 py-2.5 rounded-lg transition-colors text-sm"
+            className="bg-gray-900 dark:bg-violet-600 hover:bg-gray-800 dark:hover:bg-violet-700 text-white font-semibold px-8 py-3 rounded-lg transition-colors text-sm shadow-lg hover:shadow-xl"
           >
             Start a New Council
           </button>
