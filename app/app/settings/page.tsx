@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Moon, Sun } from "lucide-react";
+import { useTheme } from "@/lib/theme-context";
 
 export default function Settings() {
+  const { isDark, toggleTheme } = useTheme();
+
   return (
     <div className="max-w-[1600px] mx-auto px-6 pt-16 pb-32">
       {/* Back button */}
@@ -23,6 +26,34 @@ export default function Settings() {
 
       {/* Settings sections */}
       <div className="space-y-8">
+        {/* Theme */}
+        <section className="border border-glass bg-[#0F0F1A] rounded-lg p-8">
+          <h2 className="text-xl font-bold text-white mb-4">Appearance</h2>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-300 font-medium">Dark Mode</p>
+              <p className="text-sm text-gray-500 mt-1">
+                {isDark ? "Currently using dark mode" : "Currently using light mode"}
+              </p>
+            </div>
+            <button
+              onClick={toggleTheme}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-700 text-white transition-colors"
+            >
+              {isDark ? (
+                <>
+                  <Sun size={18} />
+                  Switch to Light
+                </>
+              ) : (
+                <>
+                  <Moon size={18} />
+                  Switch to Dark
+                </>
+              )}
+            </button>
+          </div>
+        </section>
         {/* API Configuration */}
         <section className="border border-glass bg-[#0F0F1A] rounded-lg p-8">
           <h2 className="text-xl font-bold text-white mb-4">API Configuration</h2>

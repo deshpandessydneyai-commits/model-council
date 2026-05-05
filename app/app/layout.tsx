@@ -4,6 +4,7 @@ import "./globals.css";
 import { Footer } from "@/components/Footer";
 import { Sidebar } from "@/components/Sidebar";
 import { SetupModalProvider } from "@/lib/setup-modal-context";
+import { ThemeProvider } from "@/lib/theme-context";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -23,18 +24,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased dark`}>
+    <html lang="en" className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-full flex bg-[#0A0A0A] text-white dark-theme">
-        <SetupModalProvider>
-          {/* Sidebar */}
-          <Sidebar currentPage="home" />
+        <ThemeProvider>
+          <SetupModalProvider>
+            {/* Sidebar */}
+            <Sidebar currentPage="home" />
 
-          {/* Main content area */}
-          <div className="flex-1 ml-64 flex flex-col">
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
-        </SetupModalProvider>
+            {/* Main content area */}
+            <div className="flex-1 ml-64 flex flex-col">
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </div>
+          </SetupModalProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
