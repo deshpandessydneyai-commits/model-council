@@ -38,13 +38,13 @@ export function Modal({ isOpen, onClose, title, children, size = "md" }: ModalPr
       />
 
       {/* Modal */}
-      <div className={`relative ${sizeClasses[size]} w-full mx-4 glass-card overflow-hidden`}>
+      <div className={`relative ${sizeClasses[size]} w-full mx-4 glass-card overflow-hidden bg-white dark:bg-[#0F0F1A]`}>
         {/* Header */}
         <div className="flex items-center justify-between border-b border-glass px-6 py-4">
-          <h2 className="text-xl font-bold text-white">{title}</h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">{title}</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors"
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white transition-colors"
           >
             <X size={24} />
           </button>
