@@ -42,11 +42,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setIsDark((prev) => !prev);
   };
 
-  // Prevent hydration mismatch
-  if (!mounted) {
-    return <>{children}</>;
-  }
-
+  // Always provide context to prevent hydration mismatch
   return (
     <ThemeContext.Provider value={{ isDark, toggleTheme }}>
       {children}
