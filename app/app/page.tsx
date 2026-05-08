@@ -615,7 +615,7 @@ export default function Home() {
           <button
             onClick={() => convene()}
             disabled={running || !prompt.trim()}
-            className="group flex items-center gap-3 border border-violet-500 px-8 py-4 mono-meta text-violet-400 disabled:opacity-30 hover:bg-violet-500/10 transition-all disabled:hover:bg-transparent disabled:border-gray-600 disabled:text-gray-500"
+            className="group flex items-center gap-3 px-8 py-4 mono-meta font-semibold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-violet-500 to-violet-600 hover:from-violet-600 hover:to-violet-700 text-white shadow-lg hover:shadow-violet-500/50 disabled:from-gray-600 disabled:to-gray-700 disabled:shadow-none"
           >
             {running ? (
               <>
