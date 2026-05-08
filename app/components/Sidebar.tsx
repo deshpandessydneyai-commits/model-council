@@ -1,10 +1,9 @@
 "use client";
 
-import { Clock, Settings, HelpCircle, Plus, MoreVertical } from "lucide-react";
+import { Clock, Settings, HelpCircle, Plus } from "lucide-react";
 import Link from "next/link";
-import { Suspense } from "react";
+import { useState, useEffect } from "react";
 import { useSetupModal } from "@/lib/setup-modal-context";
-import { CreditsData } from "./CreditsData";
 
 type SidebarProps = {
   onNewCouncil?: () => void;
@@ -13,6 +12,28 @@ type SidebarProps = {
 
 export function Sidebar({ onNewCouncil, currentPage = "home" }: SidebarProps) {
   const { setIsOpen } = useSetupModal();
+  const [credits, setCredits] = useState<string>("—");
+  const [creditsColor, setCreditsColor] = useState<string>("#9CA3AF");
+
+  useEffect(() => {
+    const fetchCredits = async () => {
+      try {
+        const res = await fetch("/api/credits");
+        if (res.ok) {
+          const data = await res.json();
+          const remaining = data.remaining ?? 0;
+          const color = remaining < 1 ? "#dc2626" : remaining < 3 ? "#d97706" : "#16a34a";
+          setCredits(`$${remaining.toFixed(2)}`);
+          setCreditsColor(color);
+        } else {
+          setCredits("—");
+        }
+      } catch {
+        setCredits("—");
+      }
+    };
+    fetchCredits();
+  }, []);
 
   const navItems = [
     { id: "new", label: "New Council", icon: Plus, onClick: () => setIsOpen(true) },
@@ -74,12 +95,23 @@ export function Sidebar({ onNewCouncil, currentPage = "home" }: SidebarProps) {
       </nav>
 
       {/* Footer */}
-      <div className="border-t border-gray-300 dark:border-glass px-3 py-4">
+      <div className="border-t border-gray-300 dark:border-glass px-3 py-4 space-y-4">
+        {/* Model Council Branding */}
+        <div className="px-2">
+          <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-tight">
+            model<br />council
+          </h3>
+          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+            Debate chamber for frontier models
+          </p>
+        </div>
+
+        {/* Credits */}
         <div className="glass-card px-4 py-3 space-y-2">
           <div className="text-xs text-gray-600 dark:text-gray-500">Credits</div>
-          <Suspense fallback={<div className="text-sm font-bold text-gray-500">Loading...</div>}>
-            <CreditsData />
-          </Suspense>
+          <div className="text-sm font-bold" style={{ color: creditsColor }}>
+            {credits}
+          </div>
         </div>
       </div>
     </aside>
