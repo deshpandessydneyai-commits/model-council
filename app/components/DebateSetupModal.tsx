@@ -136,7 +136,7 @@ export function DebateSetupModal({ isOpen, onClose, onStart, isLoading = false }
             placeholder="Ask the council anything. Be specific for better insights..."
             rows={4}
             disabled={isLoading}
-            className="w-full border border-gray-300 dark:border-glass bg-white dark:bg-[#1A1A2E] p-4 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:outline-none focus:border-indigo-500 dark:focus:border-violet-500 focus:bg-gray-50 dark:focus:bg-[#222235] transition-colors disabled:opacity-50"
+            className="w-full border border-[#E2E0DA] dark:border-glass bg-[#EEEDEA] dark:bg-[#1A1A2E] p-4 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:outline-none focus:border-indigo-500 dark:focus:border-violet-500 focus:bg-[#F5F4F0] dark:focus:bg-[#222235] transition-colors disabled:opacity-50"
           />
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
             Include context, constraints, and what matters to you for better analysis.
@@ -191,7 +191,7 @@ export function DebateSetupModal({ isOpen, onClose, onStart, isLoading = false }
               {Object.entries(stakeContexts).map(([key, context]) => (
                 <label
                   key={key}
-                  className="flex items-start gap-3 p-3 border border-gray-300 dark:border-glass rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-overlay transition-colors"
+                  className="flex items-start gap-3 p-3 border border-[#E2E0DA] dark:border-glass rounded-lg cursor-pointer hover:bg-[#F0EFEB] dark:hover:bg-dark-overlay transition-colors"
                 >
                   <input
                     type="radio"
@@ -234,7 +234,7 @@ export function DebateSetupModal({ isOpen, onClose, onStart, isLoading = false }
         )}
 
         {/* Settings Section */}
-        <div className="border-t border-gray-300 dark:border-glass pt-6">
+        <div className="border-t border-[#E2E0DA] dark:border-glass pt-6">
           <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             ⚙️ Council Settings
           </h3>
@@ -268,7 +268,7 @@ export function DebateSetupModal({ isOpen, onClose, onStart, isLoading = false }
         </div>
 
         {/* Start Button */}
-        <div className="border-t border-gray-300 dark:border-glass pt-6">
+        <div className="border-t border-[#E2E0DA] dark:border-glass pt-6">
           <button
             onClick={handleStart}
             disabled={!prompt.trim() || isLoading || (validation.severity === "error" && !validation.isValid)}

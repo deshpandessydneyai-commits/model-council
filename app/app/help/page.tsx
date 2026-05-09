@@ -5,7 +5,7 @@ import { ArrowLeft } from "lucide-react";
 
 export default function Help() {
   return (
-    <div className="max-w-[1600px] mx-auto px-6 pt-16 pb-32 min-h-screen bg-white dark:bg-[#0A0A0A]">
+    <div className="max-w-[1600px] mx-auto px-6 pt-16 pb-32 min-h-screen bg-[#F5F4F0] dark:bg-[#0A0A0A]">
       {/* Back button */}
       <Link
         href="/"
@@ -24,7 +24,7 @@ export default function Help() {
       {/* FAQ sections */}
       <div className="space-y-8">
         {/* Getting Started */}
-        <section className="border border-gray-300 dark:border-glass bg-gray-50 dark:bg-[#0F0F1A] rounded-lg p-8">
+        <section className="border border-[#E2E0DA] dark:border-glass bg-white dark:bg-[#0F0F1A] rounded-lg p-8">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Getting Started</h2>
           <div className="space-y-6">
             <div>
@@ -56,7 +56,7 @@ export default function Help() {
         </section>
 
         {/* How It Works */}
-        <section className="border border-gray-300 dark:border-glass bg-gray-50 dark:bg-[#0F0F1A] rounded-lg p-8">
+        <section className="border border-[#E2E0DA] dark:border-glass bg-white dark:bg-[#0F0F1A] rounded-lg p-8">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">How Debates Work</h2>
           <div className="space-y-6">
             <div>
@@ -87,7 +87,7 @@ export default function Help() {
         </section>
 
         {/* Decision Context & GPS Framework */}
-        <section className="border border-gray-300 dark:border-glass bg-gray-50 dark:bg-[#0F0F1A] rounded-lg p-8">
+        <section className="border border-[#E2E0DA] dark:border-glass bg-white dark:bg-[#0F0F1A] rounded-lg p-8">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Decision Context (GPS Framework)</h2>
           <div className="space-y-6">
             <div>
@@ -97,23 +97,23 @@ export default function Help() {
               </p>
             </div>
             <div className="space-y-3">
-              <div className="p-3 bg-gray-100 dark:bg-[#1A1A2E] rounded border border-gray-200 dark:border-gray-700">
+              <div className="p-3 bg-[#F0EFEB] dark:bg-[#1A1A2E] rounded border border-[#E2E0DA] dark:border-gray-700">
                 <p className="text-sm font-semibold text-indigo-700 dark:text-violet-300">📊 Exploratory</p>
                 <p className="text-sm text-gray-700 dark:text-gray-300">Low-risk brainstorming. Focus on creative thinking and multiple angles.</p>
               </div>
-              <div className="p-3 bg-gray-100 dark:bg-[#1A1A2E] rounded border border-gray-200 dark:border-gray-700">
+              <div className="p-3 bg-[#F0EFEB] dark:bg-[#1A1A2E] rounded border border-[#E2E0DA] dark:border-gray-700">
                 <p className="text-sm font-semibold text-indigo-700 dark:text-violet-300">✅ Implemented</p>
                 <p className="text-sm text-gray-700 dark:text-gray-300">Already decided. Test for blind spots and alternative approaches.</p>
               </div>
-              <div className="p-3 bg-gray-100 dark:bg-[#1A1A2E] rounded border border-gray-200 dark:border-gray-700">
+              <div className="p-3 bg-[#F0EFEB] dark:bg-[#1A1A2E] rounded border border-[#E2E0DA] dark:border-gray-700">
                 <p className="text-sm font-semibold text-indigo-700 dark:text-violet-300">⚠️ Critical</p>
                 <p className="text-sm text-gray-700 dark:text-gray-300">Significant impact. Demand evidence, accountability, and bias checks.</p>
               </div>
-              <div className="p-3 bg-gray-100 dark:bg-[#1A1A2E] rounded border border-gray-200 dark:border-gray-700">
+              <div className="p-3 bg-[#F0EFEB] dark:bg-[#1A1A2E] rounded border border-[#E2E0DA] dark:border-gray-700">
                 <p className="text-sm font-semibold text-indigo-700 dark:text-violet-300">⏰ Time-Critical</p>
                 <p className="text-sm text-gray-700 dark:text-gray-300">Urgent decision. Streamline analysis and prioritize key factors.</p>
               </div>
-              <div className="p-3 bg-gray-100 dark:bg-[#1A1A2E] rounded border border-gray-200 dark:border-gray-700">
+              <div className="p-3 bg-[#F0EFEB] dark:bg-[#1A1A2E] rounded border border-[#E2E0DA] dark:border-gray-700">
                 <p className="text-sm font-semibold text-indigo-700 dark:text-violet-300">💰 Resource-Constrained</p>
                 <p className="text-sm text-gray-700 dark:text-gray-300">Limited budget/time/options. Focus on practical trade-offs.</p>
               </div>
@@ -128,7 +128,7 @@ export default function Help() {
         </section>
 
         {/* Features */}
-        <section className="border border-gray-300 dark:border-glass bg-gray-50 dark:bg-[#0F0F1A] rounded-lg p-8">
+        <section className="border border-[#E2E0DA] dark:border-glass bg-white dark:bg-[#0F0F1A] rounded-lg p-8">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Features</h2>
           <div className="space-y-6">
             <div>
@@ -159,7 +159,7 @@ export default function Help() {
         </section>
 
         {/* Costs & Billing */}
-        <section className="border border-gray-300 dark:border-glass bg-gray-50 dark:bg-[#0F0F1A] rounded-lg p-8">
+        <section className="border border-[#E2E0DA] dark:border-glass bg-white dark:bg-[#0F0F1A] rounded-lg p-8">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Costs & Billing</h2>
           <div className="space-y-6">
             <div>
@@ -184,7 +184,7 @@ export default function Help() {
         </section>
 
         {/* Troubleshooting */}
-        <section className="border border-gray-300 dark:border-glass bg-gray-50 dark:bg-[#0F0F1A] rounded-lg p-8">
+        <section className="border border-[#E2E0DA] dark:border-glass bg-white dark:bg-[#0F0F1A] rounded-lg p-8">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Troubleshooting</h2>
           <div className="space-y-6">
             <div>
@@ -221,7 +221,7 @@ export default function Help() {
         </section>
 
         {/* Tips & Tricks */}
-        <section className="border border-gray-300 dark:border-glass bg-gray-50 dark:bg-[#0F0F1A] rounded-lg p-8">
+        <section className="border border-[#E2E0DA] dark:border-glass bg-white dark:bg-[#0F0F1A] rounded-lg p-8">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Tips & Tricks</h2>
           <div className="space-y-4 text-gray-700 dark:text-gray-300">
             <p>
@@ -244,7 +244,7 @@ export default function Help() {
       </div>
 
       {/* Footer */}
-      <div className="mt-16 pt-8 border-t border-gray-300 dark:border-glass text-sm text-gray-600 dark:text-gray-500">
+      <div className="mt-16 pt-8 border-t border-[#E2E0DA] dark:border-glass text-sm text-gray-600 dark:text-gray-500">
         <p>
           Still have questions? Check out the <a href="https://github.com/deshpandessydneyai-commits/model-council" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-violet-400 hover:text-indigo-700 dark:hover:text-violet-300">README on GitHub</a> or visit <a href="https://openrouter.ai" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-violet-400 hover:text-indigo-700 dark:hover:text-violet-300">OpenRouter docs</a>.
         </p>

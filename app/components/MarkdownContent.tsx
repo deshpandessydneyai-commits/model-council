@@ -1,159 +1,115 @@
-export function MarkdownContent({ content }: { content: string }) {
-  // Simple markdown parser for the most common cases
-  const parseMarkdown = (text: string) => {
-    const lines = text.split("\n");
-    const elements: React.ReactNode[] = [];
-    let codeBlock = false;
-    let codeContent = "";
-    let listItems: string[] = [];
+"use client";
 
-    const flushCodeBlock = (key: string) => {
-      if (codeContent) {
-        elements.push(
-          <pre
-            key={key}
-            className="bg-gray-100 dark:bg-[#1A1A2E] border border-gray-300 dark:border-glass rounded px-3 py-2 overflow-x-auto text-xs font-mono my-2"
-          >
-            <code className="text-gray-900 dark:text-gray-300">{codeContent}</code>
-          </pre>
-        );
-        codeContent = "";
-      }
-    };
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import type { Components } from "react-markdown";
 
-    const flushListItems = (key: string) => {
-      if (listItems.length > 0) {
-        elements.push(
-          <ul key={key} className="list-disc list-inside my-2 space-y-1 text-sm">
-            {listItems.map((item, i) => (
-              <li key={i} className="text-gray-700 dark:text-gray-300">
-                {item.replace(/^[-*]\s+/, "")}
-              </li>
-            ))}
-          </ul>
-        );
-        listItems = [];
-      }
-    };
+const components: Components = {
+  // Headings
+  h1: ({ children }) => (
+    <h1 className="text-lg font-bold text-gray-900 dark:text-white mt-4 mb-2 leading-snug">{children}</h1>
+  ),
+  h2: ({ children }) => (
+    <h2 className="text-base font-bold text-gray-900 dark:text-white mt-4 mb-2 leading-snug">{children}</h2>
+  ),
+  h3: ({ children }) => (
+    <h3 className="text-sm font-bold text-gray-900 dark:text-white mt-3 mb-1.5 leading-snug">{children}</h3>
+  ),
 
-    lines.forEach((line, i) => {
-      // Code blocks
-      if (line.startsWith("```")) {
-        if (codeBlock) {
-          flushCodeBlock(`code-${i}`);
-          codeBlock = false;
-        } else {
-          flushListItems(`list-before-${i}`);
-          codeBlock = true;
-        }
-        return;
-      }
+  // Paragraphs
+  p: ({ children }) => (
+    <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300 mb-3">{children}</p>
+  ),
 
-      if (codeBlock) {
-        codeContent += (codeContent ? "\n" : "") + line;
-        return;
-      }
+  // Lists
+  ul: ({ children }) => (
+    <ul className="list-disc list-outside pl-5 my-2 space-y-1 text-sm text-gray-700 dark:text-gray-300">{children}</ul>
+  ),
+  ol: ({ children }) => (
+    <ol className="list-decimal list-outside pl-5 my-2 space-y-1 text-sm text-gray-700 dark:text-gray-300">{children}</ol>
+  ),
+  li: ({ children }) => (
+    <li className="leading-relaxed">{children}</li>
+  ),
 
-      // Headers
-      if (line.startsWith("### ")) {
-        flushListItems(`list-before-h3-${i}`);
-        elements.push(
-          <h3 key={`h3-${i}`} className="text-sm font-bold text-gray-900 dark:text-white mt-3 mb-2">
-            {line.replace(/^### /, "")}
-          </h3>
-        );
-        return;
-      }
+  // Inline
+  strong: ({ children }) => (
+    <strong className="font-semibold text-gray-900 dark:text-white">{children}</strong>
+  ),
+  em: ({ children }) => (
+    <em className="italic text-gray-700 dark:text-gray-300">{children}</em>
+  ),
 
-      if (line.startsWith("## ")) {
-        flushListItems(`list-before-h2-${i}`);
-        elements.push(
-          <h2 key={`h2-${i}`} className="text-base font-bold text-gray-900 dark:text-white mt-4 mb-2">
-            {line.replace(/^## /, "")}
-          </h2>
-        );
-        return;
-      }
+  // Links — open in new tab safely
+  a: ({ href, children }) => (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-indigo-600 dark:text-violet-400 underline underline-offset-2 hover:text-indigo-800 dark:hover:text-violet-300 transition-colors"
+    >
+      {children}
+    </a>
+  ),
 
-      if (line.startsWith("# ")) {
-        flushListItems(`list-before-h1-${i}`);
-        elements.push(
-          <h1 key={`h1-${i}`} className="text-lg font-bold text-gray-900 dark:text-white mt-4 mb-2">
-            {line.replace(/^# /, "")}
-          </h1>
-        );
-        return;
-      }
-
-      // List items
-      if (line.match(/^[-*]\s+/)) {
-        listItems.push(line);
-        return;
-      }
-
-      // Empty lines
-      if (line.trim() === "") {
-        flushListItems(`list-${i}`);
-        if (elements.length > 0 && elements[elements.length - 1] !== "\n") {
-          elements.push(<div key={`space-${i}`} className="h-2" />);
-        }
-        return;
-      }
-
-      // Regular paragraphs with inline formatting
-      flushListItems(`list-before-p-${i}`);
-      const formattedLine = formatInlineMarkdown(line);
-      elements.push(
-        <p key={`p-${i}`} className="text-sm leading-relaxed text-gray-700 dark:text-gray-300 mb-2">
-          {formattedLine}
-        </p>
+  // Code
+  code: ({ className, children, ...props }) => {
+    const isBlock = className?.includes("language-");
+    if (isBlock) {
+      return (
+        <pre className="bg-[#EEEDEA] dark:bg-[#1A1A2E] border border-[#E2E0DA] dark:border-glass rounded-lg px-4 py-3 overflow-x-auto text-xs font-mono my-3 scrollbar-theme">
+          <code className="text-gray-800 dark:text-gray-300">{children}</code>
+        </pre>
       );
-    });
+    }
+    return (
+      <code className="bg-[#EEEDEA] dark:bg-[#1A1A2E] text-indigo-700 dark:text-violet-300 px-1.5 py-0.5 rounded text-xs font-mono">
+        {children}
+      </code>
+    );
+  },
 
-    flushCodeBlock("code-end");
-    flushListItems("list-end");
+  // Tables
+  table: ({ children }) => (
+    <div className="overflow-x-auto my-4 rounded-lg border border-[#E2E0DA] dark:border-glass">
+      <table className="w-full text-sm border-collapse">{children}</table>
+    </div>
+  ),
+  thead: ({ children }) => (
+    <thead className="bg-[#F0EFEB] dark:bg-[#1A1A2E]">{children}</thead>
+  ),
+  tbody: ({ children }) => (
+    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">{children}</tbody>
+  ),
+  tr: ({ children }) => (
+    <tr className="hover:bg-[#EEEDEA] dark:hover:bg-white/5 transition-colors">{children}</tr>
+  ),
+  th: ({ children }) => (
+    <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+      {children}
+    </th>
+  ),
+  td: ({ children }) => (
+    <td className="px-4 py-2.5 text-gray-700 dark:text-gray-300">{children}</td>
+  ),
 
-    return elements;
-  };
+  // Blockquote
+  blockquote: ({ children }) => (
+    <blockquote className="border-l-4 border-indigo-300 dark:border-violet-600 pl-4 my-3 text-gray-600 dark:text-gray-400 italic">
+      {children}
+    </blockquote>
+  ),
 
-  const formatInlineMarkdown = (text: string) => {
-    const parts: React.ReactNode[] = [];
-    let lastIndex = 0;
+  // Horizontal rule
+  hr: () => <hr className="my-4 border-[#E2E0DA] dark:border-gray-700" />,
+};
 
-    // Bold
-    const boldRegex = /\*\*([^*]+)\*\*/g;
-    let match;
-
-    const processText = (str: string) => {
-      const elements: React.ReactNode[] = [];
-      let lastIdx = 0;
-      let boldMatch;
-
-      while ((boldMatch = boldRegex.exec(str)) !== null) {
-        if (boldMatch.index > lastIdx) {
-          elements.push(str.substring(lastIdx, boldMatch.index));
-        }
-        elements.push(
-          <strong key={boldMatch.index} className="font-bold text-gray-900 dark:text-white">
-            {boldMatch[1]}
-          </strong>
-        );
-        lastIdx = boldMatch.index + boldMatch[0].length;
-      }
-
-      if (lastIdx < str.length) {
-        elements.push(str.substring(lastIdx));
-      }
-
-      return elements;
-    };
-
-    return processText(text);
-  };
-
+export function MarkdownContent({ content }: { content: string }) {
   return (
-    <div className="prose-sm max-w-none">
-      {parseMarkdown(content)}
+    <div className="max-w-none text-sm">
+      <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
+        {content}
+      </ReactMarkdown>
     </div>
   );
 }

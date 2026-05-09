@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronDown, Check, AlertCircle, X } from "lucide-react";
+import { Check, AlertCircle, X } from "lucide-react";
 import type { VerdictRow } from "@/lib/council";
 
 // Helper to determine consensus level
@@ -31,18 +30,6 @@ function getConsensusLevel(alignment: number): { label: string; bgColor: string;
 }
 
 export function VerdictTable({ rows }: { rows: VerdictRow[] }) {
-  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
-
-  const toggleRow = (modelId: string) => {
-    const newSet = new Set(expandedRows);
-    if (newSet.has(modelId)) {
-      newSet.delete(modelId);
-    } else {
-      newSet.add(modelId);
-    }
-    setExpandedRows(newSet);
-  };
-
   if (rows.length === 0) {
     return (
       <div className="mono-meta text-muted">
@@ -68,72 +55,56 @@ export function VerdictTable({ rows }: { rows: VerdictRow[] }) {
         <tbody>
           {rows.map((r, idx) => {
             const isWhiteRow = idx % 2 === 0;
-            const textColor = isWhiteRow ? "text-gray-900 dark:text-white" : "text-gray-900 dark:text-white";
             const consensus = getConsensusLevel(r.positionAlignment);
             return (
-            <tr
-              key={r.modelId}
-              className={`border-b border-gray-200 dark:border-white/10 align-top transition-colors hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer ${
-                isWhiteRow ? "bg-white dark:bg-[#0A0A0A]" : "bg-gray-50 dark:bg-white/[0.02]"
-              }`}
-              onClick={() => toggleRow(r.modelId)}
-            >
-              <td className="py-6 pr-4 headline text-lg min-w-[180px] text-gray-900 dark:text-white">
-                <div className="flex items-center gap-2">
-                  <ChevronDown
-                    size={16}
-                    className={`transition-transform text-gray-600 dark:text-gray-400 ${
-                      expandedRows.has(r.modelId) ? "rotate-180" : ""
-                    }`}
-                  />
-                  {r.model}
-                </div>
-              </td>
-              <td className="py-6 pr-4">
-                <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md ${consensus.bgColor} ${consensus.textColor} text-xs font-semibold whitespace-nowrap`}>
-                  {consensus.icon}
-                  {consensus.label}
-                </div>
-              </td>
-              <td className={`py-6 pr-4 text-sm leading-relaxed max-w-[260px] ${textColor}`}>
-                {r.agree}
-              </td>
-              <td className={`py-6 pr-4 text-sm leading-relaxed max-w-[260px] ${textColor}`}>
-                {r.disagree}
-              </td>
-              <td className="py-6 pr-4 text-center">
-                <div className="inline-flex items-center gap-1">
-                  <span className="headline text-xl text-gray-900 dark:text-white">{r.confidence}</span>
-                  <span className="text-gray-600 dark:text-gray-400 text-xs">/5</span>
-                </div>
-              </td>
-              <td className="py-6 pr-4 text-center min-w-[100px]">
-                <div className="inline-flex flex-col items-center gap-1">
-                  <span className="text-sm font-semibold text-gray-900 dark:text-white">{r.positionAlignment}%</span>
-                  <div className="w-16 h-1.5 bg-gray-300 dark:bg-white/10 rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full"
-                      style={{
-                        width: `${r.positionAlignment}%`,
-                        backgroundColor:
-                          r.positionAlignment >= 80
-                            ? "#10b981"
-                            : r.positionAlignment >= 50
-                              ? "#f59e0b"
-                              : "#ef4444",
-                      }}
-                    />
+              <tr
+                key={r.modelId}
+                className={`border-b border-[#E2E0DA] dark:border-white/10 align-top ${
+                  isWhiteRow ? "bg-white dark:bg-[#0A0A0A]" : "bg-[#EEEDEA] dark:bg-white/[0.02]"
+                }`}
+              >
+                <td className="py-5 pr-4 min-w-[160px]">
+                  <span className="font-bold text-base text-gray-900 dark:text-white leading-snug">{r.model}</span>
+                </td>
+                <td className="py-5 pr-4">
+                  <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md ${consensus.bgColor} ${consensus.textColor} text-xs font-semibold whitespace-nowrap`}>
+                    {consensus.icon}
+                    {consensus.label}
                   </div>
-                </div>
-              </td>
-              <td className="py-6 text-sm leading-relaxed max-w-[400px] text-gray-600 dark:text-gray-400">
-                {expandedRows.has(r.modelId) ? (
-                  <p className="text-gray-900 dark:text-white">{r.reasoningTrace}</p>
-                ) : (
-                  <p className="line-clamp-1">{r.reasoningTrace}</p>
-                )}
-              </td>
-            </tr>
+                </td>
+                <td className="py-5 pr-4 text-sm leading-relaxed max-w-[220px] text-gray-700 dark:text-gray-300">
+                  {r.agree}
+                </td>
+                <td className="py-5 pr-4 text-sm leading-relaxed max-w-[220px] text-gray-700 dark:text-gray-300">
+                  {r.disagree}
+                </td>
+                <td className="py-5 pr-4 text-center">
+                  <div className="inline-flex items-center gap-0.5">
+                    <span className="text-xl font-bold text-gray-900 dark:text-white">{r.confidence}</span>
+                    <span className="text-gray-400 dark:text-gray-500 text-xs">/5</span>
+                  </div>
+                </td>
+                <td className="py-5 pr-4 text-center min-w-[90px]">
+                  <div className="inline-flex flex-col items-center gap-1">
+                    <span className="text-sm font-semibold text-gray-900 dark:text-white">{r.positionAlignment}%</span>
+                    <div className="w-14 h-1.5 bg-[#E2E0DA] dark:bg-white/10 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-700"
+                        style={{
+                          width: `${r.positionAlignment}%`,
+                          backgroundColor:
+                            r.positionAlignment >= 80 ? "#10b981"
+                            : r.positionAlignment >= 50 ? "#f59e0b"
+                            : "#ef4444",
+                        }}
+                      />
+                    </div>
+                  </div>
+                </td>
+                <td className="py-5 text-sm leading-relaxed text-gray-700 dark:text-gray-300 max-w-[380px]">
+                  {r.reasoningTrace}
+                </td>
+              </tr>
             );
           })}
         </tbody>

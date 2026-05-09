@@ -46,7 +46,7 @@ export function Sidebar({ onNewCouncil, currentPage = "home" }: SidebarProps) {
   ];
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 border-r border-gray-300 dark:border-glass bg-white dark:bg-dark-bg flex flex-col z-40">
+    <aside className="fixed left-0 top-0 h-screen w-64 border-r border-[#E2E0DA] dark:border-glass bg-[#F5F4F0] dark:bg-dark-bg flex flex-col z-40">
       {/* Navigation */}
       <nav className="flex-1 px-3 py-6 space-y-2 overflow-y-auto">
         {navItems.map((item) => {
@@ -57,7 +57,7 @@ export function Sidebar({ onNewCouncil, currentPage = "home" }: SidebarProps) {
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
                 isActive
                   ? "bg-indigo-100 dark:bg-dark-overlay text-indigo-700 dark:text-violet-400 border border-indigo-300 dark:border-violet-500/50"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-dark-overlay"
+                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-[#F0EFEB] dark:hover:bg-dark-overlay"
               }`}
             >
               <Icon size={18} />
@@ -86,7 +86,7 @@ export function Sidebar({ onNewCouncil, currentPage = "home" }: SidebarProps) {
       </nav>
 
       {/* Footer */}
-      <div className="border-t border-gray-300 dark:border-glass px-3 py-4 space-y-4 overflow-y-auto">
+      <div className="border-t border-[#E2E0DA] dark:border-glass px-3 py-4 space-y-4 overflow-y-auto">
         {/* Credits */}
         <div className="glass-card px-4 py-3 space-y-2">
           <div className="text-xs text-gray-600 dark:text-gray-500">Credits</div>

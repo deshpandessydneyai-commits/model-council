@@ -28,7 +28,7 @@ export default function RootLayout({
   // The actual page will override this via context if needed
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
-      <body className="min-h-full flex bg-white dark:bg-[#0A0A0A] text-gray-900 dark:text-white dark-theme">
+      <body className="min-h-full flex bg-[#F5F4F0] dark:bg-[#0A0A0A] text-gray-900 dark:text-white dark-theme">
         <ThemeProvider>
           <SetupModalProvider>
             <HistoryProvider>
