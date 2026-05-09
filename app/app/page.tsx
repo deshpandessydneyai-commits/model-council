@@ -8,13 +8,14 @@ import { VerdictTable } from "@/components/VerdictTable";
 import { Toast, type Toast as ToastType } from "@/components/Toast";
 import { ModelStatusDisplay } from "@/components/ModelStatusDisplay";
 import { DebateProgress } from "@/components/DebateProgress";
+import { FollowUpPanel } from "@/components/FollowUpPanel";
 import { DebateSetupModal, type DebateConfig } from "@/components/DebateSetupModal";
 import { useSetupModal } from "@/lib/setup-modal-context";
 import { useHistory } from "@/lib/history-context";
 import type { CouncilEvent, VerdictRow } from "@/lib/council";
 import { buildMarkdown } from "@/lib/export";
-import { saveSession, listSessions, deleteSession, hasQuotaWarning, clearQuotaWarning } from "@/lib/history";
-import type { SavedSession } from "@/lib/history";
+import { saveSession, listSessions, deleteSession, hasQuotaWarning, clearQuotaWarning, updateSession } from "@/lib/history";
+import type { SavedSession, FollowUpQuestion } from "@/lib/history";
 import { estimateTokens, checkContextWarning } from "@/lib/tokens";
 import { getStakeContext, getAllStakeContexts } from "@/lib/stakes-config";
 import type { StakeLevel, DomainType } from "@/lib/types/stakes";
@@ -197,6 +198,11 @@ export default function Home() {
   const [docContextExpanded, setDocContextExpanded] = useState(false);
   const [stakeLevel, setStakeLevel] = useState<StakeLevel>("exploratory");
   const [detectedDomain, setDetectedDomain] = useState<DomainType>("unknown");
+
+  // Follow-up conversation state
+  const [followUps, setFollowUps] = useState<FollowUpQuestion[]>([]);
+  const [followUpRunning, setFollowUpRunning] = useState(false);
+  const followUpAbortRef = useRef<AbortController | null>(null);
   const [validation, setValidation] = useState<ValidationResult>({ isValid: false, message: "", severity: "error" });
   const prevRunningRef = useRef(false);
 
@@ -247,6 +253,7 @@ export default function Home() {
   const restoreSession = useCallback((session: SavedSession) => {
     setPrompt(session.prompt);
     setVerdict(session.verdict as Verdict | null);
+    setFollowUps(session.followUps || []);
     const restored: Record<number, RoundState> = {};
     session.rounds.forEach((r, i) => {
       const n = i + 1;
@@ -452,6 +459,127 @@ export default function Home() {
       setRunning(false);
     }
   }, [prompt, forceR3, webSearch, documentContext, running, stakeLevel, detectedDomain]);
+
+  const submitFollowUp = useCallback(async (question: string) => {
+    if (!question.trim() || !verdict) return;
+
+    setFollowUpRunning(true);
+    setError(null);
+
+    // Build round summaries for context
+    const roundSummaries = orderedRounds.map((n) => {
+      const round = rounds[n];
+      const summaries = COUNCIL_MODELS.map((m) => {
+        const text = round.outputs[m.id] || "(no response)";
+        const preview = text.substring(0, 200) + (text.length > 200 ? "..." : "");
+        return `- ${m.displayName}: ${preview}`;
+      }).join("\n");
+      return `**${round.label}:**\n${summaries}`;
+    });
+
+    const ctrl = new AbortController();
+    followUpAbortRef.current = ctrl;
+
+    try {
+      const timeoutId = setTimeout(() => ctrl.abort(), 5 * 60 * 1000);
+
+      try {
+        const res = await fetch("/api/council/follow-up", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            question,
+            previousContext: {
+              originalPrompt: prompt,
+              finalAnswer: verdict.finalAnswer,
+              consensusScore: verdict.consensusScore,
+              roundSummaries,
+            },
+            includeSynthesis: false,
+          }),
+          signal: ctrl.signal,
+        });
+
+        if (!res.ok || !res.body) {
+          const text = await res.text().catch(() => "");
+          throw new Error(text || `Request failed: ${res.status}`);
+        }
+
+        // Track responses as they come in
+        const responses: Record<string, string> = {};
+        const currentModels = new Set<string>();
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+
+          const messages = buffer.split("\n\n");
+          buffer = messages.pop() || "";
+
+          for (const message of messages) {
+            if (!message.trim()) continue;
+
+            const lines = message.split("\n");
+            const dataLines = lines
+              .filter((l) => l.startsWith("data: "))
+              .map((l) => l.slice(6));
+
+            if (dataLines.length === 0) continue;
+
+            const jsonString = dataLines.join("\n");
+            try {
+              const event = JSON.parse(jsonString) as any;
+
+              if (event.type === "model_start") {
+                currentModels.add(event.modelId);
+              } else if (event.type === "token") {
+                responses[event.modelId] = (responses[event.modelId] || "") + event.delta;
+              } else if (event.type === "model_done") {
+                responses[event.modelId] = event.text;
+              } else if (event.type === "error") {
+                console.error("Follow-up error:", event.message);
+              }
+            } catch (err) {
+              console.error("Failed to parse SSE event:", { raw: jsonString, error: err instanceof Error ? err.message : String(err) });
+            }
+          }
+        }
+
+        // Create follow-up record
+        const followUpRecord: FollowUpQuestion = {
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          question,
+          timestamp: Date.now(),
+          responses,
+        };
+
+        setFollowUps((prev) => [...prev, followUpRecord]);
+
+        // Update session with new follow-up
+        const savedSessions = listSessions();
+        const currentSession = savedSessions.find((s) => s.id === history[0]?.id);
+        if (currentSession) {
+          updateSession(currentSession.id, {
+            followUps: [...(currentSession.followUps || []), followUpRecord],
+          });
+        }
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    } catch (err) {
+      if (err instanceof Error && err.name !== "AbortError") {
+        setError(err.message);
+      }
+    } finally {
+      setFollowUpRunning(false);
+      followUpAbortRef.current = null;
+    }
+  }, [verdict, prompt, orderedRounds, rounds, history]);
 
   const orderedRounds = useMemo(
     () => Object.keys(rounds).map((k) => Number(k)).sort((a, b) => a - b),
@@ -947,6 +1075,14 @@ export default function Home() {
                 onExport={exportMd}
               />
             </section>
+
+            {/* Follow-Up Questions */}
+            <FollowUpPanel
+              followUps={followUps}
+              onSubmitFollowUp={submitFollowUp}
+              isLoading={followUpRunning}
+              hasVerdict={!!verdict}
+            />
           </>
         )}
       </div>

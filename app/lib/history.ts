@@ -1,5 +1,13 @@
 import type { VerdictRow } from "./council";
 
+export type FollowUpQuestion = {
+  id: string;
+  question: string;
+  timestamp: number;
+  responses: Record<string, string>;
+  synthesisResponse?: string;
+};
+
 export type SavedSession = {
   id: string;
   timestamp: number;
@@ -12,6 +20,7 @@ export type SavedSession = {
     disagreementReason: string;
     consensusScore: number;
   } | null;
+  followUps?: FollowUpQuestion[];
 };
 
 const STORAGE_KEY = "council-history";
@@ -64,6 +73,12 @@ export function listSessions(): SavedSession[] {
   } catch {
     return [];
   }
+}
+
+export function updateSession(id: string, updates: Partial<SavedSession>): void {
+  const all = listSessions();
+  const updated = all.map((s) => (s.id === id ? { ...s, ...updates } : s));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
 }
 
 export function deleteSession(id: string): void {
