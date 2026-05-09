@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=375, initial-scale=1.0">
+<title>Mobile A2 — Chamber Refined</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+
+  :root {
+    --bg: #0E0E10;
+    --bg-card: #161618;
+    --bg-inset: #1C1C1F;
+    --border: rgba(255,255,255,0.07);
+    --border-strong: rgba(255,255,255,0.12);
+    --text-primary: #F0EEE9;
+    --text-secondary: #8A8A90;
+    --text-muted: #4A4A52;
+    --accent: #6366F1;         /* single accent — indigo, used ONLY for active state */
+    --green: #34D399;          /* done state only */
+    --amber: #F59E0B;          /* warning only */
+  }
+
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text-primary); width: 375px; margin: 0 auto; min-height: 812px; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* ── STATUS BAR ── */
+  .status-bar { height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
+  .status-time { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+
+  /* ── TOP NAV ── */
+  .top-nav { padding: 0 16px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .brand { font-size: 17px; font-weight: 600; letter-spacing: -0.03em; color: var(--text-primary); }
+  .brand-dot { color: var(--accent); }
+  .avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--bg-inset); border: 1px solid var(--border-strong); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--text-secondary); }
+
+  /* ── STAGE PROGRESS ── purely typographic, no color fill */
+  .stage-bar { display: flex; align-items: center; padding: 10px 16px; gap: 6px; border-bottom: 1px solid var(--border); }
+  .stage-step { display: flex; align-items: center; gap: 5px; }
+  .ss-num { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; flex-shrink: 0; }
+  .ss-label { font-size: 10px; font-weight: 500; letter-spacing: 0.01em; }
+  .stage-line { flex: 1; height: 1px; background: var(--border); }
+
+  /* ── QUESTION STRIP ── */
+  .question-strip { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+  .qs-eyebrow { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 5px; }
+  .qs-text { font-size: 14px; font-weight: 500; line-height: 1.5; color: var(--text-primary); }
+  .qs-meta { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+  .qs-meta-item { font-size: 10px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+  .qs-meta-item::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0; }
+  .qs-meta-item:first-child::before { display: none; }
+
+  /* ── ROUND LABEL ── */
+  .round-label { padding: 10px 16px 6px; display: flex; align-items: center; gap: 8px; }
+  .rl-indicator { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .rl-text { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; }
+  .rl-count { margin-left: auto; font-size: 10px; color: var(--text-muted); }
+
+  /* ── MODEL CARD — no colored backgrounds, grayscale ── */
+  .model-card { margin: 0 12px 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; position: relative; overflow: hidden; transition: border-color 0.3s; }
+  .model-card.active { border-color: var(--border-strong); }
+  .model-card.waiting { opacity: 0.4; }
+
+  /* single pixel accent line at bottom when active — not colored cards */
+  .card-active-line { position: absolute; bottom: 0; left: 0; right: 0; height: 1px; background: var(--accent); opacity: 0; transition: opacity 0.3s; }
+  .model-card.active .card-active-line { opacity: 1; }
+  /* shimmer on active line */
+  .card-active-line.shimmer { background: linear-gradient(90deg, transparent, var(--accent), transparent); background-size: 200%; animation: sh 1.8s ease-in-out infinite; opacity: 1; }
+  @keyframes sh { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+
+  .card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+  .card-model { display: flex; align-items: center; gap: 9px; }
+
+  /* model initial — all neutral, no color per model */
+  .m-initial { width: 28px; height: 28px; background: var(--bg-inset); border: 1px solid var(--border-strong); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--text-secondary); flex-shrink: 0; }
+  .m-name { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+  .m-role { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+
+  .card-badge { font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 6px; }
+  .badge-done { color: var(--green); background: rgba(52,211,153,0.08); border: 1px solid rgba(52,211,153,0.15); }
+  .badge-writing { color: var(--accent); background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.15); }
+  .badge-wait { color: var(--text-muted); }
+
+  .card-text { font-size: 13px; line-height: 1.7; color: rgba(240,238,233,0.75); }
+  .card-text.muted { color: var(--text-muted); }
+
+  .card-footer { margin-top: 10px; display: flex; align-items: center; justify-content: space-between; }
+
+  /* confidence — purely typographic with minimal bars */
+  .conf-wrap { display: flex; align-items: center; gap: 5px; }
+  .conf-bars { display: flex; gap: 2px; }
+  .conf-bar { width: 12px; height: 2px; border-radius: 1px; }
+  .conf-bar.filled { background: var(--text-secondary); }
+  .conf-bar.empty { background: var(--bg-inset); }
+
+  /* writing dots — monochrome */
+  .dots { display: inline-flex; gap: 3px; align-items: flex-end; height: 10px; margin-left: 6px; }
+  .dots span { width: 3px; border-radius: 2px; background: var(--text-muted); animation: db 1.3s ease-in-out infinite; }
+  .dots span:nth-child(2) { animation-delay: 0.15s; }
+  .dots span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes db { 0%,100%{height:3px} 50%{height:9px} }
+
+  /* ── VERDICT SECTION ── */
+  .verdict-section { margin: 12px; border: 1px solid var(--border-strong); border-radius: 14px; overflow: hidden; }
+  .vs-header { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 16px; }
+  .vs-score { font-size: 40px; font-weight: 700; letter-spacing: -0.04em; color: var(--text-primary); line-height: 1; }
+  .vs-score-label { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+  .vs-headline { font-size: 14px; font-weight: 500; line-height: 1.5; color: var(--text-primary); flex: 1; }
+  .vs-body { padding: 12px 16px; }
+  .vs-model-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border); }
+  .vs-model-row:last-child { border-bottom: none; }
+  .vsm-name { font-size: 12px; font-weight: 500; color: var(--text-secondary); }
+  .vsm-conf { display: flex; align-items: center; gap: 6px; }
+  .vsm-align { font-size: 10px; color: var(--text-muted); }
+
+  /* ── FOLLOW-UP ── */
+  .followup-section { margin: 0 12px 12px; border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; display: flex; align-items: center; gap: 10px; background: var(--bg-card); }
+  .fu-text { font-size: 12px; color: var(--text-muted); flex: 1; }
+  .fu-btn { background: var(--accent); color: white; font-size: 11px; font-weight: 600; padding: 7px 14px; border-radius: 8px; flex-shrink: 0; letter-spacing: 0.01em; }
+
+  /* ── BOTTOM NAV ── clean, no icons */
+  .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 375px; background: rgba(14,14,16,0.97); border-top: 1px solid var(--border); padding: 10px 0 26px; display: flex; backdrop-filter: blur(16px); }
+  .bn-item { flex: 1; text-align: center; font-size: 11px; font-weight: 500; color: var(--text-muted); padding: 4px 0; cursor: pointer; letter-spacing: 0.02em; }
+  .bn-item.active { color: var(--text-primary); }
+
+  .spacer { height: 90px; }
+  .eyebrow { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); padding: 12px 16px 4px; }
+</style>
+</head>
+<body>
+
+<!-- Status bar -->
+<div class="status-bar">
+  <span class="status-time mono">9:53</span>
+  <div style="display:flex;align-items:center;gap:5px;">
+    <svg width="15" height="11" viewBox="0 0 15 11" fill="rgba(255,255,255,0.5)"><rect x="0" y="3" width="2.5" height="8" rx="0.8"/><rect x="4" y="2" width="2.5" height="9" rx="0.8"/><rect x="8" y="0" width="2.5" height="11" rx="0.8"/><rect x="12" y="0" width="2.5" height="11" rx="0.8" opacity="0.25"/></svg>
+    <svg width="24" height="11" viewBox="0 0 24 11" fill="rgba(255,255,255,0.5)"><rect x="0" y="0.5" width="20" height="10" rx="2.5" stroke="rgba(255,255,255,0.35)" stroke-width="1" fill="rgba(255,255,255,0.08)"/><rect x="1.5" y="2" width="14" height="7" rx="1.5"/><rect x="21" y="3.5" width="2.5" height="4" rx="1" fill="rgba(255,255,255,0.35)"/></svg>
+  </div>
+</div>
+
+<!-- Top nav -->
+<div class="top-nav">
+  <span class="brand">Model Council<span class="brand-dot">.</span></span>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <span class="mono" style="font-size:10px;color:var(--text-muted);">$1.97</span>
+    <div class="avatar">N</div>
+  </div>
+</div>
+
+<!-- Stage bar — minimal, typographic -->
+<div class="stage-bar">
+  <div class="stage-step">
+    <div class="ss-num" style="background:rgba(52,211,153,0.1);color:var(--green);">✓</div>
+    <span class="ss-label" style="color:var(--green);">Pose</span>
+  </div>
+  <div class="stage-line"></div>
+  <div class="stage-step">
+    <div class="ss-num" style="background:rgba(99,102,241,0.12);color:var(--accent);">2</div>
+    <span class="ss-label" style="color:var(--accent);">Deliberate</span>
+  </div>
+  <div class="stage-line"></div>
+  <div class="stage-step">
+    <div class="ss-num" style="background:var(--bg-inset);color:var(--text-muted);">3</div>
+    <span class="ss-label" style="color:var(--text-muted);">Verdict</span>
+  </div>
+</div>
+
+<!-- Question -->
+<div class="question-strip">
+  <div class="qs-eyebrow">Question</div>
+  <div class="qs-text">"Which is the best city to live in NSW for cost of living, family life, education and sports?"</div>
+  <div class="qs-meta">
+    <span class="qs-meta-item">Personal</span>
+    <span class="qs-meta-item">Exploratory</span>
+    <span class="qs-meta-item">Round 2 of 2</span>
+  </div>
+</div>
+
+<!-- Round 1 -->
+<div class="round-label">
+  <div class="rl-indicator" style="background:var(--green);"></div>
+  <span class="rl-text" style="color:var(--green);">Round 1 — Independent</span>
+  <span class="rl-count">4 / 4</span>
+</div>
+
+<div class="model-card">
+  <div class="card-active-line"></div>
+  <div class="card-header">
+    <div class="card-model">
+      <div class="m-initial">S</div>
+      <div>
+        <div class="m-name">Claude Sonnet</div>
+        <div class="m-role">Personal Advisor</div>
+      </div>
+    </div>
+    <span class="card-badge badge-done">Done</span>
+  </div>
+  <div class="card-text">Newcastle emerges as the strongest candidate when balancing all four criteria. The Hunter region offers median house prices 40% below Sydney while maintaining strong school performance in the top quartile statewide.</div>
+  <div class="card-footer">
+    <div class="conf-wrap">
+      <div class="conf-bars">
+        <div class="conf-bar filled"></div><div class="conf-bar filled"></div><div class="conf-bar filled"></div><div class="conf-bar filled"></div><div class="conf-bar empty"></div>
+      </div>
+      <span class="mono" style="font-size:10px;color:var(--text-muted);">4/5</span>
+    </div>
+    <span class="mono" style="font-size:10px;color:var(--text-muted);">312w</span>
+  </div>
+</div>
+
+<!-- Round 2 -->
+<div class="round-label" style="margin-top:4px;">
+  <div class="rl-indicator" style="background:var(--accent);animation:pulse-a 2s ease-in-out infinite;"></div>
+  <span class="rl-text" style="color:var(--accent);">Round 2 — Critique</span>
+  <span class="rl-count">2 responding</span>
+</div>
+
+<div class="model-card">
+  <div class="card-active-line"></div>
+  <div class="card-header">
+    <div class="card-model">
+      <div class="m-initial">S</div>
+      <div>
+        <div class="m-name">Claude Sonnet</div>
+        <div class="m-role" style="color:var(--accent);font-size:10px;">↳ responding to GPT-5</div>
+      </div>
+    </div>
+    <span class="card-badge badge-done">Done</span>
+  </div>
+  <div class="card-text">GPT-5 raises a fair point on Wollongong's commuter appeal but underweights sporting infrastructure. Hunter Stadium provides a richer local sports culture — material for families prioritising sports participation over selective school proximity.</div>
+  <div class="card-footer">
+    <div class="conf-wrap">
+      <div class="conf-bars">
+        <div class="conf-bar filled"></div><div class="conf-bar filled"></div><div class="conf-bar filled"></div><div class="conf-bar filled"></div><div class="conf-bar empty"></div>
+      </div>
+      <span class="mono" style="font-size:10px;color:var(--text-muted);">4/5</span>
+    </div>
+    <span class="mono" style="font-size:10px;color:var(--text-muted);">198w</span>
+  </div>
+</div>
+
+<div class="model-card active">
+  <div class="card-active-line shimmer"></div>
+  <div class="card-header">
+    <div class="card-model">
+      <div class="m-initial">G</div>
+      <div>
+        <div class="m-name">GPT-5</div>
+        <div class="m-role" style="color:var(--accent);font-size:10px;">↳ responding to Sonnet</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:4px;">
+      <span class="card-badge badge-writing">Writing</span>
+      <div class="dots"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+  <div class="card-text muted">I acknowledge Sonnet's point on sporting culture. However the selective school access question remains — Newcastle families face longer commutes than Wollongong families accessing Sydney schools via the South Coast line<span style="display:inline-block;width:1px;height:12px;background:var(--accent);margin-left:2px;vertical-align:middle;animation:cur 0.8s step-end infinite;"></span></div>
+  <div class="card-footer">
+    <span class="mono" style="font-size:10px;color:var(--accent);">89w</span>
+  </div>
+</div>
+
+<div class="model-card waiting">
+  <div class="card-header">
+    <div class="card-model">
+      <div class="m-initial">G2</div>
+      <div><div class="m-name">Gemini 3.1</div><div class="m-role">Systems Researcher</div></div>
+    </div>
+    <span class="card-badge" style="color:var(--text-muted);font-size:10px;">Queued</span>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:5px;">
+    <div style="height:7px;background:var(--bg-inset);border-radius:3px;width:86%;"></div>
+    <div style="height:7px;background:var(--bg-inset);border-radius:3px;width:70%;"></div>
+  </div>
+</div>
+
+<div class="model-card waiting">
+  <div class="card-header">
+    <div class="card-model">
+      <div class="m-initial">Gk</div>
+      <div><div class="m-name">Grok 4.20</div><div class="m-role">Devil's Advocate</div></div>
+    </div>
+    <span class="card-badge" style="color:var(--text-muted);font-size:10px;">Queued</span>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:5px;">
+    <div style="height:7px;background:var(--bg-inset);border-radius:3px;width:78%;"></div>
+    <div style="height:7px;background:var(--bg-inset);border-radius:3px;width:60%;"></div>
+  </div>
+</div>
+
+<!-- Verdict -->
+<div class="eyebrow">Verdict</div>
+<div class="verdict-section">
+  <div class="vs-header">
+    <div>
+      <div class="vs-score">75<span style="font-size:20px;font-weight:400;color:var(--text-muted);">%</span></div>
+      <div class="vs-score-label">Strong Consensus</div>
+    </div>
+    <div class="vs-headline">"Newcastle is the clear frontrunner. Wollongong suits commuter families."</div>
+  </div>
+  <div class="vs-body">
+    <div class="vs-model-row">
+      <span class="vsm-name">Claude Sonnet</span>
+      <div class="vsm-conf">
+        <div class="conf-bars">
+          <div class="conf-bar filled"></div><div class="conf-bar filled"></div><div class="conf-bar filled"></div><div class="conf-bar filled"></div><div class="conf-bar empty"></div>
+        </div>
+        <span class="vsm-align mono" style="font-size:10px;color:var(--green);">Aligned</span>
+      </div>
+    </div>
+    <div class="vs-model-row">
+      <span class="vsm-name">GPT-5</span>
+      <div class="vsm-conf">
+        <div class="conf-bars">
+          <div class="conf-bar filled"></div><div class="conf-bar filled"></div><div class="conf-bar filled"></div><div class="conf-bar filled"></div><div class="conf-bar empty"></div>
+        </div>
+        <span class="vsm-align mono" style="font-size:10px;color:var(--green);">Aligned</span>
+      </div>
+    </div>
+    <div class="vs-model-row">
+      <span class="vsm-name">Gemini 3.1</span>
+      <div class="vsm-conf">
+        <div class="conf-bars">
+          <div class="conf-bar filled"></div><div class="conf-bar filled"></div><div class="conf-bar filled"></div><div class="conf-bar empty"></div><div class="conf-bar empty"></div>
+        </div>
+        <span class="vsm-align mono" style="font-size:10px;color:var(--amber);">Partial</span>
+      </div>
+    </div>
+    <div class="vs-model-row">
+      <span class="vsm-name">Grok 4.20</span>
+      <div class="vsm-conf">
+        <div class="conf-bars">
+          <div class="conf-bar filled"></div><div class="conf-bar filled"></div><div class="conf-bar filled"></div><div class="conf-bar filled"></div><div class="conf-bar empty"></div>
+        </div>
+        <span class="vsm-align mono" style="font-size:10px;color:var(--green);">Aligned</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Follow-up -->
+<div class="followup-section">
+  <span class="fu-text">Ask a follow-up to the council…</span>
+  <div class="fu-btn">Ask →</div>
+</div>
+
+<div class="spacer"></div>
+
+<!-- Bottom nav -->
+<div class="bottom-nav">
+  <div class="bn-item">New</div>
+  <div class="bn-item active">Council</div>
+  <div class="bn-item">History</div>
+  <div class="bn-item">Settings</div>
+</div>
+
+<div style="text-align:center;padding:6px;background:var(--bg-inset);border-top:1px solid var(--border);margin-bottom:86px;">
+  <span class="mono" style="font-size:9px;color:var(--text-muted);letter-spacing:0.1em;">CONCEPT A2 · CHAMBER REFINED · DARK · MINIMAL COLOR · 375px</span>
+</div>
+
+<style>
+@keyframes cur { 0%,100%{opacity:1} 50%{opacity:0} }
+@keyframes pulse-a { 0%,100%{opacity:1} 50%{opacity:0.35} }
+</style>
+</body>
+</html>

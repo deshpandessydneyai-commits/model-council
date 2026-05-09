@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Model Council — Chamber Final</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lora:ital,wght@0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ═══════════════════════════════════
+   TOKENS — almost entirely monochrome
+   One muted steel accent, used sparingly
+═══════════════════════════════════ */
+:root {
+  --bg:        #0C0C0E;   /* near-black, warm */
+  --bg-card:   #131315;   /* card surface */
+  --bg-inset:  #1A1A1D;   /* inset/input */
+  --bg-hover:  #1F1F23;
+
+  --border:    rgba(255,255,255,0.06);
+  --border-md: rgba(255,255,255,0.10);
+  --border-hi: rgba(255,255,255,0.16);
+
+  /* Text — white hierarchy only, no hues */
+  --t1: rgba(255,255,255,0.92);  /* primary */
+  --t2: rgba(255,255,255,0.50);  /* secondary */
+  --t3: rgba(255,255,255,0.28);  /* muted */
+  --t4: rgba(255,255,255,0.14);  /* faint */
+
+  /* Single accent — muted steel, NOT bright purple
+     Used ONLY for: active step, responding shimmer, ask button */
+  --ac:    #5C6BC0;              /* muted steel-indigo */
+  --ac-bg: rgba(92,107,192,0.08);
+  --ac-bd: rgba(92,107,192,0.20);
+
+  /* Semantic — only where meaning requires it, desaturated */
+  --ok:  rgba(255,255,255,0.75);   /* "done" — just bright text, no green */
+  --mid: rgba(255,255,255,0.40);   /* "partial" — mid text */
+
+  /* Radii */
+  --r:  10px;
+  --rl: 14px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--t1);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+.serif { font-family: 'Lora', Georgia, serif; }
+.mono  { font-family: 'JetBrains Mono', monospace; }
+
+/* ═══════════════════════════════════
+   TOP NAV
+═══════════════════════════════════ */
+.top-nav {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: rgba(12,12,14,0.95);
+  backdrop-filter: blur(12px);
+}
+.brand {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--t1);
+}
+.brand-dot { color: var(--ac); }
+
+.nav-links { display: flex; gap: 20px; }
+.nav-link {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--t3);
+  cursor: pointer;
+  letter-spacing: 0.01em;
+  transition: color 0.15s;
+}
+.nav-link:hover { color: var(--t2); }
+.nav-link.active { color: var(--t1); }
+
+.nav-right { display: flex; align-items: center; gap: 12px; }
+.credits { font-size: 11px; color: var(--t3); }
+.avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--bg-inset); border: 1px solid var(--border-hi);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600; color: var(--t2);
+}
+
+/* ═══════════════════════════════════
+   STAGE TABS
+═══════════════════════════════════ */
+.stage-tabs {
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--border);
+  gap: 0;
+}
+.stage-tab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 20px 11px 0;
+  margin-right: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--t3);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.stage-tab .step-n {
+  width: 18px; height: 18px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700;
+  background: var(--bg-inset); border: 1px solid var(--border-md);
+  flex-shrink: 0;
+}
+.stage-tab.done   { color: var(--t2); }
+.stage-tab.done .step-n { background: rgba(255,255,255,0.08); border-color: var(--border-md); color: var(--t1); }
+.stage-tab.active { color: var(--t1); border-color: var(--ac); }
+.stage-tab.active .step-n { background: var(--ac-bg); border-color: var(--ac-bd); color: var(--t1); }
+
+.stage-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+}
+.stage-meta { font-size: 11px; color: var(--t3); display: flex; align-items: center; gap: 6px; }
+.stage-pulse {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--ac); opacity: 0.7;
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:0.7} 50%{opacity:0.25} }
+
+/* ═══════════════════════════════════
+   QUESTION STRIP
+═══════════════════════════════════ */
+.question-strip {
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.qs-text {
+  font-family: 'Lora', serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--t2);
+  flex: 1;
+}
+.qs-tags { display: flex; gap: 6px; flex-shrink: 0; }
+.qs-tag {
+  font-size: 10px; color: var(--t3);
+  border: 1px solid var(--border-md);
+  padding: 2px 8px; border-radius: 100px;
+}
+
+/* ═══════════════════════════════════
+   MAIN CONTENT
+═══════════════════════════════════ */
+.content { padding: 20px 24px; }
+
+/* Round progress stepper — inline horizontal */
+.round-progress {
+  display: flex;
+  align-items: center;
+  margin-bottom: 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 10px 16px;
+  gap: 0;
+}
+.rp-step { display: flex; align-items: center; gap: 7px; flex: 1; min-width: 0; }
+.rp-circle {
+  width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700;
+  flex-shrink: 0;
+  position: relative;
+}
+.rp-label { font-size: 11px; font-weight: 600; }
+.rp-sub   { font-size: 9px; color: var(--t3); margin-top: 1px; }
+.rp-line  { flex: 1; height: 1px; background: var(--border); margin: 0 8px; flex-shrink: 0; max-width: 40px; }
+
+/* ═══════════════════════════════════
+   MODEL GRID — 2×2 desktop, 1-col mobile
+═══════════════════════════════════ */
+.model-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+@media (max-width: 700px) {
+  .model-grid { grid-template-columns: 1fr; }
+}
+
+.model-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--rl);
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.model-card.responding {
+  border-color: var(--border-hi);
+}
+.model-card.waiting { opacity: 0.38; }
+
+/* Shimmer — very subtle, same width as card bottom */
+.mc-shimmer {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--ac), transparent);
+  background-size: 200%;
+  animation: sh 2.2s ease-in-out infinite;
+}
+@keyframes sh { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+
+/* Card header */
+.mc-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.mc-model { display: flex; align-items: center; gap: 9px; }
+.mc-init {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: var(--bg-inset); border: 1px solid var(--border-hi);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; color: var(--t2);
+  flex-shrink: 0;
+}
+.mc-name { font-size: 13px; font-weight: 600; color: var(--t1); }
+.mc-role { font-size: 10px; color: var(--t3); margin-top: 1px; }
+
+/* Status — text only, no colored backgrounds */
+.mc-status { font-size: 10px; font-weight: 500; flex-shrink: 0; }
+.s-done     { color: var(--t2); }
+.s-writing  { color: var(--t1); display: flex; align-items: center; gap: 5px; }
+.s-waiting  { color: var(--t4); }
+
+/* Dots */
+.dots { display: inline-flex; gap: 2px; align-items: flex-end; height: 9px; }
+.dots span { width: 2.5px; border-radius: 1.5px; background: var(--t3); animation: db 1.3s ease-in-out infinite; }
+.dots span:nth-child(2) { animation-delay: 0.15s; }
+.dots span:nth-child(3) { animation-delay: 0.30s; }
+@keyframes db { 0%,100%{height:2.5px} 50%{height:8px} }
+
+/* Response text */
+.mc-text {
+  font-size: 13px;
+  line-height: 1.72;
+  color: var(--t2);
+  flex: 1;
+}
+.mc-text.muted { color: var(--t3); }
+
+/* Cursor */
+.cursor {
+  display: inline-block; width: 1px; height: 12px;
+  background: var(--t2); margin-left: 1px;
+  vertical-align: middle;
+  animation: cur 0.85s step-end infinite;
+}
+@keyframes cur { 0%,100%{opacity:1} 50%{opacity:0} }
+
+/* Confidence */
+.mc-footer { display: flex; align-items: center; justify-content: space-between; }
+.conf { display: flex; align-items: center; gap: 3px; }
+.conf-bar { width: 12px; height: 2px; border-radius: 1px; }
+.cf { background: var(--t2); }
+.ce { background: var(--bg-inset); }
+.conf-label { font-size: 9px; color: var(--t3); margin-left: 3px; }
+
+/* Placeholder lines for waiting cards */
+.ph-lines { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.ph-line  { height: 7px; background: var(--bg-inset); border-radius: 3px; }
+
+/* ═══════════════════════════════════
+   VERDICT
+═══════════════════════════════════ */
+.verdict-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-md);
+  border-radius: var(--rl);
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+/* Arc gauge */
+.arc-section {
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+}
+@media (max-width: 500px) {
+  .arc-section { flex-direction: column; align-items: center; gap: 14px; }
+}
+
+.arc-wrap { flex-shrink: 0; text-align: center; }
+
+/* SVG arc — monochrome, no green/red by score */
+.arc-bg   { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 8; stroke-linecap: round; }
+.arc-fill { fill: none; stroke: rgba(255,255,255,0.55); stroke-width: 8; stroke-linecap: round;
+            stroke-dasharray: 122 163; transition: stroke-dasharray 1.2s cubic-bezier(0.16,1,0.3,1); }
+
+.arc-score {
+  font-size: 26px; font-weight: 700;
+  letter-spacing: -0.03em; color: var(--t1);
+}
+.arc-label { font-size: 10px; color: var(--t3); margin-top: 2px; }
+
+.verdict-text { flex: 1; }
+.verdict-eyebrow { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--t3); margin-bottom: 6px; }
+.verdict-headline {
+  font-family: 'Lora', serif;
+  font-size: 16px; font-weight: 500; line-height: 1.55;
+  color: var(--t1);
+  margin-bottom: 14px;
+}
+@media (min-width: 900px) { .verdict-headline { font-size: 18px; } }
+
+/* Model pills — all same muted style, no color per score */
+.model-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.model-pill {
+  display: flex; align-items: center; gap: 5px;
+  border: 1px solid var(--border-hi);
+  background: var(--bg-inset);
+  padding: 4px 10px; border-radius: 100px;
+  font-size: 10px; color: var(--t2);
+}
+.pill-conf { font-weight: 700; color: var(--t1); }
+
+/* Verdict table */
+.verdict-table { padding: 0 20px; }
+.vt-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+.vt-row:last-child { border-bottom: none; }
+.vt-left { display: flex; align-items: center; gap: 10px; }
+.vt-stripe { width: 2px; height: 18px; border-radius: 2px; background: var(--border-hi); flex-shrink: 0; }
+.vt-name { font-size: 12px; font-weight: 500; color: var(--t2); }
+.vt-right { display: flex; align-items: center; gap: 10px; }
+.vt-align { font-size: 10px; font-weight: 500; }
+.a-full    { color: var(--t2); }
+.a-partial { color: var(--t3); }
+
+/* ═══════════════════════════════════
+   FOLLOW-UP
+═══════════════════════════════════ */
+.followup-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 12px 16px;
+  margin-bottom: 8px;
+}
+.fu-placeholder {
+  flex: 1; font-family: 'Lora', serif; font-style: italic;
+  font-size: 13px; color: var(--t3);
+}
+.fu-btn {
+  background: var(--ac); color: white;
+  font-size: 11px; font-weight: 600;
+  padding: 7px 16px; border-radius: 8px;
+  flex-shrink: 0; cursor: pointer; border: none;
+  font-family: inherit; letter-spacing: 0.02em;
+}
+.fu-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.fu-chip {
+  font-size: 11px; color: var(--t3);
+  border: 1px solid var(--border-md);
+  padding: 4px 11px; border-radius: 100px; cursor: pointer;
+  background: transparent; white-space: nowrap;
+  transition: all 0.15s;
+}
+.fu-chip:hover { border-color: var(--border-hi); color: var(--t2); }
+
+/* ═══════════════════════════════════
+   MOBILE ADJUSTMENTS
+═══════════════════════════════════ */
+@media (max-width: 600px) {
+  .content { padding: 14px 14px; }
+  .top-nav { padding: 0 16px; }
+  .stage-tabs { padding: 0 16px; overflow-x: auto; }
+  .stage-tab { padding: 10px 14px 10px 0; margin-right: 10px; font-size: 11px; }
+  .question-strip { padding: 10px 16px; }
+  .nav-links { display: none; }
+  .arc-section { padding: 16px; }
+  .verdict-table { padding: 0 16px; }
+
+  /* Mobile bottom nav */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    display: flex;
+    background: rgba(12,12,14,0.97);
+    border-top: 1px solid var(--border);
+    padding: 8px 0 22px;
+    backdrop-filter: blur(16px);
+    z-index: 40;
+  }
+  .bn-item {
+    flex: 1; text-align: center;
+    font-size: 11px; font-weight: 500;
+    color: var(--t3); cursor: pointer; padding: 4px 0;
+  }
+  .bn-item.active { color: var(--t1); }
+  .content { padding-bottom: 90px; }
+}
+@media (min-width: 601px) {
+  .bottom-nav { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── TOP NAV ── -->
+<nav class="top-nav">
+  <span class="brand">Model Council<span class="brand-dot">.</span></span>
+  <div class="nav-links">
+    <span class="nav-link active">Council</span>
+    <span class="nav-link">History</span>
+    <span class="nav-link">Settings</span>
+    <span class="nav-link">Help</span>
+  </div>
+  <div class="nav-right">
+    <span class="mono credits">$1.97</span>
+    <div class="avatar">N</div>
+  </div>
+</nav>
+
+<!-- ── STAGE TABS ── -->
+<div class="stage-tabs">
+  <div class="stage-tab done">
+    <div class="step-n">✓</div>
+    Pose
+  </div>
+  <div class="stage-tab active">
+    <div class="step-n" style="position:relative;">
+      <span style="position:absolute;inset:-3px;border-radius:50%;border:1px solid var(--ac);animation:ring-p 1.6s ease-out infinite;opacity:0.5;"></span>
+      2
+    </div>
+    Deliberate
+  </div>
+  <div class="stage-tab">
+    <div class="step-n">3</div>
+    Verdict
+  </div>
+  <div class="stage-right">
+    <div class="stage-meta">
+      <div class="stage-pulse"></div>
+      Round 2 · Critique · 2 of 4
+    </div>
+    <div class="stage-meta" style="opacity:0.6;">~2 min remaining</div>
+  </div>
+</div>
+
+<!-- ── QUESTION ── -->
+<div class="question-strip">
+  <div class="qs-text">"Which is the best city to live in NSW for cost of living, family life, education and sports?"</div>
+  <div class="qs-tags">
+    <span class="qs-tag">Personal</span>
+    <span class="qs-tag">Exploratory</span>
+  </div>
+</div>
+
+<!-- ── CONTENT ── -->
+<div class="content">
+
+  <!-- Round progress -->
+  <div class="round-progress">
+    <div class="rp-step">
+      <div class="rp-circle" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);">
+        <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5l2 2 4-4" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+      <div>
+        <div class="rp-label" style="color:var(--t2);">Independent</div>
+        <div class="rp-sub">4 / 4 done</div>
+      </div>
+    </div>
+    <div class="rp-line" style="background:rgba(255,255,255,0.08);"></div>
+    <div class="rp-step">
+      <div class="rp-circle" style="background:var(--ac-bg);border:1px solid var(--ac-bd);color:var(--t1);position:relative;">
+        <span style="position:absolute;inset:-4px;border-radius:50%;border:1px solid var(--ac);animation:ring-p 1.6s ease-out infinite;opacity:0.4;"></span>
+        2
+      </div>
+      <div>
+        <div class="rp-label" style="color:var(--t1);">Critique</div>
+        <div class="rp-sub">2 responding</div>
+      </div>
+    </div>
+    <div class="rp-line"></div>
+    <div class="rp-step">
+      <div class="rp-circle" style="background:var(--bg-inset);border:1px solid var(--border);color:var(--t4);">3</div>
+      <div>
+        <div class="rp-label" style="color:var(--t3);">Verdict</div>
+        <div class="rp-sub">Pending</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Model grid -->
+  <div class="model-grid">
+
+    <!-- Sonnet — done -->
+    <div class="model-card">
+      <div class="mc-header">
+        <div class="mc-model">
+          <div class="mc-init">S</div>
+          <div>
+            <div class="mc-name">Claude Sonnet</div>
+            <div class="mc-role">Personal Advisor · responding to GPT-5</div>
+          </div>
+        </div>
+        <span class="mc-status s-done">Done</span>
+      </div>
+      <div class="mc-text">GPT-5 raises a fair point on Wollongong's commuter appeal but underweights sporting infrastructure. Hunter Stadium and the Newcastle Knights provide a richer local sports culture — material, not marginal, for families prioritising participation over selective school proximity to Sydney.</div>
+      <div class="mc-footer">
+        <div class="conf">
+          <div class="conf-bar cf"></div><div class="conf-bar cf"></div>
+          <div class="conf-bar cf"></div><div class="conf-bar cf"></div>
+          <div class="conf-bar ce"></div>
+          <span class="conf-label">4/5</span>
+        </div>
+        <span class="mono" style="font-size:10px;color:var(--t3);">198w</span>
+      </div>
+    </div>
+
+    <!-- GPT-5 — responding -->
+    <div class="model-card responding">
+      <div class="mc-shimmer"></div>
+      <div class="mc-header">
+        <div class="mc-model">
+          <div class="mc-init">G</div>
+          <div>
+            <div class="mc-name">GPT-5</div>
+            <div class="mc-role">Economic Analyst · responding to Sonnet</div>
+          </div>
+        </div>
+        <span class="mc-status s-writing">Writing <div class="dots"><span></span><span></span><span></span></div></span>
+      </div>
+      <div class="mc-text muted">I acknowledge Sonnet's point on sporting culture. However the selective school access question remains — Newcastle families seeking selective high school placement face longer commutes than Wollongong families who can access Sydney's selective schools via the South Coast line<span class="cursor"></span></div>
+      <div class="mc-footer">
+        <span class="mono" style="font-size:10px;color:var(--t3);">89w</span>
+      </div>
+    </div>
+
+    <!-- Gemini — waiting -->
+    <div class="model-card waiting">
+      <div class="mc-header">
+        <div class="mc-model">
+          <div class="mc-init">G2</div>
+          <div>
+            <div class="mc-name">Gemini 3.1</div>
+            <div class="mc-role">Systems Researcher</div>
+          </div>
+        </div>
+        <span class="mc-status s-waiting">Queued</span>
+      </div>
+      <div class="ph-lines">
+        <div class="ph-line" style="width:88%;"></div>
+        <div class="ph-line" style="width:72%;"></div>
+        <div class="ph-line" style="width:82%;"></div>
+      </div>
+    </div>
+
+    <!-- Grok — waiting -->
+    <div class="model-card waiting">
+      <div class="mc-header">
+        <div class="mc-model">
+          <div class="mc-init">Gk</div>
+          <div>
+            <div class="mc-name">Grok 4.20</div>
+            <div class="mc-role">Devil's Advocate</div>
+          </div>
+        </div>
+        <span class="mc-status s-waiting">Queued</span>
+      </div>
+      <div class="ph-lines">
+        <div class="ph-line" style="width:76%;"></div>
+        <div class="ph-line" style="width:60%;"></div>
+        <div class="ph-line" style="width:68%;"></div>
+      </div>
+    </div>
+
+  </div><!-- /model-grid -->
+
+  <!-- Verdict -->
+  <div class="verdict-card">
+    <div class="arc-section">
+      <div class="arc-wrap">
+        <svg width="116" height="66" viewBox="0 0 128 72">
+          <path d="M 12 68 A 52 52 0 0 1 116 68" class="arc-bg"/>
+          <path d="M 12 68 A 52 52 0 0 1 116 68" class="arc-fill"/>
+        </svg>
+        <div style="margin-top:-14px;">
+          <div class="arc-score">75<span style="font-size:14px;font-weight:400;color:var(--t3);">%</span></div>
+          <div class="arc-label">Strong consensus</div>
+        </div>
+      </div>
+      <div class="verdict-text">
+        <div class="verdict-eyebrow">Final Verdict · Claude Opus synthesis</div>
+        <div class="verdict-headline">"Newcastle is the clear frontrunner for most NSW families, with Wollongong as a strong alternative for those requiring Sydney employment access."</div>
+        <div class="model-pills">
+          <div class="model-pill"><span class="pill-conf">4/5</span> Sonnet</div>
+          <div class="model-pill"><span class="pill-conf">4/5</span> GPT-5</div>
+          <div class="model-pill"><span class="pill-conf">3/5</span> Gemini</div>
+          <div class="model-pill"><span class="pill-conf">4/5</span> Grok</div>
+        </div>
+      </div>
+    </div>
+    <div class="verdict-table">
+      <div class="vt-row">
+        <div class="vt-left">
+          <div class="vt-stripe"></div>
+          <span class="vt-name">Claude Sonnet</span>
+        </div>
+        <div class="vt-right">
+          <div class="conf"><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar ce"></div><span class="conf-label">4/5</span></div>
+          <span class="vt-align a-full">Aligned</span>
+        </div>
+      </div>
+      <div class="vt-row">
+        <div class="vt-left">
+          <div class="vt-stripe"></div>
+          <span class="vt-name">GPT-5</span>
+        </div>
+        <div class="vt-right">
+          <div class="conf"><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar ce"></div><span class="conf-label">4/5</span></div>
+          <span class="vt-align a-full">Aligned</span>
+        </div>
+      </div>
+      <div class="vt-row">
+        <div class="vt-left">
+          <div class="vt-stripe"></div>
+          <span class="vt-name">Gemini 3.1</span>
+        </div>
+        <div class="vt-right">
+          <div class="conf"><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar ce"></div><div class="conf-bar ce"></div><span class="conf-label">3/5</span></div>
+          <span class="vt-align a-partial">Partial</span>
+        </div>
+      </div>
+      <div class="vt-row">
+        <div class="vt-left">
+          <div class="vt-stripe"></div>
+          <span class="vt-name">Grok 4.20</span>
+        </div>
+        <div class="vt-right">
+          <div class="conf"><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar ce"></div><span class="conf-label">4/5</span></div>
+          <span class="vt-align a-full">Aligned</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Follow-up -->
+  <div class="followup-bar">
+    <span class="fu-placeholder">Ask a follow-up question to the council…</span>
+    <button class="fu-btn">Ask →</button>
+  </div>
+  <div class="fu-chips">
+    <span class="fu-chip">Compare schools in detail?</span>
+    <span class="fu-chip">Cost of living breakdown?</span>
+    <span class="fu-chip">Sports facilities comparison?</span>
+    <span class="fu-chip">Export report</span>
+  </div>
+
+</div>
+
+<!-- Mobile bottom nav -->
+<div class="bottom-nav">
+  <div class="bn-item">New</div>
+  <div class="bn-item active">Council</div>
+  <div class="bn-item">History</div>
+  <div class="bn-item">Settings</div>
+</div>
+
+<style>
+@keyframes ring-p { 0%{opacity:0.5;transform:scale(1)} 100%{opacity:0;transform:scale(2.2)} }
+</style>
+</body>
+</html>

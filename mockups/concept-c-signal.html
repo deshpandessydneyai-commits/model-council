@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Concept C — Signal</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: #FFFFFF; color: #0A0A0A; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* Landing/pose state */
+  .landing { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 24px; background: #FFFFFF; }
+
+  /* Chat-style feed */
+  .feed { max-width: 720px; margin: 0 auto; padding: 32px 24px 120px; }
+
+  /* Input */
+  .big-input { width: 100%; max-width: 640px; font-size: 20px; border: none; border-bottom: 2px solid #0A0A0A; padding: 16px 0; outline: none; font-family: 'Inter', sans-serif; font-weight: 400; color: #0A0A0A; background: transparent; }
+  .big-input::placeholder { color: #D1D5DB; }
+
+  /* Example chips */
+  .example-chip { border: 1px solid #E5E7EB; padding: 8px 16px; border-radius: 100px; font-size: 12px; color: #6B7280; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .example-chip:hover { border-color: #0A0A0A; color: #0A0A0A; }
+
+  /* Voice bubble — chat style */
+  .voice-bubble { margin-bottom: 20px; }
+  .bubble-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .model-pip { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .bubble-body { padding: 16px 18px; border-radius: 0 14px 14px 14px; font-size: 14px; line-height: 1.7; color: #374151; }
+
+  /* Round divider */
+  .round-div { display: flex; align-items: center; gap: 12px; margin: 24px 0; }
+  .round-div-line { flex: 1; height: 1px; background: #F3F4F6; }
+  .round-div-label { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: #9CA3AF; white-space: nowrap; }
+
+  /* Verdict sheet — slides up */
+  .verdict-sheet { position: fixed; bottom: 0; left: 0; right: 0; background: #FFFFFF; border-top: 2px solid #0A0A0A; padding: 28px 32px; box-shadow: 0 -24px 80px rgba(0,0,0,0.12); z-index: 50; }
+
+  /* Status pill — floating -->
+  .status-pill { position: fixed; top: 20px; right: 20px; background: #0A0A0A; color: white; padding: 10px 16px; border-radius: 100px; font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 8px; z-index: 40; }
+  .status-pip { width: 6px; height: 6px; border-radius: 50%; background: #10B981; animation: blink-g 1s ease-in-out infinite; }
+  @keyframes blink-g { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* Consensus big number */
+  .big-score { font-size: 72px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; }
+
+  /* Model colours */
+  .sonnet-color { background: #EEF2FF; color: #4338CA; }
+  .gpt-color { background: #ECFDF5; color: #065F46; }
+  .gemini-color { background: #EFF6FF; color: #1D4ED8; }
+  .grok-color { background: #FFFBEB; color: #92400E; }
+
+  .bubble-sonnet { background: #EEF2FF; }
+  .bubble-gpt { background: #ECFDF5; }
+  .bubble-gemini { background: #EFF6FF; }
+  .bubble-grok { background: #FFFBEB; }
+
+  /* Shimmer */
+  .shimmer-inline { display: inline-block; width: 12px; height: 12px; border-radius: 50%; border: 2px solid #0A0A0A; border-top-color: transparent; animation: spin 0.8s linear infinite; margin-left: 4px; vertical-align: middle; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Dot bounce */
+  .dots { display: inline-flex; gap: 3px; align-items: flex-end; height: 14px; }
+  .dots span { width: 4px; height: 4px; border-radius: 50%; background: #6B7280; animation: db 1.2s ease-in-out infinite; }
+  .dots span:nth-child(2) { animation-delay: 0.15s; }
+  .dots span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes db { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+
+  /* Follow up input -->
+  .followup-input { width: 100%; border: none; border-bottom: 1.5px solid #E5E7EB; padding: 12px 0; font-size: 14px; outline: none; font-family: 'Inter', sans-serif; background: transparent; }
+  .followup-input::placeholder { color: #9CA3AF; }
+  .followup-input:focus { border-color: #0A0A0A; }
+
+  /* Model avatar small */
+  .m-av { width: 22px; height: 22px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; flex-shrink: 0; }
+
+  /* Nav -->
+  .top-nav { position: fixed; top: 0; left: 0; right: 0; padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #F3F4F6; background: rgba(255,255,255,0.95); backdrop-filter: blur(8px); z-index: 30; }
+</style>
+</head>
+<body style="background: #FFFFFF;">
+
+<!-- Nav -->
+<div class="top-nav">
+  <div style="display: flex; align-items: center; gap: 32px;">
+    <span style="font-size: 16px; font-weight: 700; letter-spacing: -0.03em;">Model Council</span>
+    <nav style="display: flex; gap: 20px;">
+      <span style="font-size: 13px; color: #6B7280; cursor: pointer;">History</span>
+      <span style="font-size: 13px; color: #6B7280; cursor: pointer;">Settings</span>
+    </nav>
+  </div>
+  <span class="mono" style="font-size: 11px; color: #9CA3AF;">$1.97</span>
+</div>
+
+<!-- Floating status pill -->
+<div class="status-pill">
+  <div class="status-pip"></div>
+  Round 2 · 2 of 4 done
+</div>
+
+<!-- Feed view -->
+<div class="feed" style="margin-top: 64px;">
+
+  <!-- Question as opening statement -->
+  <div style="margin-bottom: 32px; padding-top: 12px;">
+    <div style="font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #9CA3AF; margin-bottom: 8px;">Question</div>
+    <h1 style="font-size: 22px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.4; color: #0A0A0A; max-width: 580px;">"Which is the best city to live in NSW for cost of living, family life, education and sports?"</h1>
+    <div style="display: flex; gap: 8px; margin-top: 12px;">
+      <span style="background: #0A0A0A; color: white; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 100px;">Personal</span>
+      <span style="border: 1px solid #E5E7EB; font-size: 11px; color: #6B7280; padding: 3px 10px; border-radius: 100px;">Exploratory</span>
+      <span style="border: 1px solid #E5E7EB; font-size: 11px; color: #6B7280; padding: 3px 10px; border-radius: 100px;">Web Search</span>
+    </div>
+  </div>
+
+  <!-- Round 1 -->
+  <div class="round-div">
+    <div class="round-div-line"></div>
+    <span class="round-div-label">Round 1 — Independent</span>
+    <div class="round-div-line"></div>
+  </div>
+
+  <!-- Sonnet -->
+  <div class="voice-bubble">
+    <div class="bubble-header">
+      <div class="model-pip" style="background: #6366F1;"></div>
+      <span style="font-size: 12px; font-weight: 600; color: #0A0A0A;">Claude Sonnet</span>
+      <span style="font-size: 11px; color: #9CA3AF;">Personal Advisor</span>
+      <span style="margin-left: auto;" class="mono" style="font-size: 10px; color: #D1D5DB;">4/5 · 312w</span>
+    </div>
+    <div class="bubble-body bubble-sonnet" style="border-left: 3px solid #6366F1;">
+      Newcastle emerges as the strongest candidate when balancing the four criteria. The Hunter region offers median house prices 40% below Sydney while maintaining strong school performance in the top quartile statewide. The coastal lifestyle and established sporting culture — particularly rugby league and surfing — provide excellent family amenity at significantly lower cost.
+    </div>
+  </div>
+
+  <!-- GPT-5 -->
+  <div class="voice-bubble">
+    <div class="bubble-header">
+      <div class="model-pip" style="background: #10B981;"></div>
+      <span style="font-size: 12px; font-weight: 600; color: #0A0A0A;">GPT-5</span>
+      <span style="font-size: 11px; color: #9CA3AF;">Economic Analyst</span>
+      <span style="margin-left: auto;" class="mono" style="font-size: 10px; color: #D1D5DB;">4/5 · 287w</span>
+    </div>
+    <div class="bubble-body bubble-gpt" style="border-left: 3px solid #10B981;">
+      My analysis focuses on the cost-to-quality ratio. Wollongong provides a compelling case — it sits within commuting distance of Sydney, has strong university presence, and offers coastal lifestyle at 35% below Sydney median. Families needing Sydney employment access would find Wollongong superior.
+    </div>
+  </div>
+
+  <!-- Gemini -->
+  <div class="voice-bubble">
+    <div class="bubble-header">
+      <div class="model-pip" style="background: #3B82F6;"></div>
+      <span style="font-size: 12px; font-weight: 600; color: #0A0A0A;">Gemini 3.1</span>
+      <span style="font-size: 11px; color: #9CA3AF;">Systems Researcher</span>
+      <span style="margin-left: auto;" class="mono" style="font-size: 10px; color: #D1D5DB;">3/5 · 251w</span>
+    </div>
+    <div class="bubble-body bubble-gemini" style="border-left: 3px solid #3B82F6;">
+      Both analyses overlook infrastructure investment trajectory. The NSW government's renewable energy projects are creating significant employment hubs in the Central West. Bathurst and Orange deserve serious consideration for families prioritising space and long-term value growth over coastal amenity.
+    </div>
+  </div>
+
+  <!-- Grok -->
+  <div class="voice-bubble">
+    <div class="bubble-header">
+      <div class="model-pip" style="background: #F59E0B;"></div>
+      <span style="font-size: 12px; font-weight: 600; color: #0A0A0A;">Grok 4.20</span>
+      <span style="font-size: 11px; color: #9CA3AF;">Devil's Advocate</span>
+      <span style="margin-left: auto;" class="mono" style="font-size: 10px; color: #D1D5DB;">4/5 · 298w</span>
+    </div>
+    <div class="bubble-body bubble-grok" style="border-left: 3px solid #F59E0B;">
+      Unpopular opinion: the entire framing of "best city" ignores that the data strongly suggests lifestyle match matters more than objective metrics. A sports-obsessed family and an academically-focused family have completely different optimal cities. That said, if forced to pick one: Newcastle wins on breadth.
+    </div>
+  </div>
+
+  <!-- Round 2 divider -->
+  <div class="round-div">
+    <div class="round-div-line"></div>
+    <span class="round-div-label" style="color: #7C3AED;">Round 2 — Critique · Active</span>
+    <div class="round-div-line"></div>
+  </div>
+
+  <!-- Sonnet critique — done -->
+  <div class="voice-bubble">
+    <div class="bubble-header">
+      <div class="model-pip" style="background: #6366F1;"></div>
+      <span style="font-size: 12px; font-weight: 600;">Claude Sonnet</span>
+      <span style="font-size: 11px; color: #9CA3AF;">↳ replying to GPT-5</span>
+      <span style="margin-left: auto; font-size: 11px; color: #10B981;">✓</span>
+    </div>
+    <div class="bubble-body bubble-sonnet" style="border-left: 3px solid #6366F1;">
+      GPT-5 raises a fair point on Wollongong's commuter appeal but underweights the sporting infrastructure question. Hunter Stadium and the Knights provide a significantly richer local sports culture — for a family prioritising sports participation, this is material, not marginal.
+    </div>
+  </div>
+
+  <!-- GPT-5 — responding -->
+  <div class="voice-bubble">
+    <div class="bubble-header">
+      <div class="model-pip" style="background: #10B981; animation: blink-g 1s ease-in-out infinite;"></div>
+      <span style="font-size: 12px; font-weight: 600;">GPT-5</span>
+      <span style="font-size: 11px; color: #9CA3AF;">↳ replying to Sonnet</span>
+      <div class="dots" style="margin-left: auto;"><span></span><span></span><span></span></div>
+    </div>
+    <div class="bubble-body bubble-gpt" style="border-left: 3px solid #10B981; color: #6B7280;">
+      I acknowledge Sonnet's point on sporting culture. However the selective school question remains — Newcastle families seeking selective placement face longer commutes than Wollongong families accessing Sydney schools via the South Coast line<span style="border-right: 2px solid #10B981; margin-left: 1px; animation: cur 0.8s step-end infinite;"> </span>
+    </div>
+  </div>
+
+  <!-- Waiting -->
+  <div style="display: flex; gap: 12px; margin-bottom: 8px; opacity: 0.4;">
+    <div style="flex: 1; border: 1px dashed #E5E7EB; border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; gap: 8px;">
+      <div class="model-pip" style="background: #3B82F6;"></div>
+      <span style="font-size: 12px; color: #9CA3AF;">Gemini forming critique…</span>
+    </div>
+    <div style="flex: 1; border: 1px dashed #E5E7EB; border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; gap: 8px;">
+      <div class="model-pip" style="background: #F59E0B;"></div>
+      <span style="font-size: 12px; color: #9CA3AF;">Grok forming critique…</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- Verdict Sheet — slides up from bottom (shown in its final state as preview) -->
+<div style="background: #F7F6F2; border-top: 3px solid #E5E7EB; padding: 40px 32px 32px; margin-top: 40px;">
+  <div style="max-width: 720px; margin: 0 auto;">
+    <div style="font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #9CA3AF; margin-bottom: 24px; text-align: center;">③ VERDICT — Preview of how it slides up</div>
+    <div style="display: grid; grid-template-columns: auto 1fr; gap: 40px; align-items: start; margin-bottom: 28px;">
+
+      <!-- Score -->
+      <div style="text-align: center;">
+        <div class="big-score" style="color: #0A0A0A;">75<span style="font-size: 40px; font-weight: 400; color: #9CA3AF;">%</span></div>
+        <div style="font-size: 12px; color: #6B7280; font-weight: 500; margin-top: 4px;">Strong Consensus</div>
+        <div style="margin-top: 12px; display: flex; gap: 4px; justify-content: center;">
+          <div style="width: 24px; height: 3px; border-radius: 2px; background: #0A0A0A;"></div>
+          <div style="width: 24px; height: 3px; border-radius: 2px; background: #0A0A0A;"></div>
+          <div style="width: 24px; height: 3px; border-radius: 2px; background: #0A0A0A;"></div>
+          <div style="width: 24px; height: 3px; border-radius: 2px; background: #E5E7EB;"></div>
+        </div>
+        <div class="mono" style="font-size: 10px; color: #9CA3AF; margin-top: 4px;">3 / 4 aligned</div>
+      </div>
+
+      <!-- Verdict text -->
+      <div>
+        <h2 style="font-size: 22px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.4; color: #0A0A0A; margin-bottom: 16px;">"Newcastle is the clear frontrunner, with Wollongong as a strong alternative for Sydney-commuter families."</h2>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <span style="background: #0A0A0A; color: white; font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 100px;">4/5 Sonnet</span>
+          <span style="background: #0A0A0A; color: white; font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 100px;">4/5 GPT-5</span>
+          <span style="border: 1.5px solid #0A0A0A; color: #0A0A0A; font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 100px;">3/5 Gemini</span>
+          <span style="background: #0A0A0A; color: white; font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 100px;">4/5 Grok</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Follow-up -->
+    <div style="border-top: 1px solid #E5E7EB; padding-top: 20px;">
+      <div style="font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #9CA3AF; margin-bottom: 12px;">Continue the conversation</div>
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <input class="followup-input" placeholder="Ask a follow-up — the council will respond…" style="flex: 1;" />
+        <button style="background: #0A0A0A; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap;">Ask Council →</button>
+      </div>
+      <div style="display: flex; gap: 8px; margin-top: 12px;">
+        <span style="font-size: 11px; color: #9CA3AF; cursor: pointer; border: 1px solid #E5E7EB; padding: 5px 12px; border-radius: 100px;">What about schools specifically?</span>
+        <span style="font-size: 11px; color: #9CA3AF; cursor: pointer; border: 1px solid #E5E7EB; padding: 5px 12px; border-radius: 100px;">Compare Newcastle vs Wollongong cost</span>
+        <span style="font-size: 11px; color: #9CA3AF; cursor: pointer; border: 1px solid #E5E7EB; padding: 5px 12px; border-radius: 100px;">Export this report</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Label -->
+<div style="text-align: center; padding: 16px; background: #F9FAFB; border-top: 1px solid #E5E7EB;">
+  <span style="font-size: 11px; letter-spacing: 0.1em; color: #9CA3AF; text-transform: uppercase;">Concept C — "Signal" · Conversational Feed · Bold Typography · Follow-up Native</span>
+</div>
+
+<style>
+@keyframes blink-g { 0%,100%{opacity:1} 50%{opacity:0.3} }
+@keyframes cur { 0%,100%{opacity:1} 50%{opacity:0} }
+</style>
+
+</body>
+</html>

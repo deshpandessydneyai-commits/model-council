@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=375, initial-scale=1.0">
+<title>Mobile B2 — Studio Refined</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+
+  :root {
+    --bg: #F5F3EE;           /* warm parchment — easy on eyes */
+    --bg-card: #FFFFFF;
+    --bg-inset: #EDE9E2;
+    --border: #E2DDD5;
+    --border-mid: #CEC8BF;
+    --text-primary: #1C1917;
+    --text-secondary: #57534E;
+    --text-muted: #A8A29E;
+    --accent: #4338CA;       /* one accent — deep indigo, used sparingly */
+    --green: #15803D;
+    --amber: #B45309;
+  }
+
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text-primary); width: 375px; margin: 0 auto; min-height: 812px; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .serif { font-family: 'Lora', serif; }
+
+  /* ── STATUS BAR ── */
+  .status-bar { height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: var(--bg-card); }
+  .status-time { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+
+  /* ── NAV ── */
+  .top-nav { background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 0 16px 12px; display: flex; align-items: center; justify-content: space-between; }
+  .brand { font-size: 17px; font-weight: 700; letter-spacing: -0.03em; color: var(--text-primary); }
+  .brand-dot { color: var(--accent); }
+  .avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--bg-inset); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--text-secondary); }
+
+  /* ── STICKY QUESTION HEADER ── */
+  .question-header { background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 12px 16px; }
+  .qh-eyebrow { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
+  /* serif for the question — research paper feel */
+  .qh-text { font-family: 'Lora', serif; font-size: 15px; font-weight: 500; line-height: 1.45; color: var(--text-primary); margin-bottom: 8px; }
+  .qh-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .qh-tag { font-size: 10px; color: var(--text-muted); }
+  .qh-tag + .qh-tag::before { content: '·'; margin-right: 10px; }
+  .qh-progress { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+  .progress-track { width: 48px; height: 2px; background: var(--border); border-radius: 1px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 1px; width: 65%; }
+
+  /* ── ROUND DIVIDER ── purely typographic */
+  .round-divider { padding: 14px 16px 6px; display: flex; align-items: center; gap: 10px; }
+  .rd-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .rd-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; }
+  .rd-action { margin-left: auto; font-size: 10px; color: var(--text-muted); cursor: pointer; }
+
+  /* ── VOICE CARD — white, clean, left border only ── */
+  .voice-card { background: var(--bg-card); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin-bottom: 2px; padding: 14px 16px 14px 0; display: flex; gap: 0; position: relative; overflow: hidden; }
+
+  /* left border stripe — thin, the ONLY per-model color */
+  .vc-stripe { width: 3px; flex-shrink: 0; margin-right: 14px; }
+
+  .vc-content { flex: 1; min-width: 0; }
+  .vc-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px; gap: 8px; }
+  .vc-model-info { min-width: 0; }
+  .vc-name { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+  .vc-role { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+  .vc-reply { font-size: 10px; color: var(--accent); margin-top: 1px; }
+  .vc-right { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+
+  .vc-text { font-size: 13.5px; line-height: 1.7; color: var(--text-secondary); }
+  .vc-text.muted { color: var(--text-muted); }
+  .vc-text.italic { font-family: 'Lora', serif; font-style: italic; }
+
+  .vc-footer { margin-top: 8px; display: flex; align-items: center; gap: 8px; }
+
+  /* shimmer — very subtle at bottom edge */
+  .vc-shimmer { position: absolute; bottom: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--accent), transparent); background-size: 200%; animation: sh 2s ease-in-out infinite; }
+  @key: sh { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+  @keyframes sh { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+
+  /* ── CONFIDENCE ── */
+  .conf { display: flex; align-items: center; gap: 4px; }
+  .conf-bar { width: 10px; height: 2px; border-radius: 1px; }
+  .cf { background: var(--text-secondary); }
+  .ce { background: var(--border); }
+
+  /* ── DOTS ── */
+  .dots { display: inline-flex; gap: 3px; align-items: flex-end; height: 10px; }
+  .dots span { width: 3px; border-radius: 1.5px; background: var(--text-muted); animation: db 1.3s ease-in-out infinite; }
+  .dots span:nth-child(2) { animation-delay: 0.15s; }
+  .dots span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes db { 0%,100%{height:3px} 50%{height:8px} }
+
+  /* ── WAITING PLACEHOLDER ── */
+  .waiting-card { background: var(--bg-card); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin-bottom: 2px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; opacity: 0.5; }
+  .wc-stripe { width: 3px; height: 32px; background: var(--border); border-radius: 2px; flex-shrink: 0; }
+  .wc-lines { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+  .wc-line { height: 7px; background: var(--bg-inset); border-radius: 3px; }
+
+  /* ── VERDICT ── */
+  .verdict-card { background: var(--bg-card); border: 1px solid var(--border-mid); border-radius: 14px; margin: 12px 16px; overflow: hidden; }
+  .verdict-eyebrow { padding: 12px 16px 0; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); }
+  .verdict-score-row { padding: 12px 16px; display: flex; align-items: flex-start; gap: 16px; border-bottom: 1px solid var(--border); }
+  .verdict-score { font-size: 44px; font-weight: 700; letter-spacing: -0.04em; color: var(--text-primary); line-height: 1; flex-shrink: 0; }
+  .verdict-score-pct { font-size: 20px; font-weight: 400; color: var(--text-muted); }
+  .verdict-score-label { font-size: 9px; color: var(--text-muted); margin-top: 3px; }
+  /* verdict headline — serif for gravitas */
+  .verdict-headline { font-family: 'Lora', serif; font-size: 15px; font-weight: 500; line-height: 1.5; color: var(--text-primary); flex: 1; }
+
+  .verdict-table { padding: 0 16px; }
+  .vt-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .vt-row:last-child { border-bottom: none; }
+  .vt-name { font-size: 12px; font-weight: 500; color: var(--text-secondary); }
+  .vt-right { display: flex; align-items: center; gap: 8px; }
+  .vt-align { font-size: 10px; font-weight: 500; }
+  .align-yes { color: var(--green); }
+  .align-partial { color: var(--amber); }
+
+  /* ── FOLLOW-UP ── */
+  .followup-bar { margin: 0 16px 12px; display: flex; align-items: center; gap: 10px; border: 1px solid var(--border-mid); border-radius: 10px; padding: 11px 14px; background: var(--bg-card); }
+  .fu-text { font-size: 12px; color: var(--text-muted); flex: 1; font-style: italic; font-family: 'Lora', serif; }
+  .fu-btn { background: var(--accent); color: white; font-size: 11px; font-weight: 600; padding: 7px 14px; border-radius: 7px; flex-shrink: 0; }
+
+  /* ── BOTTOM NAV ── */
+  .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 375px; background: rgba(245,243,238,0.97); border-top: 1px solid var(--border); padding: 10px 0 26px; display: flex; backdrop-filter: blur(12px); }
+  .bn-item { flex: 1; text-align: center; font-size: 11px; font-weight: 500; color: var(--text-muted); cursor: pointer; }
+  .bn-item.active { color: var(--accent); font-weight: 600; }
+
+  .spacer { height: 90px; }
+
+  /* Status badges */
+  .badge { font-size: 10px; font-weight: 500; }
+  .badge-done { color: var(--green); }
+  .badge-writing { color: var(--accent); }
+  .badge-queued { color: var(--text-muted); }
+</style>
+</head>
+<body>
+
+<!-- Status bar -->
+<div class="status-bar">
+  <span class="status-time mono">9:53</span>
+  <div style="display:flex;align-items:center;gap:5px;">
+    <svg width="15" height="11" viewBox="0 0 15 11" fill="#1C1917" opacity="0.4"><rect x="0" y="3" width="2.5" height="8" rx="0.8"/><rect x="4" y="2" width="2.5" height="9" rx="0.8"/><rect x="8" y="0" width="2.5" height="11" rx="0.8"/><rect x="12" y="0" width="2.5" height="11" rx="0.8" opacity="0.3"/></svg>
+    <svg width="24" height="11" viewBox="0 0 24 11" fill="#1C1917" opacity="0.4"><rect x="0" y="0.5" width="20" height="10" rx="2.5" stroke="#1C1917" stroke-width="1" fill="rgba(0,0,0,0.05)"/><rect x="1.5" y="2" width="14" height="7" rx="1.5"/><rect x="21" y="3.5" width="2.5" height="4" rx="1" fill="rgba(0,0,0,0.3)"/></svg>
+  </div>
+</div>
+
+<!-- Nav -->
+<div class="top-nav">
+  <span class="brand">Model Council<span class="brand-dot">.</span></span>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <span class="mono" style="font-size:10px;color:var(--text-muted);">$1.97</span>
+    <div class="avatar">N</div>
+  </div>
+</div>
+
+<!-- Question header — sticky context -->
+<div class="question-header">
+  <div class="qh-eyebrow">Research Question</div>
+  <div class="qh-text">"Which is the best city to live in NSW for cost of living, family life, education and sports?"</div>
+  <div class="qh-meta">
+    <span class="qh-tag">Personal</span>
+    <span class="qh-tag">Exploratory</span>
+    <span class="qh-tag">Round 2 of 2</span>
+    <div class="qh-progress">
+      <div class="progress-track"><div class="progress-fill"></div></div>
+      <span class="mono" style="font-size:9px;color:var(--text-muted);">65%</span>
+    </div>
+  </div>
+</div>
+
+<!-- Round 1 -->
+<div class="round-divider">
+  <div class="rd-dot" style="background:var(--green);"></div>
+  <span class="rd-label" style="color:var(--green);">Round 1 — Independent</span>
+  <span class="rd-action">Collapse ∧</span>
+</div>
+
+<!-- Sonnet R1 -->
+<div class="voice-card">
+  <div class="vc-stripe" style="background:#6366F1;"></div>
+  <div class="vc-content">
+    <div class="vc-header">
+      <div class="vc-model-info">
+        <div class="vc-name">Claude Sonnet</div>
+        <div class="vc-role">Personal Advisor</div>
+      </div>
+      <div class="vc-right">
+        <span class="badge badge-done">✓ Done</span>
+        <div class="conf"><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar ce"></div><span class="mono" style="font-size:9px;color:var(--text-muted);margin-left:2px;">4/5</span></div>
+      </div>
+    </div>
+    <div class="vc-text">Newcastle emerges as the strongest candidate. The Hunter region offers median house prices 40% below Sydney while maintaining strong school performance in the top quartile statewide. Coastal lifestyle and sporting culture provide excellent family amenity at lower cost.</div>
+  </div>
+</div>
+
+<!-- GPT-5 R1 -->
+<div class="voice-card">
+  <div class="vc-stripe" style="background:#10B981;"></div>
+  <div class="vc-content">
+    <div class="vc-header">
+      <div class="vc-model-info">
+        <div class="vc-name">GPT-5</div>
+        <div class="vc-role">Economic Analyst</div>
+      </div>
+      <div class="vc-right">
+        <span class="badge badge-done">✓ Done</span>
+        <div class="conf"><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar ce"></div><span class="mono" style="font-size:9px;color:var(--text-muted);margin-left:2px;">4/5</span></div>
+      </div>
+    </div>
+    <div class="vc-text">Wollongong provides a compelling case — within commuting distance of Sydney, strong university presence, coastal lifestyle at 35% below Sydney median. Families needing Sydney employment access would find this superior to Newcastle.</div>
+  </div>
+</div>
+
+<!-- Round 2 -->
+<div class="round-divider" style="margin-top:4px;">
+  <div class="rd-dot" style="background:var(--accent);animation:pulse-a 2s ease-in-out infinite;"></div>
+  <span class="rd-label" style="color:var(--accent);">Round 2 — Critique</span>
+  <span class="rd-action" style="color:var(--accent);">Active · 2/4</span>
+</div>
+
+<!-- Sonnet R2 done -->
+<div class="voice-card">
+  <div class="vc-stripe" style="background:#6366F1;"></div>
+  <div class="vc-content">
+    <div class="vc-header">
+      <div class="vc-model-info">
+        <div class="vc-name">Claude Sonnet</div>
+        <div class="vc-reply">↳ responding to GPT-5</div>
+      </div>
+      <div class="vc-right">
+        <span class="badge badge-done">✓ Done</span>
+      </div>
+    </div>
+    <div class="vc-text">GPT-5 underweights sporting infrastructure. Hunter Stadium provides a richer local sports culture — material for families prioritising participation over selective school proximity to Sydney.</div>
+  </div>
+</div>
+
+<!-- GPT-5 R2 writing -->
+<div class="voice-card" style="border-color:var(--border-mid);">
+  <div class="vc-shimmer"></div>
+  <div class="vc-stripe" style="background:#10B981;"></div>
+  <div class="vc-content">
+    <div class="vc-header">
+      <div class="vc-model-info">
+        <div class="vc-name">GPT-5</div>
+        <div class="vc-reply">↳ responding to Sonnet</div>
+      </div>
+      <div class="vc-right">
+        <div style="display:flex;align-items:center;gap:4px;">
+          <span class="badge badge-writing">Writing</span>
+          <div class="dots"><span></span><span></span><span></span></div>
+        </div>
+      </div>
+    </div>
+    <div class="vc-text muted">I acknowledge Sonnet's point on sporting culture. However selective school access remains — Newcastle families face longer commutes than Wollongong families accessing Sydney schools via the South Coast line<span style="display:inline-block;width:1px;height:11px;background:var(--accent);margin-left:2px;vertical-align:middle;animation:cur 0.8s step-end infinite;"></span></div>
+    <div class="vc-footer">
+      <span class="mono" style="font-size:9px;color:var(--accent);">89 words</span>
+    </div>
+  </div>
+</div>
+
+<!-- Gemini waiting -->
+<div class="waiting-card">
+  <div class="wc-stripe"></div>
+  <div style="flex:1;">
+    <div style="font-size:11px;font-weight:500;color:var(--text-muted);margin-bottom:6px;">Gemini 3.1 <span style="font-weight:400;">· Systems Researcher · Queued</span></div>
+    <div class="wc-lines"><div class="wc-line" style="width:82%;"></div><div class="wc-line" style="width:65%;"></div></div>
+  </div>
+</div>
+
+<!-- Grok waiting -->
+<div class="waiting-card">
+  <div class="wc-stripe"></div>
+  <div style="flex:1;">
+    <div style="font-size:11px;font-weight:500;color:var(--text-muted);margin-bottom:6px;">Grok 4.20 <span style="font-weight:400;">· Devil's Advocate · Queued</span></div>
+    <div class="wc-lines"><div class="wc-line" style="width:74%;"></div><div class="wc-line" style="width:55%;"></div></div>
+  </div>
+</div>
+
+<!-- Verdict -->
+<div style="padding:14px 16px 6px 16px;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);">Final Verdict</div>
+<div class="verdict-card">
+  <div class="verdict-score-row">
+    <div>
+      <div class="verdict-score">75<span class="verdict-score-pct">%</span></div>
+      <div class="verdict-score-label">Strong Consensus</div>
+    </div>
+    <div class="verdict-headline">"Newcastle is the clear frontrunner. Wollongong suits commuter families."</div>
+  </div>
+  <div class="verdict-table">
+    <div class="vt-row">
+      <span class="vt-name">Claude Sonnet</span>
+      <div class="vt-right">
+        <div class="conf"><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar ce"></div></div>
+        <span class="vt-align align-yes">Aligned</span>
+      </div>
+    </div>
+    <div class="vt-row">
+      <span class="vt-name">GPT-5</span>
+      <div class="vt-right">
+        <div class="conf"><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar ce"></div></div>
+        <span class="vt-align align-yes">Aligned</span>
+      </div>
+    </div>
+    <div class="vt-row">
+      <span class="vt-name">Gemini 3.1</span>
+      <div class="vt-right">
+        <div class="conf"><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar ce"></div><div class="conf-bar ce"></div></div>
+        <span class="vt-align align-partial">Partial</span>
+      </div>
+    </div>
+    <div class="vt-row">
+      <span class="vt-name">Grok 4.20</span>
+      <div class="vt-right">
+        <div class="conf"><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar ce"></div></div>
+        <span class="vt-align align-yes">Aligned</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Follow-up -->
+<div class="followup-bar" style="margin-top:4px;">
+  <span class="fu-text">Ask a follow-up question…</span>
+  <div class="fu-btn">Ask →</div>
+</div>
+
+<div class="spacer"></div>
+
+<!-- Bottom nav -->
+<div class="bottom-nav">
+  <div class="bn-item">New</div>
+  <div class="bn-item active">Council</div>
+  <div class="bn-item">History</div>
+  <div class="bn-item">Settings</div>
+</div>
+
+<div style="text-align:center;padding:6px;background:var(--bg-inset);border-top:1px solid var(--border);margin-bottom:86px;">
+  <span class="mono" style="font-size:9px;color:var(--text-muted);letter-spacing:0.1em;">CONCEPT B2 · STUDIO REFINED · PARCHMENT · SERIF · MINIMAL COLOR · 375px</span>
+</div>
+
+<style>
+@keyframes cur { 0%,100%{opacity:1} 50%{opacity:0} }
+@keyframes pulse-a { 0%,100%{opacity:1} 50%{opacity:0.35} }
+</style>
+</body>
+</html>

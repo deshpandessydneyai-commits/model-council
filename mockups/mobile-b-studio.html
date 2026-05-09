@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=375, initial-scale=1.0">
+<title>Mobile B — Studio</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+  body { font-family: 'Inter', sans-serif; background: #F7F6F2; color: #1A1A1A; width: 375px; margin: 0 auto; min-height: 812px; }
+  .serif { font-family: 'DM Serif Display', serif; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* Status bar */
+  .status-bar { height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; background: #FFFFFF; }
+  .status-time { font-size: 15px; font-weight: 600; color: #1A1A1A; }
+
+  /* Sticky top nav */
+  .top-nav { position: sticky; top: 0; z-index: 20; background: rgba(255,255,255,0.97); border-bottom: 1px solid #EDEAE4; backdrop-filter: blur(12px); }
+  .nav-inner { padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .brand { font-family: 'DM Serif Display', serif; font-size: 19px; letter-spacing: -0.02em; color: #1A1A1A; }
+  .brand span { color: #7C3AED; }
+  .avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #7C3AED, #4F46E5); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: white; }
+
+  /* Sticky question + round header — collapses on scroll */
+  .question-header { background: #FFFFFF; border-bottom: 1px solid #EDEAE4; padding: 12px 16px; }
+  .qh-label { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: #9CA3AF; margin-bottom: 4px; }
+  .qh-text { font-family: 'DM Serif Display', serif; font-size: 15px; line-height: 1.4; color: #1A1A1A; margin-bottom: 8px; }
+  .qh-tags { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .tag { font-size: 10px; font-weight: 500; padding: 2px 9px; border-radius: 100px; }
+  .tag-domain { background: #EDE9FE; color: #6D28D9; }
+  .tag-ctx { background: #FEF3C7; color: #92400E; }
+
+  /* Round indicator strip */
+  .round-strip { background: #FFFFFF; border-bottom: 1px solid #EDEAE4; padding: 10px 16px; display: flex; align-items: center; gap: 10px; overflow-x: auto; }
+  .rs-item { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .rs-dot { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; }
+  .rs-label { font-size: 11px; font-weight: 500; white-space: nowrap; }
+  .rs-connector { width: 24px; height: 1px; background: #E5E2DB; flex-shrink: 0; }
+
+  /* Feed area */
+  .feed { padding: 0 0 100px; }
+
+  /* Round header in feed */
+  .feed-round-header { display: flex; align-items: center; gap: 10px; padding: 14px 16px 8px; }
+  .frh-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .frh-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; }
+  .frh-count { font-size: 10px; color: #9CA3AF; margin-left: auto; }
+
+  /* Voice card */
+  .voice-card { background: #FFFFFF; border-top: 1px solid #F0EDE6; border-bottom: 1px solid #F0EDE6; padding: 14px 16px; margin-bottom: 1px; position: relative; overflow: hidden; }
+  .vc-stripe { position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+  .vc-inner { padding-left: 10px; }
+  .vc-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .vc-model { display: flex; align-items: center; gap: 7px; }
+  .vc-av { width: 22px; height: 22px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; }
+  .vc-name { font-size: 12px; font-weight: 600; color: #1A1A1A; }
+  .vc-role { font-size: 10px; color: #9CA3AF; }
+  .vc-text { font-size: 13px; line-height: 1.65; color: #4B5563; }
+  .vc-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+  .conf-bar-wrap { display: flex; align-items: center; gap: 6px; }
+  .conf-track { height: 3px; width: 40px; background: #E5E2DB; border-radius: 2px; overflow: hidden; }
+  .conf-fill { height: 100%; border-radius: 2px; }
+
+  /* Shimmer */
+  .shimmer { position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, #7C3AED, transparent); background-size: 200%; animation: sh 1.5s ease-in-out infinite; }
+  @keyframes sh { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+
+  /* Responding state */
+  .vc-text-muted { color: #9CA3AF; font-size: 13px; line-height: 1.65; }
+  .dots { display: inline-flex; gap: 2px; align-items: flex-end; height: 12px; }
+  .dots span { width: 3px; height: 3px; border-radius: 50%; background: #7C3AED; animation: db 1.2s ease-in-out infinite; }
+  .dots span:nth-child(2) { animation-delay: 0.15s; }
+  .dots span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes db { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+
+  /* Waiting placeholder */
+  .waiting-row { display: flex; gap: 8px; padding: 10px 16px; }
+  .waiting-card { flex: 1; background: #F7F6F2; border: 1px dashed #E5E2DB; border-radius: 10px; padding: 12px; display: flex; align-items: center; gap: 7px; opacity: 0.6; }
+  .w-av { width: 20px; height: 20px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; }
+
+  /* Model status sidebar row — mobile becomes a horizontal scroll strip */
+  .model-status-strip { display: flex; gap: 8px; padding: 10px 16px; overflow-x: auto; background: #FFFFFF; border-bottom: 1px solid #F0EDE6; }
+  .ms-item { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .ms-av { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; position: relative; }
+  .ms-status-ring { position: absolute; inset: -2px; border-radius: 12px; border: 2px solid; }
+  .ms-name { font-size: 9px; color: #6B7280; font-weight: 500; text-align: center; }
+  .ms-state { font-size: 9px; font-weight: 600; }
+
+  /* Pending verdict card */
+  .verdict-pending { margin: 12px 16px; background: #F0EDFA; border: 1px dashed #C4B5FD; border-radius: 14px; padding: 16px; text-align: center; }
+  .vp-text { font-size: 12px; color: #6D28D9; opacity: 0.7; }
+
+  /* Sticky bottom follow-up bar -->
+  .follow-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 375px; background: rgba(255,255,255,0.97); border-top: 1px solid #E5E2DB; padding: 10px 16px 28px; backdrop-filter: blur(12px); }
+  .follow-input-wrap { display: flex; align-items: center; gap: 10px; background: #F7F6F2; border: 1px solid #E5E2DB; border-radius: 22px; padding: 10px 14px; }
+  .follow-input-text { flex: 1; font-size: 13px; color: #9CA3AF; }
+  .follow-send { background: #7C3AED; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+  /* Bottom nav */
+  .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 375px; background: rgba(255,255,255,0.97); border-top: 1px solid #E5E2DB; padding: 6px 0 22px; display: flex; backdrop-filter: blur(12px); }
+  .bn-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; padding: 4px 0; }
+  .bn-icon { font-size: 20px; }
+  .bn-label { font-size: 10px; color: #9CA3AF; font-weight: 500; }
+  .bn-item.active .bn-label { color: #7C3AED; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<!-- Status bar -->
+<div class="status-bar">
+  <span class="status-time">9:53</span>
+  <div style="display:flex;align-items:center;gap:5px;">
+    <svg width="16" height="12" viewBox="0 0 16 12" fill="#1A1A1A" opacity="0.7"><rect x="0" y="3" width="3" height="9" rx="1"/><rect x="4.5" y="2" width="3" height="10" rx="1"/><rect x="9" y="0" width="3" height="12" rx="1"/><rect x="13.5" y="0" width="2.5" height="12" rx="1" opacity="0.3"/></svg>
+    <svg width="25" height="12" viewBox="0 0 25 12" fill="#1A1A1A" opacity="0.7"><rect x="0" y="1" width="21" height="10" rx="2.5" stroke="#1A1A1A" stroke-width="1" fill="rgba(0,0,0,0.1)"/><rect x="1.5" y="2.5" width="16" height="7" rx="1.5"/><rect x="22" y="4" width="2.5" height="4" rx="1.2" fill="rgba(0,0,0,0.4)"/></svg>
+  </div>
+</div>
+
+<!-- Top nav -->
+<div class="top-nav">
+  <div class="nav-inner">
+    <span class="brand">Model Council<span>.</span></span>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span class="mono" style="font-size:10px;color:#9CA3AF;">$1.97</span>
+      <div class="avatar">N</div>
+    </div>
+  </div>
+</div>
+
+<!-- Sticky question header -->
+<div class="question-header">
+  <div class="qh-label">Question</div>
+  <div class="qh-text">"Which is the best city to live in NSW for cost of living, family life, education and sports?"</div>
+  <div class="qh-tags">
+    <span class="tag tag-domain">🏠 Personal</span>
+    <span class="tag tag-ctx">⚡ Exploratory</span>
+    <span style="font-size:10px;color:#9CA3AF;margin-left:auto;">2–3 min left</span>
+  </div>
+</div>
+
+<!-- Round strip -->
+<div class="round-strip">
+  <div class="rs-item">
+    <div class="rs-dot" style="background:#D1FAE5;color:#065F46;">✓</div>
+    <div class="rs-label" style="color:#10B981;">Independent</div>
+  </div>
+  <div class="rs-connector" style="background:#10B981;"></div>
+  <div class="rs-item">
+    <div class="rs-dot" style="background:#EDE9FE;color:#5B21B6;position:relative;">
+      <span style="position:absolute;inset:-2px;border-radius:50%;border:1.5px solid #7C3AED;animation:rp 1.5s ease-out infinite;"></span>
+      2
+    </div>
+    <div class="rs-label" style="color:#7C3AED;font-weight:600;">Critique ·</div>
+    <span style="font-size:10px;color:#9CA3AF;white-space:nowrap;">2 / 4</span>
+  </div>
+  <div class="rs-connector"></div>
+  <div class="rs-item">
+    <div class="rs-dot" style="background:#F3F4F6;color:#9CA3AF;">3</div>
+    <div class="rs-label" style="color:#9CA3AF;">Verdict</div>
+  </div>
+</div>
+
+<!-- Model status strip -->
+<div class="model-status-strip">
+  <div class="ms-item">
+    <div class="ms-av" style="background:#EEF2FF;color:#4338CA;">
+      S
+      <div class="ms-status-ring" style="border-color:#10B981;"></div>
+    </div>
+    <div class="ms-name">Sonnet</div>
+    <div class="ms-state" style="color:#10B981;">✓</div>
+  </div>
+  <div class="ms-item">
+    <div class="ms-av" style="background:#ECFDF5;color:#065F46;">
+      G
+      <div class="ms-status-ring" style="border-color:#7C3AED;animation:ring-pulse 1s ease-in-out infinite;"></div>
+    </div>
+    <div class="ms-name">GPT-5</div>
+    <div class="dots" style="height:10px;"><span></span><span></span><span></span></div>
+  </div>
+  <div class="ms-item">
+    <div class="ms-av" style="background:#EFF6FF;color:#1D4ED8;">
+      G2
+      <div class="ms-status-ring" style="border-color:#7C3AED;animation:ring-pulse 1s ease-in-out 0.2s infinite;"></div>
+    </div>
+    <div class="ms-name">Gemini</div>
+    <div class="dots" style="height:10px;"><span></span><span></span><span></span></div>
+  </div>
+  <div class="ms-item">
+    <div class="ms-av" style="background:#FFFBEB;color:#92400E;opacity:0.5;">
+      Gk
+      <div class="ms-status-ring" style="border-color:#E5E7EB;"></div>
+    </div>
+    <div class="ms-name">Grok</div>
+    <div class="ms-state" style="color:#D1D5DB;font-size:9px;">wait</div>
+  </div>
+  <div class="ms-item" style="padding-left:4px;border-left:1px solid #E5E2DB;margin-left:4px;">
+    <div class="ms-av" style="background:linear-gradient(135deg,#EDE9FE,#DDD6FE);color:#5B21B6;">Σ</div>
+    <div class="ms-name">Opus</div>
+    <div class="ms-state" style="color:#9CA3AF;font-size:9px;">synth</div>
+  </div>
+</div>
+
+<!-- Feed -->
+<div class="feed">
+
+  <!-- Round 1 -->
+  <div class="feed-round-header">
+    <div class="frh-dot" style="background:#10B981;"></div>
+    <span class="frh-label" style="color:#10B981;">Round 1 — Independent</span>
+    <span class="frh-count">4 responses ∧</span>
+  </div>
+
+  <div class="voice-card">
+    <div class="vc-stripe" style="background:#6366F1;"></div>
+    <div class="vc-inner">
+      <div class="vc-header">
+        <div class="vc-model">
+          <div class="vc-av" style="background:#EEF2FF;color:#4338CA;">S</div>
+          <div>
+            <span class="vc-name">Claude Sonnet</span>
+            <span class="vc-role" style="display:block;">Personal Advisor</span>
+          </div>
+        </div>
+        <div class="conf-bar-wrap">
+          <div class="conf-track"><div class="conf-fill" style="width:80%;background:#10B981;"></div></div>
+          <span class="mono" style="font-size:9px;color:#9CA3AF;">4/5</span>
+        </div>
+      </div>
+      <div class="vc-text">Newcastle emerges as the strongest candidate. The Hunter region offers median house prices 40% below Sydney while maintaining strong school performance. The coastal lifestyle and sporting culture provide excellent family amenity at significantly lower cost.</div>
+    </div>
+  </div>
+
+  <div class="voice-card">
+    <div class="vc-stripe" style="background:#10B981;"></div>
+    <div class="vc-inner">
+      <div class="vc-header">
+        <div class="vc-model">
+          <div class="vc-av" style="background:#ECFDF5;color:#065F46;">G</div>
+          <div>
+            <span class="vc-name">GPT-5</span>
+            <span class="vc-role" style="display:block;">Economic Analyst</span>
+          </div>
+        </div>
+        <div class="conf-bar-wrap">
+          <div class="conf-track"><div class="conf-fill" style="width:80%;background:#10B981;"></div></div>
+          <span class="mono" style="font-size:9px;color:#9CA3AF;">4/5</span>
+        </div>
+      </div>
+      <div class="vc-text">Wollongong provides a compelling case — within commuting distance of Sydney, strong university presence, coastal lifestyle at 35% below Sydney median. Families needing Sydney employment access would find this superior.</div>
+    </div>
+  </div>
+
+  <!-- Round 2 -->
+  <div class="feed-round-header" style="margin-top:4px;">
+    <div class="frh-dot" style="background:#7C3AED;animation:pulse-d 1.5s ease-in-out infinite;"></div>
+    <span class="frh-label" style="color:#7C3AED;">Round 2 — Critique</span>
+    <span class="frh-count" style="color:#7C3AED;">Active</span>
+  </div>
+
+  <div class="voice-card">
+    <div class="vc-stripe" style="background:#6366F1;"></div>
+    <div class="vc-inner">
+      <div class="vc-header">
+        <div class="vc-model">
+          <div class="vc-av" style="background:#EEF2FF;color:#4338CA;">S</div>
+          <div>
+            <span class="vc-name">Claude Sonnet</span>
+            <span class="vc-role" style="display:block;color:#7C3AED;">↳ replying to GPT-5</span>
+          </div>
+        </div>
+        <span style="font-size:11px;color:#10B981;">✓</span>
+      </div>
+      <div class="vc-text">GPT-5 underweights the sporting infrastructure question. Hunter Stadium and the Knights provide a significantly richer local sports culture — material for families prioritising participation over proximity to Sydney selective schools.</div>
+    </div>
+  </div>
+
+  <!-- Responding card -->
+  <div class="voice-card" style="border-color:#DDD6FE;">
+    <div class="shimmer"></div>
+    <div class="vc-stripe" style="background:#10B981;"></div>
+    <div class="vc-inner">
+      <div class="vc-header">
+        <div class="vc-model">
+          <div class="vc-av" style="background:#ECFDF5;color:#065F46;">G</div>
+          <div>
+            <span class="vc-name">GPT-5</span>
+            <span class="vc-role" style="display:block;color:#7C3AED;">↳ replying to Sonnet</span>
+          </div>
+        </div>
+        <div class="dots"><span></span><span></span><span></span></div>
+      </div>
+      <div class="vc-text-muted">I acknowledge Sonnet's point on sporting culture. However selective school access remains — Newcastle families face longer commutes than Wollongong families accessing Sydney schools via South Coast line<span style="border-right:1.5px solid #7C3AED;margin-left:1px;animation:cur 0.8s step-end infinite;"> </span></div>
+      <div style="margin-top:6px;display:flex;align-items:center;gap:6px;">
+        <span class="mono" style="font-size:9px;color:#7C3AED;">Writing…</span>
+        <span class="mono" style="font-size:9px;color:#9CA3AF;">89w</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Waiting -->
+  <div class="waiting-row">
+    <div class="waiting-card">
+      <div class="w-av" style="background:#EFF6FF;color:#1D4ED8;">G2</div>
+      <span style="font-size:11px;color:#9CA3AF;">Gemini…</span>
+    </div>
+    <div class="waiting-card">
+      <div class="w-av" style="background:#FFFBEB;color:#92400E;">Gk</div>
+      <span style="font-size:11px;color:#9CA3AF;">Grok…</span>
+    </div>
+  </div>
+
+  <!-- Pending verdict -->
+  <div class="verdict-pending" style="margin-top:8px;">
+    <div class="vp-text">⟳ Verdict synthesises when Round 2 completes</div>
+  </div>
+
+</div>
+
+<!-- Sticky follow-up bar -->
+<div class="follow-bar">
+  <div class="follow-input-wrap">
+    <span class="follow-input-text">Ask a follow-up…</span>
+    <div class="follow-send">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 7h12M7 1l6 6-6 6" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+  </div>
+</div>
+
+<div style="height:80px;"></div>
+
+<style>
+@keyframes rp { 0%{opacity:1;transform:scale(1)} 100%{opacity:0;transform:scale(2)} }
+@keyframes ring-pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+@keyframes pulse-d { 0%,100%{opacity:1} 50%{opacity:0.4} }
+@keyframes cur { 0%,100%{opacity:1} 50%{opacity:0} }
+</style>
+
+<div style="text-align:center;padding:6px;background:#F0EDFA;border-top:1px solid #DDD6FE;">
+  <span class="mono" style="font-size:9px;color:#9CA3AF;letter-spacing:0.1em;">CONCEPT B · STUDIO · MOBILE · 375px</span>
+</div>
+
+</body>
+</html>

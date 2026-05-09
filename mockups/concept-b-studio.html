@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Concept B — Studio</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: #F7F6F2; color: #1A1A1A; min-height: 100vh; }
+  .serif { font-family: 'DM Serif Display', serif; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* Layout */
+  .app-shell { display: flex; height: 100vh; overflow: hidden; }
+  .left-pane { width: 320px; flex-shrink: 0; border-right: 1px solid #E5E2DB; background: #FFFFFF; display: flex; flex-direction: column; overflow: hidden; }
+  .right-pane { flex: 1; overflow-y: auto; background: #F7F6F2; }
+
+  /* Left pane parts */
+  .lp-header { padding: 20px 24px 16px; border-bottom: 1px solid #F0EDE6; }
+  .lp-question { padding: 20px 24px; border-bottom: 1px solid #F0EDE6; flex: 1; }
+  .lp-meta { padding: 16px 24px; border-bottom: 1px solid #F0EDE6; }
+  .lp-footer { padding: 16px 24px; margin-top: auto; }
+
+  /* Right pane parts */
+  .rp-content { padding: 28px 36px; max-width: 780px; }
+
+  /* Round label */
+  .round-label { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .round-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* Model voice card */
+  .voice-card { background: #FFFFFF; border: 1px solid #E5E2DB; border-radius: 14px; padding: 20px; margin-bottom: 12px; position: relative; overflow: hidden; }
+  .voice-card.responding { border-color: #C4B5FD; }
+  .voice-card .model-stripe { position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+
+  /* Shimmer for responding */
+  .shimmer { height: 2px; background: linear-gradient(90deg, transparent, #7C3AED, transparent); background-size: 200%; animation: sh 1.5s ease-in-out infinite; position: absolute; bottom: 0; left: 0; right: 0; }
+  @keyframes sh { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+
+  /* Verdict card */
+  .verdict-hero { background: linear-gradient(135deg, #EDE9FE 0%, #FFFFFF 60%); border: 1px solid #DDD6FE; border-radius: 20px; padding: 28px; margin-bottom: 20px; }
+
+  /* Stepper */
+  .stepper { display: flex; flex-direction: column; gap: 0; }
+  .step-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; position: relative; }
+  .step-item:not(:last-child)::after { content: ''; position: absolute; left: 10px; top: 32px; bottom: 0; width: 1px; background: #E5E2DB; }
+  .step-circle { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+
+  .section-meta { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #9CA3AF; margin-bottom: 6px; }
+
+  /* Domain tag */
+  .domain-tag { display: inline-flex; align-items: center; gap: 5px; background: #EDE9FE; color: #6D28D9; padding: 3px 10px; border-radius: 100px; font-size: 11px; font-weight: 500; }
+
+  /* Model avatars */
+  .m-avatar { width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+
+  /* Confidence bar */
+  .conf-track { height: 3px; background: #E5E2DB; border-radius: 2px; width: 48px; overflow: hidden; }
+  .conf-fill { height: 100%; border-radius: 2px; }
+
+  /* Follow-up */
+  .followup-bar { background: #FFFFFF; border: 1px solid #E5E2DB; border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+
+  /* Nav */
+  .nav-item { font-size: 13px; color: #6B7280; cursor: pointer; padding: 4px 0; }
+  .nav-item.active { color: #7C3AED; font-weight: 600; }
+
+  /* Dots animation */
+  .dot-bounce { display: inline-flex; gap: 2px; align-items: flex-end; height: 12px; }
+  .dot-bounce span { width: 3px; border-radius: 2px; background: #7C3AED; animation: db 1.2s ease-in-out infinite; }
+  .dot-bounce span:nth-child(2) { animation-delay: 0.15s; }
+  .dot-bounce span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes db { 0%,100%{height:4px} 50%{height:10px} }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- LEFT PANE — always visible context -->
+  <div class="left-pane">
+
+    <!-- Brand -->
+    <div class="lp-header">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <span class="serif" style="font-size: 20px; letter-spacing: -0.02em; color: #1A1A1A;">Model Council<span style="color: #7C3AED;">.</span></span>
+        <div style="width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #7C3AED, #4F46E5); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: white;">N</div>
+      </div>
+      <nav style="display: flex; gap: 20px; margin-top: 16px;">
+        <span class="nav-item active">Council</span>
+        <span class="nav-item">History</span>
+        <span class="nav-item">Settings</span>
+      </nav>
+    </div>
+
+    <!-- Question — always visible -->
+    <div class="lp-question">
+      <div class="section-meta">Your Question</div>
+      <p class="serif" style="font-size: 17px; line-height: 1.5; color: #1A1A1A; margin-bottom: 12px;">"Which is the best city to live in NSW for cost of living, family life, education and sports?"</p>
+      <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+        <span class="domain-tag">🏠 Personal</span>
+        <span class="domain-tag" style="background: #FEF3C7; color: #92400E;">⚡ Exploratory</span>
+      </div>
+    </div>
+
+    <!-- Round Stepper -->
+    <div class="lp-meta">
+      <div class="section-meta">Progress</div>
+      <div class="stepper">
+        <div class="step-item">
+          <div class="step-circle" style="background: #D1FAE5; color: #065F46;">✓</div>
+          <div>
+            <div style="font-size: 12px; font-weight: 600; color: #065F46;">Round 1 — Independent</div>
+            <div class="mono" style="font-size: 10px; color: #9CA3AF;">4 of 4 · Complete</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-circle" style="background: #EDE9FE; color: #5B21B6; position: relative;">
+            <span style="position: absolute; inset: -3px; border-radius: 50%; border: 1.5px solid #7C3AED; animation: ring-p 1.5s ease-out infinite;"></span>
+            2
+          </div>
+          <div>
+            <div style="font-size: 12px; font-weight: 600; color: #7C3AED;">Round 2 — Critique</div>
+            <div class="mono" style="font-size: 10px; color: #9CA3AF;">2 of 4 responding</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-circle" style="background: #F3F4F6; color: #9CA3AF;">3</div>
+          <div>
+            <div style="font-size: 12px; font-weight: 600; color: #9CA3AF;">Verdict</div>
+            <div class="mono" style="font-size: 10px; color: #D1D5DB;">Pending synthesis</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Model Status -->
+    <div class="lp-meta">
+      <div class="section-meta">Council</div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="m-avatar" style="background: #EEF2FF; color: #4338CA;">S</div>
+            <span style="font-size: 12px; font-weight: 500; color: #374151;">Claude Sonnet</span>
+          </div>
+          <span style="font-size: 11px; color: #10B981; font-weight: 500;">✓ Done</span>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="m-avatar" style="background: #ECFDF5; color: #065F46;">G</div>
+            <span style="font-size: 12px; font-weight: 500; color: #374151;">GPT-5</span>
+          </div>
+          <div class="dot-bounce"><span></span><span></span><span></span></div>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="m-avatar" style="background: #EFF6FF; color: #1D4ED8;">G2</div>
+            <span style="font-size: 12px; font-weight: 500; color: #374151;">Gemini 3.1</span>
+          </div>
+          <div class="dot-bounce"><span></span><span></span><span></span></div>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="m-avatar" style="background: #FFFBEB; color: #92400E;">Gk</div>
+            <span style="font-size: 12px; font-weight: 500; color: #9CA3AF;">Grok 4.20</span>
+          </div>
+          <span style="font-size: 11px; color: #D1D5DB;">Waiting</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estimate + Credits -->
+    <div class="lp-footer" style="margin-top: auto; border-top: 1px solid #F0EDE6;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <span class="mono" style="font-size: 10px; color: #9CA3AF;">Est. cost</span>
+        <span class="mono" style="font-size: 11px; color: #374151;">$0.18–0.32</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <span class="mono" style="font-size: 10px; color: #9CA3AF;">Credits</span>
+        <span class="mono" style="font-size: 11px; color: #374151;">$1.97</span>
+      </div>
+      <button style="width: 100%; background: transparent; border: 1px solid #FCA5A5; color: #DC2626; padding: 8px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">✕ Cancel</button>
+    </div>
+
+  </div>
+
+  <!-- RIGHT PANE — debate feed -->
+  <div class="right-pane">
+    <div class="rp-content">
+
+      <!-- Round 1 -->
+      <div style="margin-bottom: 32px;">
+        <div class="round-label">
+          <div class="round-dot" style="background: #10B981;"></div>
+          <span class="mono" style="font-size: 11px; color: #6B7280; letter-spacing: 0.08em;">ROUND 01 — INDEPENDENT · 4 RESPONSES</span>
+          <span style="font-size: 11px; color: #9CA3AF; margin-left: auto; cursor: pointer;">∧ Collapse</span>
+        </div>
+
+        <!-- Sonnet card -->
+        <div class="voice-card" style="margin-bottom: 10px;">
+          <div class="model-stripe" style="background: #6366F1;"></div>
+          <div style="padding-left: 8px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="m-avatar" style="background: #EEF2FF; color: #4338CA;">S</div>
+                <div>
+                  <span style="font-size: 12px; font-weight: 600; color: #1A1A1A;">Claude Sonnet</span>
+                  <span style="font-size: 11px; color: #9CA3AF; margin-left: 6px;">Personal Advisor</span>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="conf-track"><div class="conf-fill" style="width: 80%; background: #10B981;"></div></div>
+                <span class="mono" style="font-size: 10px; color: #6B7280;">4/5</span>
+              </div>
+            </div>
+            <p style="font-size: 13px; line-height: 1.7; color: #374151;">Newcastle emerges as the strongest candidate when balancing all four criteria. The Hunter region offers median house prices 40% below Sydney while maintaining strong school performance. The coastal lifestyle and established sporting culture provide excellent family amenity at significantly lower cost than Sydney metro areas.</p>
+          </div>
+        </div>
+
+        <!-- GPT-5 card -->
+        <div class="voice-card" style="margin-bottom: 10px;">
+          <div class="model-stripe" style="background: #10B981;"></div>
+          <div style="padding-left: 8px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="m-avatar" style="background: #ECFDF5; color: #065F46;">G</div>
+                <div>
+                  <span style="font-size: 12px; font-weight: 600; color: #1A1A1A;">GPT-5</span>
+                  <span style="font-size: 11px; color: #9CA3AF; margin-left: 6px;">Economic Analyst</span>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="conf-track"><div class="conf-fill" style="width: 80%; background: #10B981;"></div></div>
+                <span class="mono" style="font-size: 10px; color: #6B7280;">4/5</span>
+              </div>
+            </div>
+            <p style="font-size: 13px; line-height: 1.7; color: #374151;">My analysis focuses on the cost-to-quality ratio across regions. Wollongong provides a compelling case — it sits within commuting distance of Sydney, has a strong university presence boosting education infrastructure, and coastal lifestyle at 35% below Sydney median property prices.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Round 2 — Active -->
+      <div style="margin-bottom: 32px;">
+        <div class="round-label">
+          <div class="round-dot" style="background: #7C3AED; animation: pulse-d 1.5s ease-in-out infinite;"></div>
+          <span class="mono" style="font-size: 11px; color: #7C3AED; letter-spacing: 0.08em;">ROUND 02 — CRITIQUE · IN PROGRESS</span>
+        </div>
+
+        <!-- Done card -->
+        <div class="voice-card" style="margin-bottom: 10px;">
+          <div class="model-stripe" style="background: #6366F1;"></div>
+          <div style="padding-left: 8px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="m-avatar" style="background: #EEF2FF; color: #4338CA;">S</div>
+                <div>
+                  <span style="font-size: 12px; font-weight: 600; color: #1A1A1A;">Claude Sonnet</span>
+                  <span style="font-size: 11px; color: #9CA3AF; margin-left: 6px;">responding to GPT-5</span>
+                </div>
+              </div>
+              <span style="font-size: 11px; color: #10B981;">✓</span>
+            </div>
+            <p style="font-size: 13px; line-height: 1.7; color: #374151;">GPT-5 raises a fair point on Wollongong's commuter appeal but underweights the sporting infrastructure question. Hunter Stadium and Newcastle Knights provide a significantly richer local sports culture than Wollongong's offerings — for a family prioritising sports participation, this is material.</p>
+          </div>
+        </div>
+
+        <!-- Responding card -->
+        <div class="voice-card responding" style="margin-bottom: 10px;">
+          <div class="shimmer"></div>
+          <div class="model-stripe" style="background: #10B981;"></div>
+          <div style="padding-left: 8px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="m-avatar" style="background: #ECFDF5; color: #065F46;">G</div>
+                <div>
+                  <span style="font-size: 12px; font-weight: 600; color: #1A1A1A;">GPT-5</span>
+                  <span style="font-size: 11px; color: #9CA3AF; margin-left: 6px;">responding to Sonnet</span>
+                </div>
+              </div>
+              <div class="dot-bounce"><span></span><span></span><span></span></div>
+            </div>
+            <p style="font-size: 13px; line-height: 1.7; color: #6B7280;">I acknowledge Sonnet's point on the sports culture differential. However the selective school access question remains unaddressed — Newcastle families seeking selective high school placement face longer commutes than Wollongong families who can access Sydney's selective schools via the South Coast line</p>
+            <span class="mono" style="font-size: 10px; color: #7C3AED;">Writing… 89w</span>
+          </div>
+        </div>
+
+        <!-- Waiting cards placeholder -->
+        <div style="display: flex; gap: 10px;">
+          <div style="flex: 1; background: #F7F6F2; border: 1px dashed #E5E2DB; border-radius: 12px; padding: 16px; display: flex; align-items: center; gap: 8px;">
+            <div class="m-avatar" style="background: #EFF6FF; color: #1D4ED8; opacity: 0.5;">G2</div>
+            <span style="font-size: 12px; color: #9CA3AF;">Gemini waiting…</span>
+          </div>
+          <div style="flex: 1; background: #F7F6F2; border: 1px dashed #E5E2DB; border-radius: 12px; padding: 16px; display: flex; align-items: center; gap: 8px;">
+            <div class="m-avatar" style="background: #FFFBEB; color: #92400E; opacity: 0.5;">Gk</div>
+            <span style="font-size: 12px; color: #9CA3AF;">Grok waiting…</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Verdict Preview -->
+      <div style="margin-bottom: 32px; opacity: 0.5;">
+        <div class="round-label">
+          <div class="round-dot" style="background: #D1D5DB;"></div>
+          <span class="mono" style="font-size: 11px; color: #9CA3AF; letter-spacing: 0.08em;">VERDICT — PENDING</span>
+        </div>
+        <div style="background: #FFFFFF; border: 1px dashed #E5E2DB; border-radius: 14px; padding: 24px; text-align: center; color: #9CA3AF; font-size: 13px;">Synthesising when Round 2 completes…</div>
+      </div>
+
+      <!-- Follow-up bar (sticky at bottom in real impl) -->
+      <div style="margin-top: 16px;">
+        <div class="followup-bar">
+          <span style="font-size: 13px; color: #9CA3AF; flex: 1;">Ask a follow-up to the council…</span>
+          <div style="background: #7C3AED; border-radius: 8px; padding: 6px 16px; font-size: 12px; font-weight: 600; color: white; cursor: pointer;">Ask →</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- Label -->
+<div style="position: fixed; bottom: 0; left: 0; right: 0; text-align: center; padding: 10px; background: rgba(247,246,242,0.9); border-top: 1px solid #E5E2DB; backdrop-filter: blur(8px);">
+  <span style="font-size: 11px; letter-spacing: 0.1em; color: #9CA3AF; text-transform: uppercase;">Concept B — "Studio" · Two-Column Split · Light, Editorial, Premium</span>
+</div>
+
+<style>
+@keyframes ring-p { 0%{opacity:1;transform:scale(1)} 100%{opacity:0;transform:scale(2)} }
+@keyframes pulse-d { 0%,100%{opacity:1} 50%{opacity:0.4} }
+</style>
+
+</body>
+</html>

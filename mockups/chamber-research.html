@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Model Council — Research Edition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   DESIGN TOKENS — WCAG AA compliant (all text ≥ 4.5:1 on bg)
+   ============================================================ */
+:root {
+  /* Backgrounds */
+  --bg:          #FAFAF8;   /* warm white */
+  --bg-card:     #FFFFFF;
+  --bg-inset:    #F3F2EF;
+  --bg-hover:    #EDECE9;
+  --bg-active:   #E8E6E1;
+
+  /* Text — all pass WCAG AA on --bg */
+  --t1:  #1A1918;   /* 17.5:1 — headings, primary */
+  --t2:  #3D3B38;   /* 10.2:1 — body */
+  --t3:  #6B6862;   /* 4.6:1  — secondary (passes AA) */
+  --t4:  #9B9793;   /* 3.0:1  — ONLY for decorative/disabled */
+
+  /* Accent — deep blue, safe for all common colorblindness types */
+  --ac:     #1D4ED8;         /* 7.2:1 on white — AAA */
+  --ac-mid: #2563EB;
+  --ac-bg:  #EFF6FF;
+  --ac-bd:  #BFDBFE;
+
+  /* Status — uses SHAPE + TEXT, not color alone */
+  --done-bg:  #F0FDF4;
+  --done-bd:  #BBF7D0;
+  --done-tx:  #166534;   /* 7.2:1 on done-bg */
+  --busy-bg:  #FEF9C3;
+  --busy-bd:  #FDE047;
+  --busy-tx:  #713F12;   /* 8.4:1 on busy-bg */
+  --wait-bg:  #F3F2EF;
+  --wait-bd:  #D4D2CE;
+  --wait-tx:  #57534E;   /* 5.1:1 on wait-bg */
+
+  /* Borders */
+  --bd:    #E2E0DC;
+  --bd-hi: #C7C4BF;
+
+  /* Verdict alignment */
+  --aligned-tx: #166534;
+  --partial-tx: #92400E;
+  --diverge-tx: #991B1B;
+
+  /* Radius */
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-xl: 16px;
+
+  /* Shadow */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+
+  /* Typography */
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-serif: 'Lora', Georgia, serif;
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+}
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; }
+
+body {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  background: var(--bg);
+  color: var(--t1);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============================================================
+   TOP NAV
+   ============================================================ */
+.top-nav {
+  height: 56px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--bd);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 32px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.nav-logo {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--t1);
+  letter-spacing: -0.3px;
+  white-space: nowrap;
+}
+
+.nav-links {
+  display: flex;
+  gap: 4px;
+  list-style: none;
+  flex: 1;
+}
+
+.nav-links a {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--r-md);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--t3);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+.nav-links a:hover { background: var(--bg-inset); color: var(--t1); }
+.nav-links a.active { background: var(--ac-bg); color: var(--ac); }
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nav-theme-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--bg-inset);
+  border: 1px solid var(--bd);
+  border-radius: var(--r-md);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--t2);
+  cursor: pointer;
+}
+
+.nav-avatar {
+  width: 32px; height: 32px;
+  background: var(--ac-bg);
+  border: 2px solid var(--ac-bd);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: var(--ac);
+}
+
+/* ============================================================
+   STAGE TABS
+   ============================================================ */
+.stage-bar {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--bd);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.stage-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--t3);
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.stage-tab.done { color: var(--t2); }
+.stage-tab.active { color: var(--ac); border-bottom-color: var(--ac); }
+
+.stage-num {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+  background: var(--bg-inset);
+  color: var(--t3);
+  border: 1.5px solid var(--bd);
+}
+.stage-tab.done .stage-num { background: #DCFCE7; color: #166534; border-color: #86EFAC; }
+.stage-tab.active .stage-num { background: var(--ac); color: white; border-color: var(--ac); }
+
+.stage-divider { color: var(--t4); font-size: 14px; padding: 0 4px; }
+
+.stage-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--t3);
+}
+.round-badge {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--ac-bg);
+  border: 1px solid var(--ac-bd);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ac);
+}
+
+/* ============================================================
+   QUESTION STRIP
+   ============================================================ */
+.question-strip {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--bd);
+  padding: 16px 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.question-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--t3);
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+.question-text {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--t1);
+  flex: 1;
+}
+
+.question-tags {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  flex-shrink: 0;
+}
+.q-tag {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--bg-inset);
+  color: var(--t3);
+  border: 1px solid var(--bd);
+}
+
+/* ============================================================
+   ROUND STEPPER
+   ============================================================ */
+.round-stepper {
+  background: var(--bg-inset);
+  border-bottom: 1px solid var(--bd);
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  overflow-x: auto;
+}
+
+.round-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.r-dot {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700;
+  background: var(--bg-card);
+  color: var(--t3);
+  border: 1.5px solid var(--bd);
+}
+.round-step.done .r-dot { background: #DCFCE7; color: #166534; border-color: #86EFAC; }
+.round-step.active .r-dot { background: var(--ac); color: white; border-color: var(--ac); box-shadow: 0 0 0 3px var(--ac-bd); }
+
+.r-label { font-size: 12px; font-weight: 500; color: var(--t3); }
+.round-step.done .r-label { color: var(--t2); }
+.round-step.active .r-label { color: var(--ac); font-weight: 600; }
+
+.r-connector {
+  width: 32px; height: 2px;
+  background: var(--bd);
+  border-radius: 1px;
+}
+.r-connector.done { background: #86EFAC; }
+
+/* ============================================================
+   MAIN LAYOUT
+   ============================================================ */
+.main {
+  display: flex;
+  flex: 1;
+  gap: 0;
+}
+
+/* ============================================================
+   SESSION SIDEBAR
+   ============================================================ */
+.session-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--bd);
+  background: var(--bg-card);
+  padding: 16px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-section-title {
+  padding: 0 16px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--t4);
+}
+
+.session-item {
+  padding: 8px 16px;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+}
+.session-item:hover { background: var(--bg-inset); }
+.session-item.active { border-left-color: var(--ac); background: var(--ac-bg); }
+
+.session-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--t1);
+  line-height: 1.4;
+  margin-bottom: 2px;
+}
+.session-item.active .session-title { color: var(--ac); }
+
+.session-meta {
+  font-size: 11px;
+  color: var(--t3);
+}
+
+.sidebar-new-btn {
+  margin: 12px 16px 0;
+  padding: 9px 14px;
+  background: var(--ac);
+  color: white;
+  border: none;
+  border-radius: var(--r-md);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+/* ============================================================
+   CONTENT AREA
+   ============================================================ */
+.content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============================================================
+   MODEL GRID
+   ============================================================ */
+.model-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--bd);
+  flex: 1;
+}
+
+.model-card {
+  background: var(--bg-card);
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 220px;
+}
+
+.model-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.model-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--bg-inset);
+  border: 1.5px solid var(--bd-hi);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700;
+  color: var(--t2);
+  flex-shrink: 0;
+}
+
+.model-info { flex: 1; min-width: 0; }
+.model-name { font-size: 15px; font-weight: 600; color: var(--t1); }
+.model-role {
+  font-size: 12px; color: var(--t3);
+  display: flex; align-items: center; gap: 4px;
+}
+.model-version {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--t4);
+  background: var(--bg-inset);
+  border: 1px solid var(--bd);
+  border-radius: 3px;
+  padding: 1px 5px;
+}
+
+/* Status badge — shape + text + color, never color alone */
+.status-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.status-badge.done   { background: var(--done-bg); border-color: var(--done-bd); color: var(--done-tx); }
+.status-badge.busy   { background: var(--busy-bg); border-color: var(--busy-bd); color: var(--busy-tx); }
+.status-badge.queued { background: var(--wait-bg); border-color: var(--wait-bd); color: var(--wait-tx); }
+
+.status-icon { font-size: 11px; }
+
+.model-body { flex: 1; }
+.model-excerpt {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--t2);
+}
+
+.model-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  border-top: 1px solid var(--bd);
+}
+
+/* Confidence — dashes with aria-label for screen readers */
+.conf-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.conf-label { font-size: 12px; color: var(--t3); }
+.conf-bars {
+  display: flex;
+  gap: 3px;
+}
+.conf-bar {
+  width: 16px; height: 5px;
+  border-radius: 2px;
+  background: var(--bd);
+}
+.conf-bar.filled { background: var(--ac); }
+
+.conf-value {
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  color: var(--t2);
+}
+
+.model-actions {
+  display: flex;
+  gap: 6px;
+}
+.card-btn {
+  padding: 4px 10px;
+  border: 1px solid var(--bd);
+  border-radius: var(--r-sm);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--t3);
+  cursor: pointer;
+  display: flex; align-items: center; gap: 4px;
+}
+.card-btn:hover { background: var(--bg-inset); color: var(--t1); }
+.card-btn.primary { background: var(--ac-bg); border-color: var(--ac-bd); color: var(--ac); }
+
+.model-timestamp {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--t4);
+}
+
+/* Queued/empty state */
+.model-card.queued-card .model-body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  color: var(--t4);
+  font-size: 14px;
+}
+
+/* ============================================================
+   VERDICT PANEL
+   ============================================================ */
+.verdict-panel {
+  border-top: 2px solid var(--bd);
+  background: var(--bg-card);
+  padding: 24px;
+}
+
+.verdict-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+/* Arc gauge */
+.arc-gauge-wrap {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.arc-gauge-wrap svg { display: block; }
+.arc-score {
+  font-size: 28px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--t1);
+  text-align: center;
+  line-height: 1;
+}
+.arc-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--t3);
+  text-align: center;
+  max-width: 80px;
+  line-height: 1.3;
+}
+.arc-info {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--ac);
+  cursor: help;
+  border-bottom: 1px dashed var(--ac-bd);
+}
+
+.verdict-content { flex: 1; }
+
+.verdict-byline {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--t3);
+  margin-bottom: 8px;
+}
+
+.verdict-quote {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--t1);
+  margin-bottom: 12px;
+}
+
+.verdict-model-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.verdict-pill {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--bg-inset);
+  color: var(--t2);
+  border: 1px solid var(--bd);
+}
+
+/* Alignment table */
+.alignment-section {
+  margin-top: 20px;
+}
+.alignment-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--t3);
+  margin-bottom: 10px;
+}
+.alignment-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.alignment-table th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--t4);
+  padding: 6px 12px;
+  border-bottom: 2px solid var(--bd);
+}
+.alignment-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--bd);
+  color: var(--t2);
+  vertical-align: middle;
+}
+.alignment-table tr:last-child td { border-bottom: none; }
+.alignment-table tr:hover td { background: var(--bg-inset); }
+
+.align-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 13px;
+}
+/* Shape + text + color for status */
+.align-status::before {
+  content: '';
+  display: inline-block;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.align-status.aligned { color: var(--aligned-tx); }
+.align-status.aligned::before { background: #22C55E; }
+.align-status.partial { color: var(--partial-tx); }
+.align-status.partial::before { background: #F59E0B; border-radius: 2px; } /* square for partial */
+.align-status.diverge { color: var(--diverge-tx); }
+.align-status.diverge::before { background: #EF4444; border-radius: 0; transform: rotate(45deg); }
+
+/* ============================================================
+   EXPORT BAR
+   ============================================================ */
+.export-bar {
+  background: var(--bg-inset);
+  border-top: 1px solid var(--bd);
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.export-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--t2);
+  flex: 1;
+}
+.export-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--r-md);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+}
+.export-btn.secondary {
+  background: var(--bg-card);
+  border: 1px solid var(--bd);
+  color: var(--t2);
+}
+.export-btn.primary {
+  background: var(--ac);
+  color: white;
+}
+
+/* ============================================================
+   FOLLOW-UP BAR
+   ============================================================ */
+.followup-bar {
+  background: var(--bg-card);
+  border-top: 1px solid var(--bd);
+  padding: 16px 24px;
+}
+
+.followup-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.followup-input {
+  flex: 1;
+  padding: 10px 16px;
+  border: 1.5px solid var(--bd);
+  border-radius: var(--r-md);
+  font-size: 15px;
+  font-family: var(--font-body);
+  color: var(--t1);
+  background: var(--bg-card);
+  outline: none;
+}
+.followup-input:focus {
+  border-color: var(--ac);
+  box-shadow: 0 0 0 3px var(--ac-bg);
+}
+.followup-input::placeholder { color: var(--t4); }
+
+.ask-btn {
+  padding: 10px 20px;
+  background: var(--ac);
+  color: white;
+  border: none;
+  border-radius: var(--r-md);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.followup-chips {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.chip {
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1.5px solid var(--bd);
+  background: var(--bg-card);
+  font-size: 13px;
+  color: var(--t2);
+  cursor: pointer;
+  font-weight: 500;
+}
+.chip:hover { background: var(--bg-inset); border-color: var(--ac-bd); color: var(--ac); }
+
+/* ============================================================
+   ACCESSIBILITY HELPERS
+   ============================================================ */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0);
+  white-space: nowrap; border: 0;
+}
+
+/* Focus ring — visible for keyboard nav */
+*:focus-visible {
+  outline: 3px solid var(--ac);
+  outline-offset: 2px;
+}
+
+/* Skip-to-content link */
+.skip-link {
+  position: absolute;
+  top: -50px;
+  left: 16px;
+  background: var(--ac);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 0 0 var(--r-md) var(--r-md);
+  font-size: 14px;
+  font-weight: 600;
+  z-index: 999;
+  text-decoration: none;
+  transition: top 0.1s;
+}
+.skip-link:focus { top: 0; }
+
+/* ============================================================
+   SCORE TOOLTIP
+   ============================================================ */
+.tooltip-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.tooltip-wrap .tooltip-box {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--t1);
+  color: white;
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 8px 12px;
+  border-radius: var(--r-md);
+  width: 220px;
+  z-index: 200;
+  pointer-events: none;
+}
+.tooltip-wrap:hover .tooltip-box,
+.tooltip-wrap:focus-within .tooltip-box { display: block; }
+
+/* ============================================================
+   SKIP TO DARK MODE (toggle)
+   ============================================================ */
+body.dark-mode {
+  --bg: #0C0C0E;
+  --bg-card: #131315;
+  --bg-inset: #1A1A1D;
+  --bg-hover: #222225;
+  --bg-active: #2A2A2E;
+  --t1: rgba(255,255,255,0.92);
+  --t2: rgba(255,255,255,0.72);
+  --t3: rgba(255,255,255,0.48);
+  --t4: rgba(255,255,255,0.22);
+  --ac: #93C5FD;
+  --ac-mid: #60A5FA;
+  --ac-bg: rgba(147,197,253,0.08);
+  --ac-bd: rgba(147,197,253,0.22);
+  --bd: rgba(255,255,255,0.10);
+  --bd-hi: rgba(255,255,255,0.18);
+  --done-bg: rgba(22,163,74,0.12);
+  --done-bd: rgba(22,163,74,0.30);
+  --done-tx: #86EFAC;
+  --busy-bg: rgba(234,179,8,0.10);
+  --busy-bd: rgba(234,179,8,0.30);
+  --busy-tx: #FDE047;
+  --wait-bg: rgba(255,255,255,0.05);
+  --wait-bd: rgba(255,255,255,0.12);
+  --wait-tx: rgba(255,255,255,0.45);
+  --aligned-tx: #86EFAC;
+  --partial-tx: #FCD34D;
+  --diverge-tx: #FCA5A5;
+}
+
+/* ============================================================
+   RESPONSIVE — MOBILE
+   ============================================================ */
+@media (max-width: 768px) {
+  .session-sidebar { display: none; }
+  .model-grid { grid-template-columns: 1fr; }
+  .top-nav { padding: 0 16px; gap: 16px; }
+  .nav-links { display: none; }
+  .question-strip { flex-direction: column; }
+  .question-tags { flex-wrap: wrap; }
+  .verdict-header { flex-direction: column; }
+  .stage-right { display: none; }
+  .export-bar { flex-wrap: wrap; }
+  .round-stepper { padding: 10px 16px; }
+  .content-area { padding: 0; }
+  .model-card { padding: 16px; }
+  .verdict-panel { padding: 16px; }
+  .followup-bar { padding: 12px 16px; }
+  .top-nav-mobile-btn { display: flex; }
+
+  /* Mobile bottom nav */
+  .mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--bg-card);
+    border-top: 1px solid var(--bd);
+    z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  body { padding-bottom: 64px; }
+}
+@media (min-width: 769px) {
+  .mobile-bottom-nav { display: none; }
+}
+
+.mobile-bottom-nav {
+  display: none;
+}
+.mobile-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--t3);
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+.mobile-nav-item.active { color: var(--ac); }
+.mobile-nav-icon { font-size: 18px; }
+
+/* ============================================================
+   ANNOTATION HIGHLIGHT (researcher feature)
+   ============================================================ */
+.annotatable:hover { background: #FEF9C3; cursor: text; }
+.annotation-hint {
+  font-size: 11px;
+  color: var(--t4);
+  margin-top: 4px;
+}
+</style>
+</head>
+<body>
+
+<!-- Skip to content — keyboard accessibility -->
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<!-- ============================================================
+     TOP NAV
+     ============================================================ -->
+<nav class="top-nav" role="navigation" aria-label="Main navigation">
+  <div class="nav-logo">Model Council</div>
+  <ul class="nav-links" role="list">
+    <li><a href="#" class="active" aria-current="page">⬡ Council</a></li>
+    <li><a href="#">🕐 History</a></li>
+    <li><a href="#">⚙ Settings</a></li>
+    <li><a href="#">? Help</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="nav-theme-btn" onclick="document.body.classList.toggle('dark-mode')" aria-label="Toggle dark mode">
+      ◑ Dark mode
+    </button>
+    <div class="nav-avatar" aria-label="User account: A">A</div>
+  </div>
+</nav>
+
+<!-- ============================================================
+     STAGE TABS
+     ============================================================ -->
+<div class="stage-bar" role="tablist" aria-label="Session stages">
+  <div class="stage-tab done" role="tab" aria-selected="false" tabindex="-1">
+    <span class="stage-num" aria-hidden="true">✓</span>
+    Pose
+  </div>
+  <span class="stage-divider" aria-hidden="true">›</span>
+  <div class="stage-tab active" role="tab" aria-selected="true" tabindex="0">
+    <span class="stage-num" aria-hidden="true">2</span>
+    Deliberate
+  </div>
+  <span class="stage-divider" aria-hidden="true">›</span>
+  <div class="stage-tab" role="tab" aria-selected="false" tabindex="-1">
+    <span class="stage-num" aria-hidden="true">3</span>
+    Verdict
+  </div>
+  <div class="stage-right">
+    <span class="round-badge" aria-label="Round 2: Critique, 2 of 4 rounds">
+      Round 2 · Critique — 2 of 4
+    </span>
+    <span aria-label="2 rounds remaining">+2 remaining</span>
+  </div>
+</div>
+
+<!-- ============================================================
+     QUESTION
+     ============================================================ -->
+<div class="question-strip" role="region" aria-label="Research question">
+  <span class="question-label">Question</span>
+  <p class="question-text">"Which is the best city to live in NSW for cost of living, family life, education and sports?"</p>
+  <div class="question-tags" aria-label="Tags">
+    <span class="q-tag">Personal</span>
+    <span class="q-tag">Exploratory</span>
+  </div>
+</div>
+
+<!-- ============================================================
+     ROUND STEPPER
+     ============================================================ -->
+<div class="round-stepper" role="list" aria-label="Round progress">
+  <div class="round-step done" role="listitem">
+    <div class="r-dot" aria-hidden="true">✓</div>
+    <span class="r-label">Independent</span>
+  </div>
+  <div class="r-connector done" role="separator" aria-hidden="true"></div>
+  <div class="round-step active" role="listitem">
+    <div class="r-dot" aria-hidden="true">2</div>
+    <span class="r-label">Critique</span>
+  </div>
+  <div class="r-connector" role="separator" aria-hidden="true"></div>
+  <div class="round-step" role="listitem">
+    <div class="r-dot" aria-hidden="true">3</div>
+    <span class="r-label">Rebuttal</span>
+  </div>
+  <div class="r-connector" role="separator" aria-hidden="true"></div>
+  <div class="round-step" role="listitem">
+    <div class="r-dot" aria-hidden="true">4</div>
+    <span class="r-label">Synthesis</span>
+  </div>
+</div>
+
+<!-- ============================================================
+     MAIN CONTENT
+     ============================================================ -->
+<div class="main" id="main-content">
+
+  <!-- Session History Sidebar -->
+  <aside class="session-sidebar" role="complementary" aria-label="Session history">
+    <button class="sidebar-new-btn" aria-label="Start new council session">
+      + New Session
+    </button>
+    <div style="height:16px"></div>
+    <div class="sidebar-section-title">Today</div>
+    <div class="session-item active" role="button" tabindex="0" aria-current="true">
+      <div class="session-title">Best city in NSW</div>
+      <div class="session-meta">In progress · 2 of 4 models</div>
+    </div>
+    <div class="session-item" role="button" tabindex="0">
+      <div class="session-title">Sydney vs Melbourne property</div>
+      <div class="session-meta">Done · 4 models</div>
+    </div>
+    <div class="sidebar-section-title" style="margin-top:16px">Yesterday</div>
+    <div class="session-item" role="button" tabindex="0">
+      <div class="session-title">Climate policy trade-offs</div>
+      <div class="session-meta">Done · 4 models</div>
+    </div>
+    <div class="session-item" role="button" tabindex="0">
+      <div class="session-title">Remote work productivity</div>
+      <div class="session-meta">Done · 3 models</div>
+    </div>
+    <div class="session-item" role="button" tabindex="0">
+      <div class="session-title">AI in healthcare ethics</div>
+      <div class="session-meta">Done · 4 models</div>
+    </div>
+    <div class="sidebar-section-title" style="margin-top:16px">This week</div>
+    <div class="session-item" role="button" tabindex="0">
+      <div class="session-title">Renewable energy investments</div>
+      <div class="session-meta">Done · 4 models</div>
+    </div>
+    <div class="session-item" role="button" tabindex="0">
+      <div class="session-title">Education reform models</div>
+      <div class="session-meta">Done · 4 models</div>
+    </div>
+  </aside>
+
+  <!-- Main content column -->
+  <div class="content">
+
+    <!-- Model Response Grid -->
+    <section class="model-grid" role="region" aria-label="Model responses">
+
+      <!-- Card 1: Claude Sonnet — Done -->
+      <article class="model-card" aria-label="Claude Sonnet response">
+        <div class="model-header">
+          <div class="model-avatar" aria-hidden="true">S</div>
+          <div class="model-info">
+            <div class="model-name">Claude Sonnet</div>
+            <div class="model-role">
+              Personal Advisor · responding to GPT-5
+              <span class="model-version" title="Model version">claude-3-5-sonnet-20241022</span>
+            </div>
+          </div>
+          <span class="status-badge done" role="status" aria-label="Status: Done">
+            <span class="status-icon" aria-hidden="true">✓</span> Done
+          </span>
+        </div>
+
+        <div class="model-body">
+          <p class="model-excerpt annotatable" title="Click and drag to highlight for annotation">
+            GPT-5 raises a fair point on Wollongong's commuter appeal but underweights sporting infrastructure. Hunter Stadium and the Knights provide a local sports culture — material, not marginal, for families prioritising participation over selective school proximity to Sydney.
+          </p>
+          <p class="annotation-hint">↑ Select text to annotate</p>
+        </div>
+
+        <div class="model-footer">
+          <div class="conf-row" aria-label="Confidence: 4 out of 5">
+            <span class="conf-label">Confidence</span>
+            <div class="conf-bars" aria-hidden="true">
+              <div class="conf-bar filled"></div>
+              <div class="conf-bar filled"></div>
+              <div class="conf-bar filled"></div>
+              <div class="conf-bar filled"></div>
+              <div class="conf-bar"></div>
+            </div>
+            <span class="conf-value">4/5</span>
+          </div>
+          <div class="model-actions">
+            <button class="card-btn primary" aria-label="Expand Claude Sonnet full response">↗ Full response</button>
+            <time class="model-timestamp" datetime="2025-05-09T14:23:00" aria-label="Response time: 198 seconds">198s</time>
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 2: GPT-5 — Writing -->
+      <article class="model-card" aria-label="GPT-5 response">
+        <div class="model-header">
+          <div class="model-avatar" aria-hidden="true">G</div>
+          <div class="model-info">
+            <div class="model-name">GPT-5</div>
+            <div class="model-role">
+              Economic Analyst · responding to Sonnet
+              <span class="model-version" title="Model version">gpt-5-0409</span>
+            </div>
+          </div>
+          <span class="status-badge busy" role="status" aria-label="Status: Writing response">
+            <span class="status-icon" aria-hidden="true">✎</span> Writing…
+          </span>
+        </div>
+
+        <div class="model-body">
+          <p class="model-excerpt" style="color: var(--t3);">
+            I acknowledge Sonnet's point on sporting culture. However the selective school access question remains — Newcastle families seeking selective high school placement face longer commutes than Wollongong families who can access Sydney's selective schools via the South Coast line…
+          </p>
+        </div>
+
+        <div class="model-footer">
+          <div class="conf-row" aria-label="Confidence: 3 out of 5">
+            <span class="conf-label">Confidence</span>
+            <div class="conf-bars" aria-hidden="true">
+              <div class="conf-bar filled"></div>
+              <div class="conf-bar filled"></div>
+              <div class="conf-bar filled"></div>
+              <div class="conf-bar"></div>
+              <div class="conf-bar"></div>
+            </div>
+            <span class="conf-value">3/5</span>
+          </div>
+          <div class="model-actions">
+            <button class="card-btn" disabled aria-label="Full response not yet available" aria-disabled="true">↗ Full response</button>
+            <span class="model-timestamp">…</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 3: Gemini 3.1 — Queued -->
+      <article class="model-card queued-card" aria-label="Gemini 3.1 response — queued">
+        <div class="model-header">
+          <div class="model-avatar" aria-hidden="true">G2</div>
+          <div class="model-info">
+            <div class="model-name">Gemini 3.1</div>
+            <div class="model-role">
+              Systems Thinker
+              <span class="model-version" title="Model version">gemini-3.1-pro</span>
+            </div>
+          </div>
+          <span class="status-badge queued" role="status" aria-label="Status: Queued, waiting">
+            <span class="status-icon" aria-hidden="true">○</span> Queued
+          </span>
+        </div>
+        <div class="model-body">
+          <span style="color:var(--t4); font-size:14px;">Waiting for GPT-5 to complete…</span>
+        </div>
+        <div class="model-footer">
+          <div class="conf-row" aria-label="Confidence not yet available">
+            <span class="conf-label">Confidence</span>
+            <div class="conf-bars" aria-hidden="true">
+              <div class="conf-bar"></div>
+              <div class="conf-bar"></div>
+              <div class="conf-bar"></div>
+              <div class="conf-bar"></div>
+              <div class="conf-bar"></div>
+            </div>
+            <span class="conf-value" style="color:var(--t4);">—</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 4: Grok 4.20 — Queued -->
+      <article class="model-card queued-card" aria-label="Grok 4.20 response — queued">
+        <div class="model-header">
+          <div class="model-avatar" aria-hidden="true">Gk</div>
+          <div class="model-info">
+            <div class="model-name">Grok 4.20</div>
+            <div class="model-role">
+              Devil's Advocate
+              <span class="model-version" title="Model version">grok-4-20250201</span>
+            </div>
+          </div>
+          <span class="status-badge queued" role="status" aria-label="Status: Queued, waiting">
+            <span class="status-icon" aria-hidden="true">○</span> Queued
+          </span>
+        </div>
+        <div class="model-body">
+          <span style="color:var(--t4); font-size:14px;">Waiting for GPT-5 to complete…</span>
+        </div>
+        <div class="model-footer">
+          <div class="conf-row" aria-label="Confidence not yet available">
+            <span class="conf-label">Confidence</span>
+            <div class="conf-bars" aria-hidden="true">
+              <div class="conf-bar"></div>
+              <div class="conf-bar"></div>
+              <div class="conf-bar"></div>
+              <div class="conf-bar"></div>
+              <div class="conf-bar"></div>
+            </div>
+            <span class="conf-value" style="color:var(--t4);">—</span>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <!-- ============================================================
+         VERDICT PANEL
+         ============================================================ -->
+    <section class="verdict-panel" role="region" aria-label="Final verdict">
+      <div class="verdict-header">
+
+        <!-- Arc gauge with score explanation -->
+        <div class="arc-gauge-wrap">
+          <svg width="100" height="60" viewBox="0 0 100 60" aria-hidden="true">
+            <path d="M 10 55 A 40 40 0 0 1 90 55" fill="none" stroke="#E2E0DC" stroke-width="8" stroke-linecap="round"/>
+            <path d="M 10 55 A 40 40 0 0 1 90 55" fill="none" stroke="#1D4ED8" stroke-width="8" stroke-linecap="round"
+              stroke-dasharray="125.66" stroke-dashoffset="31.4"/>
+          </svg>
+          <div class="arc-score" aria-label="Consensus score: 75 percent">75<span style="font-size:14px;color:var(--t3)">%</span></div>
+          <div class="arc-label">Strong consensus</div>
+          <div class="tooltip-wrap arc-info" tabindex="0" role="button" aria-label="What does this score mean?">
+            <span>What is this? ⓘ</span>
+            <div class="tooltip-box" role="tooltip">
+              <strong>Consensus score</strong><br>
+              Percentage of models whose final positions substantially agree with the synthesised verdict. 75% = 3 of 4 models aligned. Calculated after the final Synthesis round.
+            </div>
+          </div>
+        </div>
+
+        <div class="verdict-content">
+          <div class="verdict-byline">Final Verdict · Claude Opus Synthesis · <time datetime="2025-05-09T14:25:00">Today, 2:25 PM</time></div>
+          <blockquote class="verdict-quote">
+            "Newcastle is the clear frontrunner for most NSW families, with Wollongong as a strong alternative for those requiring Sydney employment access."
+          </blockquote>
+          <div class="verdict-model-pills" aria-label="Contributing models">
+            <span class="verdict-pill">4/5 Sonnet</span>
+            <span class="verdict-pill">4/5 GPT-5</span>
+            <span class="verdict-pill">3/5 Gemini</span>
+            <span class="verdict-pill">4/5 Grok</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alignment table — structured for researchers -->
+      <div class="alignment-section">
+        <div class="alignment-title">Model Alignment Detail</div>
+        <table class="alignment-table" aria-label="Model alignment with verdict">
+          <thead>
+            <tr>
+              <th scope="col">Model</th>
+              <th scope="col">Role</th>
+              <th scope="col">Alignment</th>
+              <th scope="col">Confidence</th>
+              <th scope="col">Key point</th>
+              <th scope="col"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Claude Sonnet</strong></td>
+              <td style="color:var(--t3)">Personal Advisor</td>
+              <td><span class="align-status aligned" aria-label="Aligned">Aligned</span></td>
+              <td><span style="font-family:var(--font-mono);font-size:13px;">4/5</span></td>
+              <td style="color:var(--t3)">Sports infrastructure favours Newcastle</td>
+              <td><button class="card-btn" aria-label="View full Claude Sonnet reasoning">↗ View</button></td>
+            </tr>
+            <tr>
+              <td><strong>GPT-5</strong></td>
+              <td style="color:var(--t3)">Economic Analyst</td>
+              <td><span class="align-status aligned" aria-label="Aligned">Aligned</span></td>
+              <td><span style="font-family:var(--font-mono);font-size:13px;">4/5</span></td>
+              <td style="color:var(--t3)">Cost of living differential supports Newcastle</td>
+              <td><button class="card-btn" aria-label="View full GPT-5 reasoning">↗ View</button></td>
+            </tr>
+            <tr>
+              <td><strong>Gemini 3.1</strong></td>
+              <td style="color:var(--t3)">Systems Thinker</td>
+              <td><span class="align-status partial" aria-label="Partial alignment">Partial</span></td>
+              <td><span style="font-family:var(--font-mono);font-size:13px;">3/5</span></td>
+              <td style="color:var(--t3)">Selective school access complicates ranking</td>
+              <td><button class="card-btn" aria-label="View full Gemini 3.1 reasoning">↗ View</button></td>
+            </tr>
+            <tr>
+              <td><strong>Grok 4.20</strong></td>
+              <td style="color:var(--t3)">Devil's Advocate</td>
+              <td><span class="align-status aligned" aria-label="Aligned">Aligned</span></td>
+              <td><span style="font-family:var(--font-mono);font-size:13px;">4/5</span></td>
+              <td style="color:var(--t3)">Wollongong remains strong for dual-income families</td>
+              <td><button class="card-btn" aria-label="View full Grok 4.20 reasoning">↗ View</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Export bar -->
+    <div class="export-bar" role="toolbar" aria-label="Export options">
+      <span class="export-label">Session complete · 4 rounds · 4 models · Council ID #MC-2025-0509-003</span>
+      <button class="export-btn secondary" aria-label="Copy link to this session">🔗 Copy link</button>
+      <button class="export-btn secondary" aria-label="Save as PDF report">📄 PDF report</button>
+      <button class="export-btn primary" aria-label="Export full research report with citations">↓ Export report</button>
+    </div>
+
+    <!-- Follow-up bar -->
+    <div class="followup-bar" role="region" aria-label="Follow-up questions">
+      <div class="followup-row">
+        <label for="followup-input" class="sr-only">Ask a follow-up question to the council</label>
+        <input
+          type="text"
+          id="followup-input"
+          class="followup-input"
+          placeholder="Ask a follow-up question…"
+          aria-label="Follow-up question"
+        >
+        <button class="ask-btn" aria-label="Submit follow-up question">Ask →</button>
+      </div>
+      <div class="followup-chips" role="list" aria-label="Suggested follow-up questions">
+        <button class="chip" role="listitem">Compare schools in detail?</button>
+        <button class="chip" role="listitem">Cost of living breakdown?</button>
+        <button class="chip" role="listitem">Sports facilities comparison?</button>
+        <button class="chip" role="listitem">5-year property outlook?</button>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- Mobile bottom nav -->
+<nav class="mobile-bottom-nav" role="navigation" aria-label="Mobile navigation">
+  <button class="mobile-nav-item active" aria-label="Council" aria-current="page">
+    <span class="mobile-nav-icon" aria-hidden="true">⬡</span>
+    Council
+  </button>
+  <button class="mobile-nav-item" aria-label="History">
+    <span class="mobile-nav-icon" aria-hidden="true">🕐</span>
+    History
+  </button>
+  <button class="mobile-nav-item" aria-label="Export">
+    <span class="mobile-nav-icon" aria-hidden="true">↓</span>
+    Export
+  </button>
+  <button class="mobile-nav-item" aria-label="Settings">
+    <span class="mobile-nav-icon" aria-hidden="true">⚙</span>
+    Settings
+  </button>
+</nav>
+
+</body>
+</html>

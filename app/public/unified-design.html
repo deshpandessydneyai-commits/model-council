@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Model Council — Unified Design</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ═══════════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════════ */
+:root {
+  /* Surfaces */
+  --bg:          #F5F3EE;   /* warm parchment — page bg */
+  --bg-card:     #FFFFFF;   /* card / panel surface */
+  --bg-inset:    #ECE9E2;   /* inset / input bg */
+  --bg-hover:    #F0EDE6;   /* hover state */
+
+  /* Borders */
+  --border:      #E0DBD3;   /* standard */
+  --border-mid:  #CCC6BC;   /* medium */
+  --border-str:  #B8B2A8;   /* strong */
+
+  /* Text */
+  --text-primary:   #1C1917;
+  --text-secondary: #57534E;
+  --text-muted:     #A8A29E;
+  --text-faint:     #D4CFC9;
+
+  /* Single accent — used ONLY for active/interactive states */
+  --accent:    #4338CA;
+  --accent-bg: rgba(67,56,202,0.06);
+  --accent-bd: rgba(67,56,202,0.18);
+
+  /* Semantic — used ONLY where meaning requires it */
+  --green:     #15803D;
+  --green-bg:  rgba(21,128,61,0.06);
+  --amber:     #B45309;
+  --amber-bg:  rgba(180,83,9,0.06);
+
+  /* Model stripe colours — thin 3px left border only */
+  --stripe-s:  #6366F1;  /* Sonnet */
+  --stripe-g:  #059669;  /* GPT-5 */
+  --stripe-g2: #2563EB;  /* Gemini */
+  --stripe-gk: #D97706;  /* Grok */
+
+  /* Layout */
+  --left-width: 268px;
+  --radius:     12px;
+  --radius-lg:  16px;
+}
+
+/* ═══════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+.serif  { font-family: 'Lora', Georgia, serif; }
+.mono   { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+
+/* ═══════════════════════════════════════════
+   DESKTOP LAYOUT — two column
+═══════════════════════════════════════════ */
+.shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ── Left panel ── */
+.left-panel {
+  width: var(--left-width);
+  flex-shrink: 0;
+  background: var(--bg-card);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.lp-brand {
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.brand-name {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+}
+.brand-dot { color: var(--accent); }
+.avatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--bg-inset);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* Nav links */
+.lp-nav {
+  padding: 12px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  text-decoration: none;
+}
+.nav-item:hover { background: var(--bg-hover); color: var(--text-secondary); }
+.nav-item.active { background: var(--accent-bg); color: var(--accent); }
+.nav-icon { width: 14px; text-align: center; flex-shrink: 0; }
+
+/* Question in left panel */
+.lp-question {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.lp-eyebrow {
+  font-size: 9px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+.lp-q-text {
+  font-family: 'Lora', serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+}
+.tag-row { display: flex; gap: 5px; flex-wrap: wrap; }
+.tag {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+/* Round stepper — vertical in desktop left panel */
+.lp-stepper {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.stepper-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 6px 0;
+  position: relative;
+}
+.stepper-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 9px;
+  top: 24px;
+  bottom: 0;
+  width: 1px;
+  background: var(--border);
+}
+.step-circle {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 1px;
+  position: relative;
+}
+.step-info { flex: 1; }
+.step-label { font-size: 12px; font-weight: 600; }
+.step-sub { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+
+/* Model status list */
+.lp-models {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  flex: 1;
+}
+.model-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+}
+.msr-left { display: flex; align-items: center; gap: 8px; }
+.m-init {
+  width: 24px; height: 24px;
+  border-radius: 6px;
+  background: var(--bg-inset);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+.msr-name { font-size: 12px; font-weight: 500; color: var(--text-secondary); }
+.msr-state { font-size: 10px; font-weight: 500; }
+.state-done    { color: var(--green); }
+.state-writing { color: var(--accent); }
+.state-queued  { color: var(--text-muted); }
+
+/* Credits / footer */
+.lp-footer {
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+  margin-top: auto;
+}
+.credits-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.cancel-btn {
+  width: 100%;
+  background: transparent;
+  border: 1px solid #FCA5A5;
+  color: #DC2626;
+  padding: 7px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* ── Right feed ── */
+.right-feed {
+  flex: 1;
+  min-width: 0;
+  padding-bottom: 80px;
+}
+
+/* ═══════════════════════════════════════════
+   SHARED FEED COMPONENTS
+═══════════════════════════════════════════ */
+
+/* Round divider */
+.round-div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 28px 8px;
+}
+.rd-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.rd-label {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.rd-count { font-size: 10px; color: var(--text-muted); margin-left: auto; }
+
+/* Voice card */
+.voice-card {
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2px;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.voice-card.writing { border-color: var(--border-mid); }
+
+.vc-stripe {
+  width: 3px;
+  flex-shrink: 0;
+}
+
+.vc-body {
+  flex: 1;
+  padding: 14px 20px 14px 14px;
+  min-width: 0;
+}
+
+/* Desktop: more padding */
+@media (min-width: 768px) {
+  .vc-body { padding: 16px 28px 16px 16px; }
+  .round-div { padding: 20px 32px 10px; }
+}
+
+.vc-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  gap: 10px;
+}
+.vc-model { min-width: 0; }
+.vc-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.vc-role { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+.vc-reply { font-size: 11px; color: var(--accent); margin-top: 1px; }
+
+.vc-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+/* Badge */
+.badge { font-size: 10px; font-weight: 600; white-space: nowrap; }
+.badge-done    { color: var(--green); }
+.badge-writing { color: var(--accent); display: flex; align-items: center; gap: 4px; }
+.badge-queued  { color: var(--text-muted); }
+
+/* Confidence bars */
+.conf {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.conf-bar {
+  width: 12px; height: 2px;
+  border-radius: 1px;
+}
+.cf { background: var(--text-secondary); }
+.ce { background: var(--border); }
+.conf-label { font-size: 9px; color: var(--text-muted); margin-left: 3px; }
+
+/* Response text */
+.vc-text {
+  font-size: 13.5px;
+  line-height: 1.72;
+  color: var(--text-secondary);
+}
+.vc-text.muted { color: var(--text-muted); }
+
+.vc-footer {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Animated shimmer line at bottom of responding card */
+.card-shimmer {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 1.5px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  background-size: 200%;
+  animation: sh 2s ease-in-out infinite;
+}
+@keyframes sh { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+
+/* Writing dots */
+.dots {
+  display: inline-flex;
+  gap: 2.5px;
+  align-items: flex-end;
+  height: 10px;
+}
+.dots span {
+  width: 2.5px;
+  border-radius: 1.5px;
+  background: var(--accent);
+  animation: db 1.3s ease-in-out infinite;
+}
+.dots span:nth-child(2) { animation-delay: 0.15s; }
+.dots span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes db { 0%,100%{height:2.5px} 50%{height:8px} }
+
+/* Cursor blink */
+.cursor {
+  display: inline-block;
+  width: 1px; height: 12px;
+  background: var(--accent);
+  margin-left: 1px;
+  vertical-align: middle;
+  animation: cur 0.8s step-end infinite;
+}
+@keyframes cur { 0%,100%{opacity:1} 50%{opacity:0} }
+
+/* Waiting placeholder */
+.waiting-card {
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2px;
+  padding: 14px 20px 14px 17px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  opacity: 0.45;
+}
+.wc-stripe { width: 3px; height: 28px; background: var(--border); border-radius: 2px; flex-shrink: 0; }
+.wc-info { flex: 1; }
+.wc-name { font-size: 11px; font-weight: 500; color: var(--text-muted); margin-bottom: 5px; }
+.wc-lines { display: flex; flex-direction: column; gap: 4px; }
+.wc-line { height: 6px; background: var(--bg-inset); border-radius: 3px; }
+
+/* ═══════════════════════════════════════════
+   VERDICT
+═══════════════════════════════════════════ */
+.verdict-wrap {
+  padding: 16px 28px 8px;
+}
+@media (min-width: 768px) {
+  .verdict-wrap { padding: 20px 32px 8px; }
+}
+.verdict-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.verdict-score-row {
+  padding: 20px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+@media (min-width: 768px) {
+  .verdict-score-row { padding: 24px 24px; gap: 28px; }
+}
+.verdict-score-block { flex-shrink: 0; text-align: center; }
+.verdict-score {
+  font-size: 52px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: var(--text-primary);
+  line-height: 1;
+}
+.verdict-pct {
+  font-size: 24px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+.verdict-score-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+/* Confidence track for score */
+.score-track {
+  display: flex;
+  gap: 3px;
+  justify-content: center;
+  margin-top: 8px;
+}
+.score-seg { width: 24px; height: 2.5px; border-radius: 2px; }
+.verdict-headline-block { flex: 1; }
+.verdict-eyebrow { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+.verdict-headline {
+  font-family: 'Lora', serif;
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+@media (min-width: 768px) {
+  .verdict-headline { font-size: 19px; }
+}
+/* Model alignment table */
+.verdict-table { padding: 0 20px; }
+@media (min-width: 768px) { .verdict-table { padding: 0 24px; } }
+.vt-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.vt-row:last-child { border-bottom: none; }
+.vt-left { display: flex; align-items: center; gap: 10px; }
+.vt-name { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
+.vt-right { display: flex; align-items: center; gap: 10px; }
+.vt-align { font-size: 11px; font-weight: 600; }
+.align-yes  { color: var(--green); }
+.align-partial { color: var(--amber); }
+
+/* ═══════════════════════════════════════════
+   FOLLOW-UP BAR
+═══════════════════════════════════════════ */
+.followup-wrap {
+  padding: 8px 28px 16px;
+}
+@media (min-width: 768px) { .followup-wrap { padding: 10px 32px 20px; } }
+.followup-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  background: var(--bg-card);
+}
+.fu-placeholder {
+  flex: 1;
+  font-family: 'Lora', serif;
+  font-style: italic;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.fu-chips { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
+.fu-chip {
+  font-size: 11px;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  padding: 4px 11px;
+  border-radius: 100px;
+  cursor: pointer;
+  background: var(--bg-card);
+  white-space: nowrap;
+}
+.fu-chip:hover { border-color: var(--accent); color: var(--accent); }
+.fu-btn {
+  background: var(--accent);
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════
+   MOBILE OVERRIDES
+═══════════════════════════════════════════ */
+@media (max-width: 767px) {
+  .left-panel { display: none; }
+  .shell { display: block; }
+  .right-feed { padding-bottom: 100px; }
+
+  /* Mobile sticky top header */
+  .mobile-header {
+    display: block;
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+  }
+  .mh-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px 8px;
+  }
+  .mh-brand { font-size: 16px; font-weight: 700; letter-spacing: -0.03em; }
+  .mh-right { display: flex; align-items: center; gap: 10px; }
+  .mh-question {
+    padding: 0 16px 10px;
+    font-family: 'Lora', serif;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.45;
+    color: var(--text-primary);
+  }
+  .mh-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 16px 10px;
+    flex-wrap: wrap;
+  }
+  .mh-tag { font-size: 10px; color: var(--text-muted); }
+  .mh-tag + .mh-tag::before { content: '·'; margin-right: 8px; }
+  .mh-progress { margin-left: auto; display: flex; align-items: center; gap: 5px; }
+  .mh-track { width: 44px; height: 2px; background: var(--border); border-radius: 1px; overflow: hidden; }
+  .mh-fill { height: 100%; background: var(--accent); border-radius: 1px; }
+
+  /* Mobile stage strip */
+  .mobile-stage {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    gap: 6px;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+  }
+  .ms-step { display: flex; align-items: center; gap: 5px; }
+  .ms-circle {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 8px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .ms-label { font-size: 10px; font-weight: 500; }
+  .ms-line { flex: 1; height: 1px; background: var(--border); }
+
+  /* Mobile round divider — less padding */
+  .round-div { padding: 12px 16px 6px; }
+  .vc-body { padding: 13px 16px 13px 13px; }
+  .waiting-card { padding: 12px 16px 12px 17px; }
+  .verdict-wrap { padding: 12px 16px 6px; }
+  .followup-wrap { padding: 6px 16px 12px; }
+
+  /* Mobile bottom nav */
+  .mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(245,243,238,0.97);
+    border-top: 1px solid var(--border);
+    padding: 8px 0 22px;
+    backdrop-filter: blur(12px);
+    z-index: 30;
+  }
+  .mbn-item {
+    flex: 1;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px 0;
+  }
+  .mbn-item.active { color: var(--accent); font-weight: 600; }
+
+  /* Status bar sim */
+  .mobile-status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    height: 44px;
+    background: var(--bg-card);
+  }
+}
+
+/* Desktop: hide mobile-only elements */
+@media (min-width: 768px) {
+  .mobile-header,
+  .mobile-stage,
+  .mobile-status-bar,
+  .mobile-bottom-nav { display: none; }
+}
+
+/* Pulse animation for active step dot */
+@keyframes pulse-a { 0%,100%{opacity:1} 50%{opacity:0.35} }
+/* Ring for active step */
+@keyframes ring-p { 0%{opacity:1;transform:scale(1)} 100%{opacity:0;transform:scale(2.2)} }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════
+     MOBILE ONLY: status bar + header
+════════════════════════════════════════ -->
+<div class="mobile-status-bar">
+  <span class="mono" style="font-size:15px;font-weight:600;">9:53</span>
+  <div style="display:flex;gap:5px;align-items:center;">
+    <svg width="15" height="11" viewBox="0 0 15 11" fill="#1C1917" opacity="0.4"><rect x="0" y="3" width="2.5" height="8" rx="0.8"/><rect x="4" y="2" width="2.5" height="9" rx="0.8"/><rect x="8" y="0" width="2.5" height="11" rx="0.8"/><rect x="12" y="0" width="2.5" height="11" rx="0.8" opacity="0.3"/></svg>
+    <svg width="24" height="11" viewBox="0 0 24 11" fill="#1C1917" opacity="0.4"><rect x="0" y="0.5" width="20" height="10" rx="2.5" stroke="#1C1917" stroke-width="1" fill="rgba(0,0,0,0.05)"/><rect x="1.5" y="2" width="14" height="7" rx="1.5"/><rect x="21" y="3.5" width="2.5" height="4" rx="1" fill="rgba(0,0,0,0.35)"/></svg>
+  </div>
+</div>
+
+<div class="mobile-header">
+  <div class="mh-top">
+    <span class="mh-brand">Model Council<span style="color:var(--accent);">.</span></span>
+    <div class="mh-right">
+      <span class="mono" style="font-size:10px;color:var(--text-muted);">$1.97</span>
+      <div class="avatar">N</div>
+    </div>
+  </div>
+  <div class="mh-question">"Which is the best city to live in NSW for cost of living, family life, education and sports?"</div>
+  <div class="mh-meta">
+    <span class="mh-tag">Personal</span>
+    <span class="mh-tag">Exploratory</span>
+    <span class="mh-tag">Round 2 of 2</span>
+    <div class="mh-progress">
+      <div class="mh-track"><div class="mh-fill" style="width:65%;"></div></div>
+      <span class="mono" style="font-size:9px;color:var(--text-muted);">65%</span>
+    </div>
+  </div>
+</div>
+
+<!-- Mobile stage progress -->
+<div class="mobile-stage">
+  <div class="ms-step">
+    <div class="ms-circle" style="background:var(--green-bg);color:var(--green);">✓</div>
+    <span class="ms-label" style="color:var(--green);">Pose</span>
+  </div>
+  <div class="ms-line"></div>
+  <div class="ms-step">
+    <div class="ms-circle" style="background:var(--accent-bg);color:var(--accent);position:relative;">
+      <span style="position:absolute;inset:-3px;border-radius:50%;border:1px solid var(--accent);animation:ring-p 1.5s ease-out infinite;opacity:0.5;"></span>
+      2
+    </div>
+    <span class="ms-label" style="color:var(--accent);">Deliberate</span>
+  </div>
+  <div class="ms-line"></div>
+  <div class="ms-step">
+    <div class="ms-circle" style="background:var(--bg-inset);color:var(--text-muted);">3</div>
+    <span class="ms-label" style="color:var(--text-muted);">Verdict</span>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     MAIN SHELL
+════════════════════════════════════════ -->
+<div class="shell">
+
+  <!-- ── LEFT PANEL (desktop only) ── -->
+  <div class="left-panel">
+
+    <div class="lp-brand">
+      <span class="brand-name">Model Council<span class="brand-dot">.</span></span>
+      <div class="avatar">N</div>
+    </div>
+
+    <div class="lp-nav">
+      <a class="nav-item active">
+        <span class="nav-icon">⬡</span> Council
+      </a>
+      <a class="nav-item">
+        <span class="nav-icon">○</span> History
+      </a>
+      <a class="nav-item">
+        <span class="nav-icon">◇</span> Settings
+      </a>
+      <a class="nav-item">
+        <span class="nav-icon">?</span> Help
+      </a>
+    </div>
+
+    <div class="lp-question">
+      <div class="lp-eyebrow">Research Question</div>
+      <div class="lp-q-text">"Which is the best city to live in NSW for cost of living, family life, education and sports?"</div>
+      <div class="tag-row">
+        <span class="tag">🏠 Personal</span>
+        <span class="tag">⚡ Exploratory</span>
+      </div>
+    </div>
+
+    <div class="lp-stepper">
+      <div class="lp-eyebrow" style="margin-bottom:10px;">Progress</div>
+
+      <div class="stepper-item">
+        <div class="step-circle" style="background:var(--green-bg);color:var(--green);">
+          <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1 4l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <div class="step-info">
+          <div class="step-label" style="color:var(--green);">Round 1 — Independent</div>
+          <div class="step-sub">4 of 4 complete</div>
+        </div>
+      </div>
+
+      <div class="stepper-item">
+        <div class="step-circle" style="background:var(--accent-bg);color:var(--accent);position:relative;">
+          <span style="position:absolute;inset:-3px;border-radius:50%;border:1px solid var(--accent);animation:ring-p 1.5s ease-out infinite;opacity:0.6;"></span>
+          2
+        </div>
+        <div class="step-info">
+          <div class="step-label" style="color:var(--accent);">Round 2 — Critique</div>
+          <div class="step-sub">2 of 4 responding</div>
+        </div>
+      </div>
+
+      <div class="stepper-item">
+        <div class="step-circle" style="background:var(--bg-inset);color:var(--text-muted);">3</div>
+        <div class="step-info">
+          <div class="step-label" style="color:var(--text-muted);">Verdict</div>
+          <div class="step-sub">Pending synthesis</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="lp-models">
+      <div class="lp-eyebrow" style="margin-bottom:10px;">Council</div>
+      <div class="model-status-row">
+        <div class="msr-left"><div class="m-init">S</div><span class="msr-name">Claude Sonnet</span></div>
+        <span class="msr-state state-done">✓ Done</span>
+      </div>
+      <div class="model-status-row">
+        <div class="msr-left"><div class="m-init">G</div><span class="msr-name">GPT-5</span></div>
+        <span class="msr-state state-writing" style="display:flex;align-items:center;gap:4px;">
+          Writing <div class="dots"><span></span><span></span><span></span></div>
+        </span>
+      </div>
+      <div class="model-status-row">
+        <div class="msr-left"><div class="m-init">G2</div><span class="msr-name">Gemini 3.1</span></div>
+        <span class="msr-state state-queued">Queued</span>
+      </div>
+      <div class="model-status-row">
+        <div class="msr-left"><div class="m-init">Gk</div><span class="msr-name">Grok 4.20</span></div>
+        <span class="msr-state state-queued">Queued</span>
+      </div>
+    </div>
+
+    <div class="lp-footer">
+      <div class="credits-row">
+        <span class="mono" style="font-size:10px;color:var(--text-muted);">Est. cost</span>
+        <span class="mono" style="font-size:11px;color:var(--text-secondary);">$0.18–0.32</span>
+      </div>
+      <div class="credits-row">
+        <span class="mono" style="font-size:10px;color:var(--text-muted);">Credits</span>
+        <span class="mono" style="font-size:11px;color:var(--text-secondary);">$1.97</span>
+      </div>
+      <button class="cancel-btn">✕ Cancel Council</button>
+    </div>
+
+  </div>
+
+  <!-- ── RIGHT FEED ── -->
+  <div class="right-feed">
+
+    <!-- Round 1 -->
+    <div class="round-div">
+      <div class="rd-dot" style="background:var(--green);"></div>
+      <span class="rd-label" style="color:var(--green);">Round 1 — Independent</span>
+      <span class="rd-count">4 / 4 · Collapse ∧</span>
+    </div>
+
+    <!-- Sonnet R1 -->
+    <div class="voice-card">
+      <div class="vc-stripe" style="background:var(--stripe-s);"></div>
+      <div class="vc-body">
+        <div class="vc-header">
+          <div class="vc-model">
+            <div class="vc-name">Claude Sonnet</div>
+            <div class="vc-role">Personal Advisor</div>
+          </div>
+          <div class="vc-right">
+            <span class="badge badge-done">✓ Done</span>
+            <div class="conf">
+              <div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar ce"></div>
+              <span class="conf-label">4/5</span>
+            </div>
+          </div>
+        </div>
+        <div class="vc-text">Newcastle emerges as the strongest candidate when balancing all four criteria. The Hunter region offers median house prices 40% below Sydney while maintaining strong school performance in the top quartile statewide. The coastal lifestyle and established sporting culture — particularly rugby league and surfing — provide excellent family amenity at significantly lower cost than Sydney metro areas.</div>
+      </div>
+    </div>
+
+    <!-- GPT-5 R1 -->
+    <div class="voice-card">
+      <div class="vc-stripe" style="background:var(--stripe-g);"></div>
+      <div class="vc-body">
+        <div class="vc-header">
+          <div class="vc-model">
+            <div class="vc-name">GPT-5</div>
+            <div class="vc-role">Economic Analyst</div>
+          </div>
+          <div class="vc-right">
+            <span class="badge badge-done">✓ Done</span>
+            <div class="conf">
+              <div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar ce"></div>
+              <span class="conf-label">4/5</span>
+            </div>
+          </div>
+        </div>
+        <div class="vc-text">Wollongong provides a compelling case — it sits within commuting distance of Sydney, has strong university presence boosting education infrastructure, and offers coastal lifestyle at 35% below Sydney median property prices. Families requiring Sydney employment access would find this superior to Newcastle.</div>
+      </div>
+    </div>
+
+    <!-- Gemini R1 -->
+    <div class="voice-card">
+      <div class="vc-stripe" style="background:var(--stripe-g2);"></div>
+      <div class="vc-body">
+        <div class="vc-header">
+          <div class="vc-model">
+            <div class="vc-name">Gemini 3.1</div>
+            <div class="vc-role">Systems Researcher</div>
+          </div>
+          <div class="vc-right">
+            <span class="badge badge-done">✓ Done</span>
+            <div class="conf">
+              <div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar ce"></div><div class="conf-bar ce"></div>
+              <span class="conf-label">3/5</span>
+            </div>
+          </div>
+        </div>
+        <div class="vc-text">Both analyses overlook the infrastructure investment trajectory. The NSW government's renewable energy projects are creating significant employment hubs in the Central West — Bathurst and Orange deserve serious consideration for families prioritising space and long-term value growth over coastal amenity.</div>
+      </div>
+    </div>
+
+    <!-- Grok R1 -->
+    <div class="voice-card">
+      <div class="vc-stripe" style="background:var(--stripe-gk);"></div>
+      <div class="vc-body">
+        <div class="vc-header">
+          <div class="vc-model">
+            <div class="vc-name">Grok 4.20</div>
+            <div class="vc-role">Devil's Advocate</div>
+          </div>
+          <div class="vc-right">
+            <span class="badge badge-done">✓ Done</span>
+            <div class="conf">
+              <div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar ce"></div>
+              <span class="conf-label">4/5</span>
+            </div>
+          </div>
+        </div>
+        <div class="vc-text">The framing of "best city" ignores that lifestyle match matters more than objective metrics. A sports-obsessed family and an academically-focused family have different optimal cities. Forced to pick one: Newcastle wins on breadth for the average NSW family.</div>
+      </div>
+    </div>
+
+    <!-- ── Round 2 ── -->
+    <div class="round-div" style="margin-top:6px;">
+      <div class="rd-dot" style="background:var(--accent);animation:pulse-a 2s ease-in-out infinite;"></div>
+      <span class="rd-label" style="color:var(--accent);">Round 2 — Critique</span>
+      <span class="rd-count" style="color:var(--accent);">Active · 2 of 4</span>
+    </div>
+
+    <!-- Sonnet R2 done -->
+    <div class="voice-card">
+      <div class="vc-stripe" style="background:var(--stripe-s);"></div>
+      <div class="vc-body">
+        <div class="vc-header">
+          <div class="vc-model">
+            <div class="vc-name">Claude Sonnet</div>
+            <div class="vc-reply">↳ responding to GPT-5</div>
+          </div>
+          <div class="vc-right">
+            <span class="badge badge-done">✓ Done</span>
+          </div>
+        </div>
+        <div class="vc-text">GPT-5 raises a fair point on Wollongong's commuter appeal but underweights sporting infrastructure. Hunter Stadium and the Newcastle Knights provide a richer local sports culture — material, not marginal, for families prioritising participation over selective school proximity to Sydney.</div>
+      </div>
+    </div>
+
+    <!-- GPT-5 R2 writing -->
+    <div class="voice-card writing">
+      <div class="card-shimmer"></div>
+      <div class="vc-stripe" style="background:var(--stripe-g);"></div>
+      <div class="vc-body">
+        <div class="vc-header">
+          <div class="vc-model">
+            <div class="vc-name">GPT-5</div>
+            <div class="vc-reply">↳ responding to Sonnet</div>
+          </div>
+          <div class="vc-right">
+            <span class="badge badge-writing">Writing <div class="dots"><span></span><span></span><span></span></div></span>
+          </div>
+        </div>
+        <div class="vc-text muted">I acknowledge Sonnet's point on sporting culture. However the selective school access question remains — Newcastle families seeking selective high school placement face longer commutes than Wollongong families who can access Sydney's selective schools via the South Coast line<span class="cursor"></span></div>
+        <div class="vc-footer">
+          <span class="mono" style="font-size:10px;color:var(--accent);">89 words</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gemini waiting -->
+    <div class="waiting-card">
+      <div class="wc-stripe"></div>
+      <div class="wc-info">
+        <div class="wc-name">Gemini 3.1 · Systems Researcher · Queued</div>
+        <div class="wc-lines">
+          <div class="wc-line" style="width:82%;"></div>
+          <div class="wc-line" style="width:64%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grok waiting -->
+    <div class="waiting-card">
+      <div class="wc-stripe"></div>
+      <div class="wc-info">
+        <div class="wc-name">Grok 4.20 · Devil's Advocate · Queued</div>
+        <div class="wc-lines">
+          <div class="wc-line" style="width:74%;"></div>
+          <div class="wc-line" style="width:52%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Verdict ── -->
+    <div class="verdict-wrap" style="margin-top:8px;">
+      <div style="font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;padding:0 4px;">Final Verdict · Claude Opus synthesis</div>
+      <div class="verdict-card">
+        <div class="verdict-score-row">
+          <div class="verdict-score-block">
+            <div class="verdict-score">75<span class="verdict-pct">%</span></div>
+            <div class="verdict-score-label">Strong Consensus</div>
+            <div class="score-track">
+              <div class="score-seg" style="background:var(--text-secondary);"></div>
+              <div class="score-seg" style="background:var(--text-secondary);"></div>
+              <div class="score-seg" style="background:var(--text-secondary);"></div>
+              <div class="score-seg" style="background:var(--border);"></div>
+            </div>
+          </div>
+          <div class="verdict-headline-block">
+            <div class="verdict-eyebrow">Synthesised Answer</div>
+            <div class="verdict-headline">"Newcastle is the clear frontrunner for most NSW families, with Wollongong as a strong alternative for those requiring Sydney employment access."</div>
+          </div>
+        </div>
+        <div class="verdict-table">
+          <div class="vt-row">
+            <div class="vt-left">
+              <div style="width:3px;height:20px;background:var(--stripe-s);border-radius:2px;flex-shrink:0;"></div>
+              <span class="vt-name">Claude Sonnet</span>
+            </div>
+            <div class="vt-right">
+              <div class="conf"><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar ce"></div><span class="conf-label">4/5</span></div>
+              <span class="vt-align align-yes">Aligned</span>
+            </div>
+          </div>
+          <div class="vt-row">
+            <div class="vt-left">
+              <div style="width:3px;height:20px;background:var(--stripe-g);border-radius:2px;flex-shrink:0;"></div>
+              <span class="vt-name">GPT-5</span>
+            </div>
+            <div class="vt-right">
+              <div class="conf"><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar ce"></div><span class="conf-label">4/5</span></div>
+              <span class="vt-align align-yes">Aligned</span>
+            </div>
+          </div>
+          <div class="vt-row">
+            <div class="vt-left">
+              <div style="width:3px;height:20px;background:var(--stripe-g2);border-radius:2px;flex-shrink:0;"></div>
+              <span class="vt-name">Gemini 3.1</span>
+            </div>
+            <div class="vt-right">
+              <div class="conf"><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar ce"></div><div class="conf-bar ce"></div><span class="conf-label">3/5</span></div>
+              <span class="vt-align align-partial">Partial</span>
+            </div>
+          </div>
+          <div class="vt-row">
+            <div class="vt-left">
+              <div style="width:3px;height:20px;background:var(--stripe-gk);border-radius:2px;flex-shrink:0;"></div>
+              <span class="vt-name">Grok 4.20</span>
+            </div>
+            <div class="vt-right">
+              <div class="conf"><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar cf"></div><div class="conf-bar ce"></div><span class="conf-label">4/5</span></div>
+              <span class="vt-align align-yes">Aligned</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Follow-up ── -->
+    <div class="followup-wrap">
+      <div class="followup-bar">
+        <span class="fu-placeholder">Ask a follow-up question to the council…</span>
+        <span class="fu-btn">Ask →</span>
+      </div>
+      <div class="fu-chips">
+        <span class="fu-chip">Compare schools in detail?</span>
+        <span class="fu-chip">Cost of living breakdown?</span>
+        <span class="fu-chip">Sports facilities comparison?</span>
+        <span class="fu-chip">Export report</span>
+      </div>
+    </div>
+
+  </div><!-- /right-feed -->
+</div><!-- /shell -->
+
+<!-- Mobile bottom nav -->
+<div class="mobile-bottom-nav">
+  <div class="mbn-item">New</div>
+  <div class="mbn-item active">Council</div>
+  <div class="mbn-item">History</div>
+  <div class="mbn-item">Settings</div>
+</div>
+
+</body>
+</html>

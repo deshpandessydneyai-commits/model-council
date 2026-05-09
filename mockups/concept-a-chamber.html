@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Concept A — The Chamber</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  * { box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #0D0D0F; color: #F0EEE8; margin: 0; }
+  .serif { font-family: 'Playfair Display', serif; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  .stage-tabs { display: flex; gap: 0; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .stage-tab { padding: 12px 24px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; color: rgba(255,255,255,0.3); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s; }
+  .stage-tab.active { color: #C4B5FD; border-color: #C4B5FD; }
+
+  .model-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 20px; position: relative; overflow: hidden; transition: all 0.3s; }
+  .model-card.responding { border-color: rgba(139,92,246,0.4); background: rgba(139,92,246,0.06); }
+  .model-card.done { border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.04); }
+
+  .pulse-ring { position: absolute; top: 16px; right: 16px; width: 8px; height: 8px; border-radius: 50%; background: #8B5CF6; }
+  .pulse-ring::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; border: 1px solid #8B5CF6; animation: ring-pulse 1.5s ease-out infinite; }
+  @keyframes ring-pulse { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(2.5); } }
+
+  .shimmer-bar { height: 2px; background: linear-gradient(90deg, transparent, #8B5CF6, transparent); background-size: 200% 100%; animation: shimmer 1.5s ease-in-out infinite; position: absolute; bottom: 0; left: 0; right: 0; }
+  @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+  .verdict-card { background: linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(13,13,15,0.95) 60%); border: 1px solid rgba(139,92,246,0.3); border-radius: 20px; }
+
+  .arc-track { fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 10; stroke-linecap: round; }
+  .arc-fill { fill: none; stroke: #8B5CF6; stroke-width: 10; stroke-linecap: round; stroke-dasharray: 122 163; transition: stroke-dasharray 1.2s cubic-bezier(0.16,1,0.3,1); }
+
+  .confidence-pill { background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.3); color: #C4B5FD; padding: 4px 12px; border-radius: 100px; font-size: 11px; font-weight: 600; }
+
+  .nav-link { color: rgba(255,255,255,0.4); font-size: 13px; cursor: pointer; padding: 8px 0; transition: color 0.2s; }
+  .nav-link:hover { color: rgba(255,255,255,0.8); }
+  .nav-link.active { color: #C4B5FD; }
+
+  .input-area { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 20px 24px; font-size: 22px; line-height: 1.5; color: #F0EEE8; resize: none; width: 100%; outline: none; font-family: 'Playfair Display', serif; transition: border-color 0.2s; }
+  .input-area:focus { border-color: rgba(139,92,246,0.5); }
+
+  .start-btn { background: linear-gradient(135deg, #7C3AED, #6D28D9); border: none; color: white; padding: 16px 48px; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; letter-spacing: 0.02em; transition: all 0.2s; box-shadow: 0 8px 32px rgba(109,40,217,0.4); }
+  .start-btn:hover { transform: translateY(-1px); box-shadow: 0 12px 40px rgba(109,40,217,0.5); }
+
+  .round-step { display: flex; align-items: center; gap: 8px; }
+  .step-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-center: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .section-label { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.3); margin-bottom: 12px; }
+
+  .domain-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.25); color: #C4B5FD; padding: 4px 12px; border-radius: 100px; font-size: 11px; }
+
+  .text-stream { color: rgba(255,255,255,0.7); font-size: 13px; line-height: 1.7; }
+  .cursor-blink::after { content: '|'; animation: blink 1s step-end infinite; color: #8B5CF6; margin-left: 1px; }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+  .model-avatar { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div style="border-bottom: 1px solid rgba(255,255,255,0.06); padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 52px;">
+  <div style="display: flex; align-items: center; gap: 32px;">
+    <span class="serif" style="font-size: 18px; font-weight: 600; letter-spacing: -0.02em;">Model Council<span style="color: #8B5CF6;">.</span></span>
+    <nav style="display: flex; gap: 24px;">
+      <span class="nav-link active">Council</span>
+      <span class="nav-link">History</span>
+      <span class="nav-link">Settings</span>
+    </nav>
+  </div>
+  <div style="display: flex; align-items: center; gap: 16px;">
+    <span class="mono" style="font-size: 11px; color: rgba(255,255,255,0.3);">$1.97 credits</span>
+    <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #7C3AED, #4F46E5); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700;">N</div>
+  </div>
+</div>
+
+<!-- Stage Tabs -->
+<div style="padding: 0 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.06);">
+  <div class="stage-tabs">
+    <div class="stage-tab">① Pose</div>
+    <div class="stage-tab active">② Deliberate</div>
+    <div class="stage-tab" style="color: rgba(255,255,255,0.15);">③ Verdict</div>
+  </div>
+  <div style="display: flex; align-items: center; gap: 12px; padding: 12px 0;">
+    <div style="display: flex; align-items: center; gap: 6px;">
+      <div style="width: 6px; height: 6px; border-radius: 50%; background: #22c55e;"></div>
+      <span class="mono" style="font-size: 10px; color: rgba(255,255,255,0.4);">Round 2 · Critique</span>
+    </div>
+    <div style="height: 12px; width: 1px; background: rgba(255,255,255,0.1);"></div>
+    <span class="mono" style="font-size: 10px; color: rgba(255,255,255,0.3);">~2 min remaining</span>
+  </div>
+</div>
+
+<!-- Main Content Area -->
+<div style="padding: 24px 32px; min-height: calc(100vh - 104px);">
+
+  <!-- Question Banner -->
+  <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between;">
+    <div>
+      <div class="section-label" style="margin-bottom: 4px;">Your Question</div>
+      <p class="serif" style="font-size: 16px; color: rgba(255,255,255,0.85); margin: 0;">"Which is the best city to live in NSW for cost of living, family life, and education?"</p>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0; margin-left: 24px;">
+      <span class="domain-badge">🏠 Personal</span>
+      <span class="domain-badge" style="background: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.25); color: #FCD34D;">⚡ Exploratory</span>
+    </div>
+  </div>
+
+  <!-- Round Progress -->
+  <div style="display: flex; align-items: center; gap: 0; margin-bottom: 24px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 12px 20px;">
+    <div class="round-step" style="flex: 1;">
+      <div class="step-dot" style="background: #22c55e; color: white; width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+      </div>
+      <div>
+        <div style="font-size: 11px; font-weight: 600; color: #4ade80;">Independent</div>
+        <div class="mono" style="font-size: 10px; color: rgba(255,255,255,0.3);">4 / 4 done</div>
+      </div>
+    </div>
+    <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.08); margin: 0 12px;"></div>
+    <div class="round-step" style="flex: 1;">
+      <div class="step-dot" style="background: #8B5CF6; color: white; width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow: 0 0 0 4px rgba(139,92,246,0.2); position:relative;">
+        <span style="position:absolute;inset:0;border-radius:50%;border:1px solid #8B5CF6;animation:ring-pulse 1.5s ease-out infinite;"></span>
+        2
+      </div>
+      <div>
+        <div style="font-size: 11px; font-weight: 600; color: #C4B5FD;">Critique</div>
+        <div class="mono" style="font-size: 10px; color: rgba(255,255,255,0.3);">2 / 4 done</div>
+      </div>
+    </div>
+    <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.08); margin: 0 12px;"></div>
+    <div class="round-step" style="flex: 1;">
+      <div class="step-dot" style="background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.3); width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;">3</div>
+      <div>
+        <div style="font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.3);">Verdict</div>
+        <div class="mono" style="font-size: 10px; color: rgba(255,255,255,0.2);">Pending</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4-Model Grid (THE CHAMBER) -->
+  <div style="display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 16px; height: 400px;">
+
+    <!-- Model 1 — Done -->
+    <div class="model-card done">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div class="model-avatar" style="background: rgba(99,102,241,0.2); color: #818CF8;">S</div>
+          <div>
+            <div style="font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.9);">Claude Sonnet</div>
+            <div style="font-size: 10px; color: rgba(255,255,255,0.3);">Clinical Analyst</div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap-6px;">
+          <span style="color: #4ade80; font-size: 11px;">✓ Complete</span>
+        </div>
+      </div>
+      <p class="text-stream" style="margin: 0; font-size: 12px; line-height: 1.6;">Newcastle emerges as the strongest candidate when balancing the four criteria. The Hunter region offers median house prices 40% below Sydney while maintaining strong school performance in the top quartile statewide. The coastal lifestyle and established sporting culture — particularly rugby league and surfing — provide...</p>
+      <div style="margin-top: 12px; display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; gap: 4px;">
+          {Array(5).fill(0).map((_, i) => <div style="width: 16px; height: 4px; border-radius: 2px; background: i < 4 ? '#4ade80' : 'rgba(255,255,255,0.1)';"></div>)}
+          <div style="width: 16px; height: 4px; border-radius: 2px; background: #4ade80; margin-right: 2px;"></div>
+          <div style="width: 16px; height: 4px; border-radius: 2px; background: #4ade80; margin-right: 2px;"></div>
+          <div style="width: 16px; height: 4px; border-radius: 2px; background: #4ade80; margin-right: 2px;"></div>
+          <div style="width: 16px; height: 4px; border-radius: 2px; background: #4ade80; margin-right: 2px;"></div>
+          <div style="width: 16px; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.1);"></div>
+        </div>
+        <span class="mono" style="font-size: 10px; color: rgba(255,255,255,0.3);">4/5 conf · 312w</span>
+      </div>
+    </div>
+
+    <!-- Model 2 — Responding -->
+    <div class="model-card responding">
+      <div class="shimmer-bar"></div>
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div class="model-avatar" style="background: rgba(16,185,129,0.2); color: #34D399;">G</div>
+          <div>
+            <div style="font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.9);">GPT-5</div>
+            <div style="font-size: 10px; color: rgba(255,255,255,0.3);">Economic Strategist</div>
+          </div>
+        </div>
+        <div class="pulse-ring"></div>
+      </div>
+      <p class="text-stream cursor-blink" style="margin: 0; font-size: 12px; line-height: 1.6;">I'd challenge the assumption that Newcastle is clearly superior. The data on school performance requires nuance — while aggregate scores are strong, selective school access from Newcastle requires longer commutes to Sydney campuses. Wollongong presents a compelling alternative with its proximity to both Sydney employment corridors and coastal amenity</p>
+      <div style="margin-top: 12px;">
+        <span class="mono" style="font-size: 10px; color: rgba(139,92,246,0.7);">Writing… 187w</span>
+      </div>
+    </div>
+
+    <!-- Model 3 — Responding -->
+    <div class="model-card responding">
+      <div class="shimmer-bar"></div>
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div class="model-avatar" style="background: rgba(59,130,246,0.2); color: #60A5FA;">G2</div>
+          <div>
+            <div style="font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.9);">Gemini 3.1</div>
+            <div style="font-size: 10px; color: rgba(255,255,255,0.3);">Systems Researcher</div>
+          </div>
+        </div>
+        <div class="pulse-ring" style="background: #3b82f6;"></div>
+      </div>
+      <p class="text-stream cursor-blink" style="margin: 0; font-size: 12px; line-height: 1.6;">Both analyses overlook the infrastructure investment trajectory. The NSW government's Snowy 2.0 and renewable energy corridor projects are creating significant employment hubs in the Central West — Bathurst and Orange deserve serious consideration for families willing to trade coastal proximity for</p>
+      <div style="margin-top: 12px;">
+        <span class="mono" style="font-size: 10px; color: rgba(139,92,246,0.7);">Writing… 143w</span>
+      </div>
+    </div>
+
+    <!-- Model 4 — Waiting -->
+    <div class="model-card">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div class="model-avatar" style="background: rgba(245,158,11,0.15); color: #FBBF24;">Gk</div>
+          <div>
+            <div style="font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.5);">Grok 4.20</div>
+            <div style="font-size: 10px; color: rgba(255,255,255,0.2);">Devil's Advocate</div>
+          </div>
+        </div>
+        <span style="font-size: 11px; color: rgba(255,255,255,0.2);">Waiting</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px; opacity: 0.3;">
+        <div style="height: 10px; background: rgba(255,255,255,0.1); border-radius: 4px; width: 90%;"></div>
+        <div style="height: 10px; background: rgba(255,255,255,0.1); border-radius: 4px; width: 75%;"></div>
+        <div style="height: 10px; background: rgba(255,255,255,0.1); border-radius: 4px; width: 85%;"></div>
+        <div style="height: 10px; background: rgba(255,255,255,0.1); border-radius: 4px; width: 60%;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cancel footer -->
+  <div style="display: flex; align-items: center; justify-content: center; margin-top: 20px;">
+    <button style="background: transparent; border: 1px solid rgba(239,68,68,0.3); color: rgba(239,68,68,0.7); padding: 8px 20px; border-radius: 8px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+      ✕ Cancel Council
+    </button>
+  </div>
+
+</div>
+
+<!-- Sample Verdict Stage (shown below as preview) -->
+<div style="border-top: 1px solid rgba(255,255,255,0.06); padding: 32px; background: rgba(139,92,246,0.03);">
+  <div class="section-label" style="text-align: center; margin-bottom: 24px;">③ VERDICT STAGE PREVIEW</div>
+
+  <div class="verdict-card" style="max-width: 700px; margin: 0 auto; padding: 32px;">
+    <div style="display: flex; align-items: center; gap-32px; margin-bottom: 24px; gap: 32px;">
+      <!-- Arc -->
+      <div style="text-align: center; flex-shrink: 0;">
+        <svg width="120" height="68" viewBox="0 0 128 72">
+          <path d="M 12 68 A 52 52 0 0 1 116 68" class="arc-track"/>
+          <path d="M 12 68 A 52 52 0 0 1 116 68" class="arc-fill"/>
+        </svg>
+        <div style="margin-top: -16px; font-size: 28px; font-weight: 700; color: #8B5CF6;">75%</div>
+        <div style="font-size: 11px; color: #A78BFA; margin-top: 2px;">Strong Consensus</div>
+      </div>
+      <!-- Headline -->
+      <div style="flex: 1;">
+        <div class="section-label">Final Verdict</div>
+        <p class="serif" style="font-size: 20px; line-height: 1.4; color: #F0EEE8; margin: 0 0 16px 0;">"Newcastle is the clear frontrunner, with Wollongong as a compelling alternative for Sydney-commuter families."</p>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <span class="confidence-pill">4/5 · Sonnet</span>
+          <span class="confidence-pill">4/5 · GPT-5</span>
+          <span class="confidence-pill" style="background: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.3); color: #FCD34D;">3/5 · Gemini</span>
+          <span class="confidence-pill">4/5 · Grok</span>
+        </div>
+      </div>
+    </div>
+    <!-- Follow-up bar -->
+    <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 16px; margin-top: 8px;">
+      <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 12px 16px; display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 13px; color: rgba(255,255,255,0.3); flex: 1;">Ask a follow-up question…</span>
+        <div style="background: rgba(139,92,246,0.3); border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 600; color: #C4B5FD;">Ask →</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Label -->
+<div style="text-align: center; padding: 20px; border-top: 1px solid rgba(255,255,255,0.06);">
+  <span style="font-size: 11px; letter-spacing: 0.1em; color: rgba(255,255,255,0.2); text-transform: uppercase;">Concept A — "The Chamber" · Dark, Stage-Based, Authoritative</span>
+</div>
+
+</body>
+</html>
