@@ -241,3 +241,44 @@ html:not(.dark) a {
 html:not(.dark) a:hover {
   color: #6366F1;
 }
+
+/* Theme-aware scrollbar styling */
+.scrollbar-theme {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db #f3f4f6;
+}
+
+.dark .scrollbar-theme {
+  scrollbar-color: #4b5563 #1a1a2e;
+}
+
+/* Webkit browsers (Chrome, Safari, Edge) */
+.scrollbar-theme::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollbar-theme::-webkit-scrollbar-track {
+  background: #f3f4f6;
+}
+
+.scrollbar-theme::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+.scrollbar-theme::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+.dark .scrollbar-theme::-webkit-scrollbar-track {
+  background: #1a1a2e;
+}
+
+.dark .scrollbar-theme::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 4px;
+}
+
+.dark .scrollbar-theme::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}

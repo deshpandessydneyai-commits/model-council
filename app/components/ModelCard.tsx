@@ -81,7 +81,7 @@ export function ModelCard({ model, text, variant, round, done, previousRoundText
       </header>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4 min-h-[200px]">
+      <div className="flex-1 overflow-y-auto p-4 min-h-[200px] max-h-[400px] scrollbar-theme">
         {text ? (
           <MarkdownContent content={text} />
         ) : (

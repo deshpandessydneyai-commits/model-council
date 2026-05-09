@@ -51,7 +51,7 @@ export function DebateCard({
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto p-4 max-h-[400px] scrollbar-theme">
         <div className="text-sm leading-relaxed text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-words">
           {content || (
             <span className="text-gray-600 dark:text-gray-500 italic">
