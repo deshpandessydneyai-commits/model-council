@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useCallback, useEffect, useState } from "react";
 
 type ThemeContextType = {
   isDark: boolean;
@@ -9,39 +9,56 @@ type ThemeContextType = {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-function applyTheme(isDark: boolean) {
-  if (typeof document === "undefined") return;
-
-  const html = document.documentElement;
-  if (isDark) {
-    html.classList.add("dark");
-  } else {
-    html.classList.remove("dark");
-  }
-  localStorage.setItem("model-council-theme", isDark ? "dark" : "light");
-}
-
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [isDark, setIsDark] = useState(true);
   const [mounted, setMounted] = useState(false);
 
-  // Load theme from localStorage on mount
+  // Initialize theme from localStorage on component mount
   useEffect(() => {
-    const saved = localStorage.getItem("model-council-theme");
-    const theme = saved === "light" ? false : true;
-    setIsDark(theme);
-    applyTheme(theme);
+    const savedTheme = localStorage.getItem("model-council-theme");
+    const isLight = savedTheme === "light";
+    const isDarkTheme = !isLight;
+
+    setIsDark(isDarkTheme);
+
+    // Apply theme to DOM immediately
+    const html = document.documentElement;
+    if (isDarkTheme) {
+      html.classList.add("dark");
+    } else {
+      html.classList.remove("dark");
+    }
+
     setMounted(true);
   }, []);
 
-  // Apply theme whenever isDark changes
+  // Update DOM whenever isDark changes
   useEffect(() => {
-    applyTheme(isDark);
-  }, [isDark]);
+    if (!mounted) return;
 
-  const toggleTheme = () => {
-    setIsDark((prev) => !prev);
-  };
+    const html = document.documentElement;
+    if (isDark) {
+      html.classList.add("dark");
+      localStorage.setItem("model-council-theme", "dark");
+    } else {
+      html.classList.remove("dark");
+      localStorage.setItem("model-council-theme", "light");
+    }
+  }, [isDark, mounted]);
+
+  const toggleTheme = useCallback(() => {
+    console.log("[Theme] Toggle clicked");
+    setIsDark((prevIsDark) => {
+      const newValue = !prevIsDark;
+      console.log("[Theme] Updating isDark from", prevIsDark, "to", newValue);
+      return newValue;
+    });
+  }, []);
+
+  if (!mounted) {
+    // Return children during SSR and hydration
+    return <ThemeContext.Provider value={{ isDark: true, toggleTheme }}>{children}</ThemeContext.Provider>;
+  }
 
   return (
     <ThemeContext.Provider value={{ isDark, toggleTheme }}>
