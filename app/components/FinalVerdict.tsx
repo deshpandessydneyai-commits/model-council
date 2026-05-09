@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, Download } from "lucide-react";
+import { ChevronDown, Download, Info, AlertCircle } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { VerdictRow } from "@/lib/council";
@@ -83,6 +83,8 @@ function extractHeadline(text: string): string {
 
 export function FinalVerdict({ finalAnswer, consensusScore, rows, triggeredRound3, disagreementReason, roundsCompleted, onExport }: Props) {
   const [analysisOpen, setAnalysisOpen] = useState(false);
+  const [methodologyOpen, setMethodologyOpen] = useState(false);
+  const [infoOpen, setInfoOpen] = useState(false);
 
   const headline = extractHeadline(finalAnswer);
   const takeaways = extractKeyTakeaways(finalAnswer);
@@ -103,7 +105,21 @@ export function FinalVerdict({ finalAnswer, consensusScore, rows, triggeredRound
         {/* Header row */}
         <div className="flex items-start justify-between mb-6">
           <div>
-            <div className="mono-meta text-xs text-gray-400 dark:text-gray-500 mb-1">Final Verdict</div>
+            <div className="flex items-center gap-2 mb-1 relative">
+              <div className="mono-meta text-xs text-gray-400 dark:text-gray-500">Final Verdict</div>
+              <button
+                onClick={() => setInfoOpen(!infoOpen)}
+                className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                title="About this verdict"
+              >
+                <Info size={14} />
+              </button>
+              {infoOpen && (
+                <div className="absolute top-full left-0 mt-2 w-64 bg-gray-900 dark:bg-gray-950 text-white dark:text-gray-100 text-xs p-3 rounded-lg shadow-lg border border-gray-700 dark:border-gray-800 z-10">
+                  <p className="leading-relaxed">This verdict was synthesized by Claude Opus 4.6 (made by Anthropic). Two of the four debating models (Sonnet and the synthesizer) are from Anthropic, which may introduce bias toward Anthropic's perspective.</p>
+                </div>
+              )}
+            </div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-white/10 border border-[#E2E0DA] dark:border-glass px-2.5 py-1 rounded-full">
                 Claude Opus 4.6
@@ -219,6 +235,81 @@ export function FinalVerdict({ finalAnswer, consensusScore, rows, triggeredRound
                 ↳ Round 3 auto-triggered — {disagreementReason}
               </p>
             )}
+          </div>
+        )}
+      </div>
+
+      {/* ── Methodology Section ── */}
+      <div className="border-t border-gray-100 dark:border-glass">
+        <button
+          onClick={() => setMethodologyOpen(p => !p)}
+          className="w-full flex items-center justify-between px-8 py-4 hover:bg-[#F0EFEB] dark:hover:bg-white/5 transition-colors group"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-semibold text-gray-900 dark:text-white">Methodology</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500 bg-[#EEEDEA] dark:bg-white/10 px-2 py-0.5 rounded-full">
+              Council composition & synthesis
+            </span>
+          </div>
+          <ChevronDown
+            size={16}
+            className={`text-gray-400 transition-transform duration-300 ${methodologyOpen ? "rotate-180" : ""}`}
+          />
+        </button>
+
+        {methodologyOpen && (
+          <div className="px-8 pb-8 bg-white dark:bg-[#0F0F1A]">
+            <div className="w-full h-px bg-[#E2E0DA] dark:bg-glass mb-6" />
+
+            {/* Council Composition */}
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Council Members</h3>
+              <div className="space-y-2">
+                {rows.map((row) => (
+                  <div key={row.modelId} className="flex items-center justify-between text-sm">
+                    <span className="text-gray-700 dark:text-gray-300">{row.model}</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {row.positionAlignment >= 75 ? "✓ Strong alignment" : row.positionAlignment >= 50 ? "◐ Partial alignment" : "✗ Disagreed"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Synthesizer Info */}
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Synthesizer</h3>
+              <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                Claude Opus 4.6 (made by Anthropic) analyzed all council member responses and produced this final verdict.
+              </p>
+            </div>
+
+            {/* Verdict Stats */}
+            <div className="mb-6 grid grid-cols-2 gap-4">
+              <div className="border border-[#E2E0DA] dark:border-glass rounded-lg p-3 bg-[#F9F8F6] dark:bg-[#0A0A0F]">
+                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Rounds Completed</div>
+                <div className="text-lg font-semibold text-gray-900 dark:text-white">{roundsCompleted}</div>
+              </div>
+              <div className="border border-[#E2E0DA] dark:border-glass rounded-lg p-3 bg-[#F9F8F6] dark:bg-[#0A0A0F]">
+                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Consensus Score</div>
+                <div className="text-lg font-semibold" style={{ color: scoreColor }}>
+                  {consensusScore}%
+                </div>
+              </div>
+            </div>
+
+            {/* Bias Disclosure */}
+            <div className="p-4 rounded-lg border border-amber-200 dark:border-amber-800/40 bg-amber-50 dark:bg-amber-950/20">
+              <div className="flex gap-3">
+                <AlertCircle size={16} className="text-amber-700 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="text-sm font-semibold text-amber-900 dark:text-amber-200 mb-1">Potential Bias</h4>
+                  <p className="text-sm text-amber-800 dark:text-amber-300 leading-relaxed">
+                    2 of 4 council members are from Anthropic (Sonnet 4.6 and the synthesizer). If these models strongly agreed, results may favor Anthropic's perspective. Consider weighing OpenAI, Google, and xAI perspectives especially carefully if they disagreed.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>

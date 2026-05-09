@@ -460,6 +460,11 @@ export default function Home() {
     }
   }, [prompt, forceR3, webSearch, documentContext, running, stakeLevel, detectedDomain]);
 
+  const orderedRounds = useMemo(
+    () => Object.keys(rounds).map((k) => Number(k)).sort((a, b) => a - b),
+    [rounds]
+  );
+
   const submitFollowUp = useCallback(async (question: string) => {
     if (!question.trim() || !verdict) return;
 
@@ -580,11 +585,6 @@ export default function Home() {
       followUpAbortRef.current = null;
     }
   }, [verdict, prompt, orderedRounds, rounds, history]);
-
-  const orderedRounds = useMemo(
-    () => Object.keys(rounds).map((k) => Number(k)).sort((a, b) => a - b),
-    [rounds]
-  );
 
   const exportMd = () => {
     const md = buildMarkdown({ prompt, rounds: orderedRounds.map((n) => ({ label: rounds[n].label, outputs: rounds[n].outputs })), verdict });
