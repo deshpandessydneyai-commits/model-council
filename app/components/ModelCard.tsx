@@ -4,7 +4,6 @@ import type { CouncilModel } from "@/lib/models";
 import { Copy, Maximize2 } from "lucide-react";
 import { useState } from "react";
 import { MarkdownContent } from "./MarkdownContent";
-import { PERSONAS } from "@/lib/models";
 
 type Props = {
   model: CouncilModel;
@@ -12,12 +11,10 @@ type Props = {
   variant: "a" | "b" | "c" | "d";
   round: number;
   done: boolean;
-  personaEmoji?: string;
-  personaId?: string;
   previousRoundText?: string;
 };
 
-export function ModelCard({ model, text, variant, round, done, personaEmoji = "ü§ñ", personaId = "default", previousRoundText }: Props) {
+export function ModelCard({ model, text, variant, round, done, previousRoundText }: Props) {
   const [copied, setCopied] = useState(false);
 
   // Determine status indicator
@@ -46,8 +43,6 @@ export function ModelCard({ model, text, variant, round, done, personaEmoji = "
   };
 
   const status = getStatusIndicator();
-  const persona = PERSONAS.find(p => p.id === personaId);
-  const personaName = persona?.label || model.displayName;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(text);
@@ -56,31 +51,30 @@ export function ModelCard({ model, text, variant, round, done, personaEmoji = "
   };
 
   return (
-    <article className="border border-glass bg-[#0F0F1A] dark:bg-[#0F0F1A] rounded-lg overflow-hidden hover:bg-[#121220] dark:hover:bg-[#121220] transition-colors flex flex-col h-full">
+    <article className="border border-gray-300 dark:border-glass bg-white dark:bg-[#0F0F1A] rounded-lg overflow-hidden hover:bg-gray-50 dark:hover:bg-[#121220] transition-colors flex flex-col h-full">
       {/* Header */}
-      <header className="border-b border-glass px-4 py-3 flex items-center justify-between bg-dark-overlay/50">
+      <header className="border-b border-gray-300 dark:border-glass px-4 py-3 flex items-center justify-between bg-gray-100 dark:bg-dark-overlay/50">
         <div className="flex items-center gap-2.5 flex-1">
-          <span className="text-xl">{personaEmoji}</span>
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-sm font-semibold text-white">{personaName}</h3>
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{model.displayName}</h3>
               <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold ${status.color}`}>
                 <span>{status.symbol}</span>
                 <span>{status.label}</span>
               </span>
             </div>
-            <div className="text-xs text-gray-500 mono-meta">{model.displayName} ¬∑ {model.provider}</div>
+            <div className="text-xs text-gray-600 dark:text-gray-500 mono-meta">{model.provider}</div>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="mono-meta text-xs text-gray-400">
+          <div className="mono-meta text-xs text-gray-500 dark:text-gray-400">
             R{round.toString().padStart(2, "0")}
           </div>
           {done ? (
-            <span className="text-xs text-green-400">‚óè</span>
+            <span className="text-xs text-green-600 dark:text-green-400">‚óè</span>
           ) : (
             <span className="text-xs text-gray-500 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-pulse" />
+              <span className="w-1.5 h-1.5 bg-violet-500 dark:bg-violet-400 rounded-full animate-pulse" />
             </span>
           )}
         </div>
@@ -91,7 +85,7 @@ export function ModelCard({ model, text, variant, round, done, personaEmoji = "
         {text ? (
           <MarkdownContent content={text} />
         ) : (
-          <span className="text-gray-500 italic">
+          <span className="text-gray-600 dark:text-gray-500 italic">
             {done ? "No response" : "Awaiting tokens‚Ä¶"}
           </span>
         )}
@@ -99,17 +93,17 @@ export function ModelCard({ model, text, variant, round, done, personaEmoji = "
 
       {/* Footer Actions */}
       {done && text && (
-        <div className="border-t border-glass px-4 py-2 flex items-center gap-2 bg-dark-overlay/30">
+        <div className="border-t border-gray-300 dark:border-glass px-4 py-2 flex items-center gap-2 bg-gray-100 dark:bg-dark-overlay/30">
           <button
             onClick={handleCopy}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded hover:bg-white/10 transition-colors text-gray-400 hover:text-white"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded hover:bg-gray-200 dark:hover:bg-white/10 transition-colors text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
             title="Copy to clipboard"
           >
             <Copy size={14} />
             {copied ? "Copied" : "Copy"}
           </button>
           <button
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded hover:bg-white/10 transition-colors text-gray-400 hover:text-white"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded hover:bg-gray-200 dark:hover:bg-white/10 transition-colors text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
             title="Expand full response"
           >
             <Maximize2 size={14} />

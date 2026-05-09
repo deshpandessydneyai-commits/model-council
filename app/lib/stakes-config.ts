@@ -1,0 +1,225 @@
+import { StakeContext, DomainType } from '@/lib/types/stakes';
+
+export const stakeContexts: Record<string, StakeContext> = {
+  exploratory: {
+    label: 'Exploratory',
+    description: 'Intellectual exploration, curiosity-driven, low pressure',
+    mainPrompt: `You are providing an intellectual analysis of this question.
+This is exploratory in nature—the goal is thorough understanding rather than implementation.
+Feel free to explore nuances, trade-offs, and alternative perspectives without pressure for a single "right answer."`,
+
+    adversarialPrompt: (domain: DomainType) => {
+      const domainSpecific: Record<DomainType, string> = {
+        medical: 'What alternative medical explanations or treatment approaches should be considered?',
+        academic: 'What is the strongest counterargument that other researchers might make?',
+        technical: 'What alternative architecture or approach might work better?',
+        legal: 'What is the opposing counsel\'s strongest argument?',
+        creative: 'What weaknesses could a critic find in this concept?',
+        policy: 'What is the strongest argument from those who oppose this policy?',
+        personal: 'What is the best argument for the opposite choice?',
+        business: 'What would a thoughtful skeptic say about this strategy?',
+        unknown: 'What is a compelling counterargument to this position?',
+      };
+      return domainSpecific[domain] || domainSpecific.unknown;
+    },
+
+    biasCheckPrompt: (domain: DomainType) => {
+      const domainSpecific: Record<DomainType, string> = {
+        medical: 'Identify any anchoring bias toward popular treatments or confirmation bias in evidence selection.',
+        academic: 'Check for publication bias, p-hacking, or over-reliance on recent studies.',
+        technical: 'Look for trend-chasing (microservices hype?) or cargo-cult programming.',
+        legal: 'Identify anchoring from opening statements or recency bias from recent case law.',
+        creative: 'Check for trend-chasing in genre conventions or echo-chamber consensus.',
+        policy: 'Look for political bias, lobbyist influence, or local vs global thinking.',
+        personal: 'Check for availability heuristic (recent events), sunk cost fallacy, or status quo bias.',
+        business: 'Identify survivor bias (focusing on success stories) or trend-chasing.',
+        unknown: 'Check for confirmation bias and groupthink.',
+      };
+      return `Before finalizing, identify cognitive biases: ${domainSpecific[domain] || domainSpecific.unknown}`;
+    },
+
+    accountabilityPrompt: (domain: DomainType) => {
+      const domainSpecific: Record<DomainType, string> = {
+        medical: 'If you had to explain this to the patient and accept blame if it goes wrong, would you change anything?',
+        academic: 'If this was published under your name and defended against critics, would you change it?',
+        technical: 'If you were on-call 24/7 debugging production issues, would you change the design?',
+        legal: 'If you had to stake your bar license on this argument, would you change your position?',
+        creative: 'If your career reputation depended entirely on this work, would you change anything?',
+        policy: 'If you were personally responsible for unintended consequences, would you change the policy?',
+        personal: 'If you had to live with this decision for 20 years, would you change anything?',
+        business: 'If you were personally liable for financial losses, would you change your strategy?',
+        unknown: 'If you were personally accountable for failure, would you change anything?',
+      };
+      return domainSpecific[domain] || domainSpecific.unknown;
+    },
+
+    estimatedImpactLevel: 'low',
+  },
+
+  implemented: {
+    label: 'Implementation',
+    description: 'This decision will be acted upon. Real consequences depend on accuracy.',
+    mainPrompt: `This recommendation will be implemented in the real world.
+Real outcomes and consequences depend on the accuracy of this analysis.
+Provide thorough analysis that accounts for practical implementation challenges, unintended side effects, and stakeholder impact.
+Assume this advice will be followed—be appropriately cautious and complete.`,
+
+    adversarialPrompt: (domain: DomainType) => {
+      const domainSpecific: Record<DomainType, string> = {
+        medical: 'What serious side effects or contraindications might apply to some patients?',
+        academic: 'What is the strongest empirical counterargument published in literature?',
+        technical: 'What are the main failure modes when this system scales or encounters edge cases?',
+        legal: 'What is the strongest legal precedent that argues against this position?',
+        creative: 'What would harsh critics say are the fundamental flaws in this approach?',
+        policy: 'What unintended negative consequences could this policy trigger?',
+        personal: 'What is the most compelling argument for the opposite choice?',
+        business: 'How would a market competitor or disruptive startup attack this strategy?',
+        unknown: 'What is the strongest counterargument to this recommendation?',
+      };
+      return `Identify the most critical counterargument: ${domainSpecific[domain] || domainSpecific.unknown}`;
+    },
+
+    biasCheckPrompt: (domain: DomainType) => {
+      const domainSpecific: Record<DomainType, string> = {
+        medical: 'Are we anchoring on familiar treatments? Missing rare but highly effective alternatives? Ignoring patient subgroups?',
+        academic: 'Are we subject to publication bias? Are we over-weighting recent studies? Missing contradicting evidence?',
+        technical: 'Are we trend-chasing? Over-optimizing prematurely? Ignoring operational complexity?',
+        legal: 'Are we anchoring on opening position? Ignoring stronger precedents? Underestimating opponent?',
+        creative: 'Are we following trends blindly? Missing the unique angle? Over-consulting the same peer group?',
+        policy: 'Are we subject to political pressure? Lobbyist influence? Ignoring vulnerable populations?',
+        personal: 'Are we overweighting recent events (recency bias)? Sunk cost fallacy? Status quo bias?',
+        business: 'Are we ignoring how competitors will respond? Focusing only on success stories? Missing market shifts?',
+        unknown: 'Check for confirmation bias, groupthink, and narrow perspective.',
+      };
+      return `${domainSpecific[domain] || domainSpecific.unknown}`;
+    },
+
+    accountabilityPrompt: (domain: DomainType) => {
+      const domainSpecific: Record<DomainType, string> = {
+        medical: 'If this treatment fails and the patient is harmed, could you defend your recommendation to a medical board?',
+        academic: 'If other researchers found flaws in this analysis, could you defend it in peer review?',
+        technical: 'If this causes a 4-hour production outage, could you defend the architectural choice?',
+        legal: 'If you lose this case, could you defend your strategy to the client?',
+        creative: 'If this project fails critically, could you defend your creative choices?',
+        policy: 'If this policy causes unintended harm, could you defend it to affected communities?',
+        personal: 'If in 5 years this turns out to be the wrong choice, would you regret it?',
+        business: 'If this strategy loses $5M in market share, could you defend it to investors?',
+        unknown: 'If this fails, could you defend your recommendation?',
+      };
+      return `Before finalizing: ${domainSpecific[domain] || domainSpecific.unknown}`;
+    },
+
+    estimatedImpactLevel: 'high',
+  },
+
+  critical: {
+    label: 'Critical Stakes',
+    description: 'Health, safety, legal, or major life consequences. High precision required.',
+    mainPrompt: `This decision affects health, safety, legal standing, or major life outcomes.
+Consequences of being wrong are severe and potentially irreversible.
+This analysis will be relied upon for consequential action.
+Be appropriately rigorous, thorough, and explicitly identify assumptions and limitations.
+Assume worst-case scenarios when evaluating safety and risk.`,
+
+    adversarialPrompt: (domain: DomainType) => {
+      const domainSpecific: Record<DomainType, string> = {
+        medical: 'What are ALL potential serious adverse effects, contraindications, and patient populations this might harm?',
+        academic: 'What fundamental methodological flaws could invalidate this entire analysis?',
+        technical: 'Under what specific conditions would this architecture fail catastrophically?',
+        legal: 'What are the most damaging precedents or legal theories opposing this position?',
+        creative: 'What are the fundamental creative and commercial weaknesses that could cause this to fail?',
+        policy: 'What are the most serious unintended consequences this could trigger for vulnerable groups?',
+        personal: 'What is the most compelling life-altering argument for the opposite choice?',
+        business: 'What could cause this business plan to fail spectacularly?',
+        unknown: 'What could cause this to fail catastrophically?',
+      };
+      return domainSpecific[domain] || domainSpecific.unknown;
+    },
+
+    biasCheckPrompt: (domain: DomainType) => {
+      const domainSpecific: Record<DomainType, string> = {
+        medical: 'Could we be missing rare but serious side effects? Ignoring vulnerable patient populations? Anchoring on optimistic outcomes?',
+        academic: 'Could we be missing contradicting evidence? Subject to publication bias? Overconfident in methodology?',
+        technical: 'Could we be underestimating operational complexity? Ignoring security implications? Over-optimizing?',
+        legal: 'Could we be ignoring stronger counterarguments? Anchoring incorrectly? Missing procedural risks?',
+        creative: 'Could we be missing fundamental narrative flaws? Over-confident in concept? Ignoring audience?',
+        policy: 'Could we be ignoring impacts on vulnerable groups? Subject to political pressure? Missing implementation failures?',
+        personal: 'Could we be rationalizing a bad choice? Ignoring intuition? Subject to sunk cost fallacy?',
+        business: 'Could we be ignoring competitive response? Missing market shifts? Over-optimistic on execution?',
+        unknown: 'Rigorously check for all potential biases and blindspots.',
+      };
+      return `CRITICAL: ${domainSpecific[domain] || domainSpecific.unknown}`;
+    },
+
+    accountabilityPrompt: (domain: DomainType) => {
+      const domainSpecific: Record<DomainType, string> = {
+        medical: 'Would you recommend this to your own family member? If it causes harm, could you live with that?',
+        academic: 'Would you stake your academic career on this analysis being correct?',
+        technical: 'Would you be comfortable with this system handling critical infrastructure?',
+        legal: 'Would you stake your bar license and professional reputation on this argument?',
+        creative: 'Would you be proud to have this represent your best work?',
+        policy: 'Would you be willing to publicly defend this to affected communities if it causes harm?',
+        personal: 'Can you truly commit to living with this decision for the next 20 years?',
+        business: 'Would you invest your entire net worth in this strategy?',
+        unknown: 'Can you fully stand behind this recommendation with complete confidence?',
+      };
+      return `${domainSpecific[domain] || domainSpecific.unknown}`;
+    },
+
+    estimatedImpactLevel: 'critical',
+  },
+
+  timeCritical: {
+    label: 'Time-Critical',
+    description: 'Decision needed within 48 hours. Prioritize most critical insights.',
+    mainPrompt: `This decision is time-critical (needed within 48 hours).
+Prioritize the most critical insights and actionable recommendations first.
+Briefly explain assumptions and trade-offs but focus on practical next steps.
+Structure response for rapid decision-making by stakeholders under time pressure.`,
+
+    adversarialPrompt: (domain: DomainType) => {
+      return 'What are the highest-risk assumptions in this analysis that could be proven wrong?';
+    },
+
+    biasCheckPrompt: (domain: DomainType) => {
+      return 'Are we rushing into a decision without sufficient scrutiny? What are we not considering due to time pressure?';
+    },
+
+    accountabilityPrompt: (domain: DomainType) => {
+      return 'If this time-critical decision turns out to be wrong, would you still feel comfortable with the analysis process given the time constraints?';
+    },
+
+    estimatedImpactLevel: 'high',
+  },
+
+  resourceConstrained: {
+    label: 'Resource-Constrained',
+    description: 'Limited budget, time, or personnel. Optimize for constraints.',
+    mainPrompt: `This decision must work within significant resource constraints (budget, time, or personnel).
+Provide recommendations that are practical and implementable given limitations.
+Focus on highest-impact, lowest-cost solutions.
+Be realistic about what can be accomplished with constrained resources.`,
+
+    adversarialPrompt: (domain: DomainType) => {
+      return 'If resources were even more constrained, what would break first in this plan?';
+    },
+
+    biasCheckPrompt: (domain: DomainType) => {
+      return 'Are we over-scoping the solution? Forgetting that constraints eliminate "perfect" options?';
+    },
+
+    accountabilityPrompt: (domain: DomainType) => {
+      return 'If we cannot afford to implement this fully, do we have a viable Phase 1?';
+    },
+
+    estimatedImpactLevel: 'medium',
+  },
+};
+
+export function getStakeContext(stakeLevel: string): StakeContext {
+  return stakeContexts[stakeLevel] || stakeContexts.exploratory;
+}
+
+export function getAllStakeContexts(): Record<string, StakeContext> {
+  return stakeContexts;
+}

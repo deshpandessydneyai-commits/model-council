@@ -3,16 +3,18 @@
 import Link from "next/link";
 import { ArrowLeft, Moon, Sun } from "lucide-react";
 import { useTheme } from "@/lib/theme-context";
+import { useSetupModal } from "@/lib/setup-modal-context";
 
 export default function Settings() {
   const { isDark, toggleTheme } = useTheme();
+  const { setIsOpen } = useSetupModal();
 
   return (
-    <div className="max-w-[1600px] mx-auto px-6 pt-16 pb-32">
+    <div className="max-w-[1600px] mx-auto px-6 pt-16 pb-32 min-h-screen bg-white dark:bg-[#0A0A0A]">
       {/* Back button */}
       <Link
         href="/"
-        className="inline-flex items-center gap-2 text-violet-400 hover:text-violet-300 mb-8 transition-colors"
+        className="inline-flex items-center gap-2 text-indigo-600 dark:text-violet-400 hover:text-indigo-700 dark:hover:text-violet-300 mb-8 transition-colors"
       >
         <ArrowLeft size={16} />
         Back to Council
@@ -20,25 +22,43 @@ export default function Settings() {
 
       {/* Header */}
       <div className="mb-12">
-        <h1 className="text-4xl font-bold text-white mb-2">Settings</h1>
-        <p className="text-gray-400">Configure Model Council to your preferences</p>
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Settings</h1>
+        <p className="text-gray-600 dark:text-gray-400">Configure Model Council to your preferences</p>
       </div>
 
       {/* Settings sections */}
       <div className="space-y-8">
         {/* Theme */}
-        <section className="border border-glass bg-[#0F0F1A] rounded-lg p-8">
-          <h2 className="text-xl font-bold text-white mb-4">Appearance</h2>
+        <section className="border border-gray-300 dark:border-glass bg-gray-50 dark:bg-[#0F0F1A] rounded-lg p-8">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Appearance</h2>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-300 font-medium">Dark Mode</p>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-gray-900 dark:text-gray-300 font-medium">Dark Mode</p>
+              <p className="text-sm text-gray-600 dark:text-gray-500 mt-1">
                 {isDark ? "Currently using dark mode" : "Currently using light mode"}
               </p>
             </div>
             <button
               onClick={toggleTheme}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-700 text-white transition-colors"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "8px 16px",
+                borderRadius: "8px",
+                backgroundColor: isDark ? "#7c3aed" : "#4f46e5",
+                color: "#ffffff",
+                border: "none",
+                fontWeight: "500",
+                cursor: "pointer",
+                transition: "background-color 0.3s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = isDark ? "#6d28d9" : "#4338ca";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = isDark ? "#7c3aed" : "#4f46e5";
+              }}
             >
               {isDark ? (
                 <>
@@ -55,44 +75,44 @@ export default function Settings() {
           </div>
         </section>
         {/* API Configuration */}
-        <section className="border border-glass bg-[#0F0F1A] rounded-lg p-8">
-          <h2 className="text-xl font-bold text-white mb-4">API Configuration</h2>
-          <div className="space-y-4 text-gray-300">
+        <section className="border border-gray-300 dark:border-glass bg-gray-50 dark:bg-[#0F0F1A] rounded-lg p-8">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">API Configuration</h2>
+          <div className="space-y-4 text-gray-700 dark:text-gray-300">
             <p>
-              Your OpenRouter API key is stored locally in <code className="bg-[#1A1A2E] px-2 py-1 rounded text-sm">.env.local</code>
+              Your OpenRouter API key is stored locally in <code className="bg-gray-200 dark:bg-[#1A1A2E] px-2 py-1 rounded text-sm text-gray-900 dark:text-gray-200 font-mono">.env.local</code>
             </p>
             <p>
               To change your API key, edit the file in your project root:
             </p>
-            <pre className="bg-[#1A1A2E] border border-glass rounded p-4 overflow-x-auto text-sm">
+            <pre className="bg-gray-100 dark:bg-[#1A1A2E] border border-gray-300 dark:border-glass rounded p-4 overflow-x-auto text-sm text-gray-900 dark:text-gray-200 font-mono">
 {`OPENROUTER_API_KEY=your_new_key_here`}
             </pre>
             <p className="text-sm text-gray-500">
-              Then restart the dev server: <code className="bg-[#1A1A2E] px-2 py-1 rounded">npm run dev</code>
+              Then restart the dev server: <code className="bg-gray-200 dark:bg-[#1A1A2E] px-2 py-1 rounded text-gray-900 dark:text-gray-200 font-mono">npm run dev</code>
             </p>
           </div>
         </section>
 
         {/* Model Configuration */}
-        <section className="border border-glass bg-[#0F0F1A] rounded-lg p-8">
-          <h2 className="text-xl font-bold text-white mb-4">Customize the Council</h2>
-          <div className="space-y-4 text-gray-300">
+        <section className="border border-gray-300 dark:border-glass bg-gray-50 dark:bg-[#0F0F1A] rounded-lg p-8">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Customize the Council</h2>
+          <div className="space-y-4 text-gray-700 dark:text-gray-300">
             <p>
-              Want different models? Edit the lineup in <code className="bg-[#1A1A2E] px-2 py-1 rounded text-sm">app/lib/models.ts</code>
+              Want different models? Edit the lineup in <code className="bg-gray-200 dark:bg-[#1A1A2E] px-2 py-1 rounded text-sm text-gray-900 dark:text-gray-200 font-mono">app/lib/models.ts</code>
             </p>
             <p>
               Find available models at <a href="https://openrouter.ai/models" target="_blank" rel="noopener noreferrer" className="text-violet-400 hover:text-violet-300">OpenRouter Models</a>
             </p>
             <p className="text-sm text-gray-500">
-              Change the <code className="bg-[#1A1A2E] px-2 py-1 rounded">slug</code> values to swap in any model you want.
+              Change the <code className="bg-gray-200 dark:bg-[#1A1A2E] px-2 py-1 rounded text-gray-900 dark:text-gray-200 font-mono">slug</code> values to swap in any model you want.
             </p>
           </div>
         </section>
 
         {/* Data & Storage */}
-        <section className="border border-glass bg-[#0F0F1A] rounded-lg p-8">
-          <h2 className="text-xl font-bold text-white mb-4">Data & Storage</h2>
-          <div className="space-y-4 text-gray-300">
+        <section className="border border-gray-300 dark:border-glass bg-gray-50 dark:bg-[#0F0F1A] rounded-lg p-8">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Data & Storage</h2>
+          <div className="space-y-4 text-gray-700 dark:text-gray-300">
             <p>
               Your debate history is stored locally in your browser's localStorage.
             </p>
@@ -111,9 +131,9 @@ export default function Settings() {
         </section>
 
         {/* Cost Tracking */}
-        <section className="border border-glass bg-[#0F0F1A] rounded-lg p-8">
-          <h2 className="text-xl font-bold text-white mb-4">Cost Estimation</h2>
-          <div className="space-y-4 text-gray-300">
+        <section className="border border-gray-300 dark:border-glass bg-gray-50 dark:bg-[#0F0F1A] rounded-lg p-8">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Cost Estimation</h2>
+          <div className="space-y-4 text-gray-700 dark:text-gray-300">
             <p>
               <strong>Typical debate cost:</strong> $0.10 – $0.40 USD
             </p>
@@ -129,9 +149,9 @@ export default function Settings() {
         </section>
 
         {/* Advanced */}
-        <section className="border border-glass bg-[#0F0F1A] rounded-lg p-8">
-          <h2 className="text-xl font-bold text-white mb-4">Advanced</h2>
-          <div className="space-y-4 text-gray-300">
+        <section className="border border-gray-300 dark:border-glass bg-gray-50 dark:bg-[#0F0F1A] rounded-lg p-8">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Advanced</h2>
+          <div className="space-y-4 text-gray-700 dark:text-gray-300">
             <p>
               <strong>Environment Variables:</strong>
             </p>
@@ -144,8 +164,8 @@ export default function Settings() {
       </div>
 
       {/* Footer */}
-      <div className="mt-16 pt-8 border-t border-glass text-sm text-gray-500">
-        <p>Questions? Check the <Link href="/help" className="text-violet-400 hover:text-violet-300">Help</Link> page or visit the <a href="https://github.com/deshpandessydneyai-commits/model-council" target="_blank" rel="noopener noreferrer" className="text-violet-400 hover:text-violet-300">GitHub repo</a>.</p>
+      <div className="mt-16 pt-8 border-t border-gray-300 dark:border-glass text-sm text-gray-600 dark:text-gray-500">
+        <p>Questions? Check the <Link href="/help" className="text-indigo-600 dark:text-violet-400 hover:text-indigo-700 dark:hover:text-violet-300">Help</Link> page or visit the <a href="https://github.com/deshpandessydneyai-commits/model-council" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-violet-400 hover:text-indigo-700 dark:hover:text-violet-300">GitHub repo</a>.</p>
       </div>
     </div>
   );

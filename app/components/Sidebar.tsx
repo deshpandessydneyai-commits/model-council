@@ -1,10 +1,11 @@
 "use client";
 
-import { Clock, Settings, HelpCircle, Plus, MoreVertical } from "lucide-react";
+import { Clock, Settings, HelpCircle, Plus } from "lucide-react";
 import Link from "next/link";
-import { Suspense } from "react";
+import { useState, useEffect } from "react";
 import { useSetupModal } from "@/lib/setup-modal-context";
-import { CreditsData } from "./CreditsData";
+import { useHistory } from "@/lib/history-context";
+import { COUNCIL_MODELS, SYNTHESIZER } from "@/lib/models";
 
 type SidebarProps = {
   onNewCouncil?: () => void;
@@ -13,28 +14,39 @@ type SidebarProps = {
 
 export function Sidebar({ onNewCouncil, currentPage = "home" }: SidebarProps) {
   const { setIsOpen } = useSetupModal();
+  const { openHistory } = useHistory();
+  const [credits, setCredits] = useState<string>("—");
+  const [creditsColor, setCreditsColor] = useState<string>("#9CA3AF");
+
+  useEffect(() => {
+    const fetchCredits = async () => {
+      try {
+        const res = await fetch("/api/credits");
+        if (res.ok) {
+          const data = await res.json();
+          const remaining = data.remaining ?? 0;
+          const color = remaining < 1 ? "#dc2626" : remaining < 3 ? "#d97706" : "#16a34a";
+          setCredits(`$${remaining.toFixed(2)}`);
+          setCreditsColor(color);
+        } else {
+          setCredits("—");
+        }
+      } catch {
+        setCredits("—");
+      }
+    };
+    fetchCredits();
+  }, []);
 
   const navItems = [
     { id: "new", label: "New Council", icon: Plus, onClick: () => setIsOpen(true) },
-    { id: "home", label: "Recent", icon: Clock, href: "/" },
+    { id: "history", label: "History", icon: Clock, onClick: () => openHistory() },
     { id: "settings", label: "Settings", icon: Settings, href: "/settings" },
     { id: "help", label: "Help", icon: HelpCircle, href: "/help" },
   ];
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 border-r border-gray-300 dark:border-glass bg-white dark:bg-dark-bg pt-6 flex flex-col z-40">
-      {/* Logo */}
-      <div className="px-6 pb-8 border-b border-gray-300 dark:border-glass">
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 dark:from-violet-500 to-indigo-600 dark:to-purple-600 flex items-center justify-center">
-            <span className="text-white font-bold text-lg">mc</span>
-          </div>
-          <span className="font-bold text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-violet-400 transition-colors">
-            Council
-          </span>
-        </Link>
-      </div>
-
+    <aside className="fixed left-0 top-0 h-screen w-64 border-r border-gray-300 dark:border-glass bg-white dark:bg-dark-bg flex flex-col z-40">
       {/* Navigation */}
       <nav className="flex-1 px-3 py-6 space-y-2 overflow-y-auto">
         {navItems.map((item) => {
@@ -74,12 +86,28 @@ export function Sidebar({ onNewCouncil, currentPage = "home" }: SidebarProps) {
       </nav>
 
       {/* Footer */}
-      <div className="border-t border-gray-300 dark:border-glass px-3 py-4">
+      <div className="border-t border-gray-300 dark:border-glass px-3 py-4 space-y-4 overflow-y-auto">
+        {/* Credits */}
         <div className="glass-card px-4 py-3 space-y-2">
           <div className="text-xs text-gray-600 dark:text-gray-500">Credits</div>
-          <Suspense fallback={<div className="text-sm font-bold text-gray-500">Loading...</div>}>
-            <CreditsData />
-          </Suspense>
+          <div className="text-sm font-bold" style={{ color: creditsColor }}>
+            {credits}
+          </div>
+        </div>
+
+        {/* Council Models */}
+        <div className="px-2 space-y-2">
+          <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Council</div>
+          <ul className="space-y-1">
+            {COUNCIL_MODELS.map((m) => (
+              <li key={m.id} className="text-xs text-gray-600 dark:text-gray-400">
+                {m.displayName}
+              </li>
+            ))}
+            <li className="text-xs text-gray-500 dark:text-gray-500 pt-1">
+              synth — {SYNTHESIZER.displayName}
+            </li>
+          </ul>
         </div>
       </div>
     </aside>

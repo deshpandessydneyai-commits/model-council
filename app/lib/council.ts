@@ -1,6 +1,7 @@
 import OpenAI from "openai";
-import { COUNCIL_MODELS, CouncilModel, SYNTHESIZER, PERSONA_BY_ID } from "./models";
-import type { Persona } from "./models";
+import { COUNCIL_MODELS, CouncilModel, SYNTHESIZER } from "./models";
+import { getStakeContext } from "./stakes-config";
+import type { StakeLevel, DomainType } from "./types/stakes";
 
 const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
 
@@ -157,13 +158,6 @@ function isTransient(err: unknown): boolean {
   return /5\d\d|timeout|rate.?limit|overload|unavailable/i.test(msg);
 }
 
-function getPersonaPrefix(personaId: string | undefined): string {
-  if (!personaId || personaId === "default") return "";
-  const persona = PERSONA_BY_ID[personaId];
-  if (!persona) return "";
-  return `${persona.systemPrefix}\n\n`;
-}
-
 async function streamOne(
   client: OpenAI,
   model: CouncilModel,
@@ -230,15 +224,12 @@ async function runRound(
   systemFor: (m: CouncilModel) => string,
   userFor: (m: CouncilModel) => string,
   webSearch: boolean,
-  personas: Record<string, string>,
   onEvent: (e: CouncilEvent) => void
 ): Promise<RoundOutput[]> {
   onEvent({ type: "round_start", round, label });
   const results = await Promise.all(
     COUNCIL_MODELS.map((m) => {
-      const baseSystem = systemFor(m);
-      const personaPrefix = getPersonaPrefix(personas[m.id]);
-      const finalSystem = personaPrefix + baseSystem;
+      const finalSystem = systemFor(m);
       return streamOne(client, m, finalSystem, userFor(m), round, webSearch, onEvent);
     })
   );
@@ -391,13 +382,68 @@ async function synthesize(
   };
 }
 
+// Helper function to build enhanced Round 2 prompt with stakes-aware adversarial challenge
+function buildEnhancedRound2Prompt(
+  basePrompt: string,
+  metadata?: { stakeLevel?: string; domain?: string }
+): string {
+  if (!metadata?.stakeLevel || !metadata?.domain) {
+    return basePrompt;
+  }
+
+  const stakeContext = getStakeContext(metadata.stakeLevel);
+  const domain = metadata.domain as DomainType;
+  const adversarialChallenge = stakeContext.adversarialPrompt(domain);
+
+  return `${basePrompt}
+
+[ADVERSARIAL CHALLENGE FOR THIS CONTEXT]
+${adversarialChallenge}
+
+Provide a rigorous critique that identifies weaknesses, assumptions, and alternative perspectives.`;
+}
+
+// Helper function to build enhanced Round 3 prompt with bias sweep and accountability checks
+function buildEnhancedRound3Prompt(
+  basePrompt: string,
+  metadata?: { stakeLevel?: string; domain?: string }
+): string {
+  if (!metadata?.stakeLevel || !metadata?.domain) {
+    return basePrompt;
+  }
+
+  const stakeContext = getStakeContext(metadata.stakeLevel);
+  const domain = metadata.domain as DomainType;
+
+  const biasCheckPrompt = stakeContext.biasCheckPrompt(domain);
+  const accountabilityPrompt = stakeContext.accountabilityPrompt(domain);
+
+  return `${basePrompt}
+
+[FINAL STRESS TEST]
+
+Before providing your final statement, complete this mental exercise:
+
+BIAS CHECK:
+${biasCheckPrompt}
+
+ACCOUNTABILITY:
+${accountabilityPrompt}
+
+Now provide your final statement. Have these questions changed your position?`;
+}
+
 export async function runCouncil(
   prompt: string,
   forceRound3: boolean,
   webSearch: boolean,
   documentContext: string,
-  personas: Record<string, string>,
-  onEvent: (e: CouncilEvent) => void
+  onEvent: (e: CouncilEvent) => void,
+  metadata?: {
+    stakeLevel?: string;
+    domain?: string;
+    userQuestion?: string;
+  }
 ) {
   const client = getClient();
 
@@ -414,7 +460,7 @@ export async function runCouncil(
 
   // ── Round 1 ──────────────────────────────────────────────
   const r1Label = webSearch ? "Round 01 — Independent ⟡ web" : "Round 01 — Independent";
-  const r1 = await runRound(client, 1, r1Label, () => ROUND_1_SYSTEM, () => fullPrompt, webSearch, personas, onEvent);
+  const r1 = await runRound(client, 1, r1Label, () => ROUND_1_SYSTEM, () => fullPrompt, webSearch, onEvent);
   allRounds.push({ label: "Round 1 — Independent", outputs: r1 });
 
   // ── Vote-Then-Debate: convergence check after Round 1 ───
@@ -431,11 +477,11 @@ export async function runCouncil(
     // ── Round 2 ────────────────────────────────────────────
     const r2Label = webSearch ? "Round 02 — Critique & Update ⟡ web" : "Round 02 — Critique & Update";
     const r2 = await runRound(
-      client, 2, r2Label, () => ROUND_2_SYSTEM,
+      client, 2, r2Label, () => buildEnhancedRound2Prompt(ROUND_2_SYSTEM, metadata),
       (m) => `Original prompt:\n\n${fullPrompt}\n\n---\n\nYour own Round 1 answer:\n\n${
         r1.find((r) => r.modelId === m.id)?.text ?? ""
       }\n\n---\n\nThe other models' Round 1 answers:\n\n${formatOthers(r1, m.id)}`,
-      webSearch, personas, onEvent
+      webSearch, onEvent
     );
     allRounds.push({ label: "Round 2 — Critique & Update", outputs: r2 });
 
@@ -450,11 +496,11 @@ export async function runCouncil(
 
       const r3Label = webSearch ? "Round 03 — Final Statements ⟡ web" : "Round 03 — Final Statements";
       const r3 = await runRound(
-        client, 3, r3Label, () => ROUND_3_SYSTEM,
+        client, 3, r3Label, () => buildEnhancedRound3Prompt(ROUND_3_SYSTEM, metadata),
         (m) => `Original prompt:\n\n${fullPrompt}\n\n---\n\nYour Round 2 answer:\n\n${
           r2.find((r) => r.modelId === m.id)?.text ?? ""
         }\n\n---\n\nThe other models' Round 2 answers:\n\n${formatOthers(r2, m.id)}`,
-        webSearch, personas, onEvent
+        webSearch, onEvent
       );
       allRounds.push({ label: "Round 3 — Final Statements", outputs: r3 });
 
@@ -470,7 +516,7 @@ export async function runCouncil(
           (m) => `Original prompt:\n\n${fullPrompt}\n\n---\n\nYour Round 3 answer:\n\n${
             r3.find((r) => r.modelId === m.id)?.text ?? ""
           }\n\n---\n\nThe other models' Round 3 answers:\n\n${formatOthers(r3, m.id)}`,
-          webSearch, personas, onEvent
+          webSearch, onEvent
         );
         allRounds.push({ label: "Round 4 — Final Resolution", outputs: r4 });
       }

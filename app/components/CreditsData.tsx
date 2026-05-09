@@ -1,6 +1,6 @@
 async function CreditsData() {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) return <div className="text-sm font-bold text-green-400">$0.00</div>;
+  if (!apiKey) return <div className="text-sm font-bold text-gray-400">—</div>;
 
   try {
     const res = await fetch("https://openrouter.ai/api/v1/credits", {
@@ -19,7 +19,7 @@ async function CreditsData() {
       </div>
     );
   } catch {
-    return <div className="text-sm font-bold text-gray-400">unavailable</div>;
+    return <div className="text-sm font-bold text-gray-400">—</div>;
   }
 }
 

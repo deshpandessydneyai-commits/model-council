@@ -10,7 +10,11 @@ export async function POST(req: Request) {
     forceRound3?: boolean;
     webSearch?: boolean;
     documentContext?: string;
-    personaMap?: Record<string, string>;
+    metadata?: {
+      stakeLevel?: string;
+      domain?: string;
+      userQuestion?: string;
+    };
   };
   try {
     body = await req.json();
@@ -22,7 +26,7 @@ export async function POST(req: Request) {
   const forceRound3 = !!body.forceRound3;
   const webSearch = !!body.webSearch;
   const documentContext = (body.documentContext ?? "").trim();
-  const personaMap = body.personaMap ?? {}; // Map of modelId -> personaId
+  const metadata = body.metadata ?? {}; // Stakes and domain metadata
 
   if (!prompt) {
     return new Response("prompt is required", { status: 400 });
@@ -38,7 +42,7 @@ export async function POST(req: Request) {
       };
 
       try {
-        await runCouncil(prompt, forceRound3, webSearch, documentContext, personaMap, send);
+        await runCouncil(prompt, forceRound3, webSearch, documentContext, send, metadata);
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         send({ type: "error", message: msg });

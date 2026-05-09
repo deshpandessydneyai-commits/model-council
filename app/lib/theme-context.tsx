@@ -7,7 +7,19 @@ type ThemeContextType = {
   toggleTheme: () => void;
 };
 
-const ThemeContext = createContext<ThemeContextType | null>(null);
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+
+function applyTheme(isDark: boolean) {
+  if (typeof document === "undefined") return;
+
+  const html = document.documentElement;
+  if (isDark) {
+    html.classList.add("dark");
+  } else {
+    html.classList.remove("dark");
+  }
+  localStorage.setItem("model-council-theme", isDark ? "dark" : "light");
+}
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [isDark, setIsDark] = useState(true);
@@ -16,33 +28,21 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // Load theme from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem("model-council-theme");
-    if (saved) {
-      setIsDark(saved === "dark");
-    } else {
-      // Default to dark mode
-      setIsDark(true);
-    }
+    const theme = saved === "light" ? false : true;
+    setIsDark(theme);
+    applyTheme(theme);
     setMounted(true);
   }, []);
 
-  // Update DOM and localStorage when theme changes
+  // Apply theme whenever isDark changes
   useEffect(() => {
-    if (!mounted) return;
-
-    const html = document.documentElement;
-    if (isDark) {
-      html.classList.add("dark");
-    } else {
-      html.classList.remove("dark");
-    }
-    localStorage.setItem("model-council-theme", isDark ? "dark" : "light");
-  }, [isDark, mounted]);
+    applyTheme(isDark);
+  }, [isDark]);
 
   const toggleTheme = () => {
     setIsDark((prev) => !prev);
   };
 
-  // Always provide context to prevent hydration mismatch
   return (
     <ThemeContext.Provider value={{ isDark, toggleTheme }}>
       {children}
@@ -52,7 +52,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
 export function useTheme() {
   const context = useContext(ThemeContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error("useTheme must be used within ThemeProvider");
   }
   return context;

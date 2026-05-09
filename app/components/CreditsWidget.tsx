@@ -27,11 +27,11 @@ async function CreditsData() {
 
 export function CreditsWidget() {
   return (
-    <div className="fixed bottom-24 left-4 z-40 bg-[#1A1A2E] border border-glass rounded-lg flex items-center gap-2 px-3 py-2 hover:bg-[#222235] transition-colors group">
-      <span className="mono-meta text-gray-400 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+    <div className="fixed bottom-24 left-4 z-40 bg-white dark:bg-[#1A1A2E] border border-gray-300 dark:border-glass rounded-lg flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-[#222235] transition-colors group">
+      <span className="mono-meta text-gray-600 dark:text-gray-400 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
         Credits
       </span>
-      <Suspense fallback={<span className="mono-meta text-sm text-gray-500">—</span>}>
+      <Suspense fallback={<span className="mono-meta text-sm text-gray-500 dark:text-gray-500">—</span>}>
         <CreditsData />
       </Suspense>
     </div>

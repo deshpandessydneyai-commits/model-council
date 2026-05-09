@@ -12,9 +12,9 @@ export function MarkdownContent({ content }: { content: string }) {
         elements.push(
           <pre
             key={key}
-            className="bg-[#1A1A2E] border border-glass rounded px-3 py-2 overflow-x-auto text-xs font-mono my-2"
+            className="bg-gray-100 dark:bg-[#1A1A2E] border border-gray-300 dark:border-glass rounded px-3 py-2 overflow-x-auto text-xs font-mono my-2"
           >
-            <code className="text-gray-300">{codeContent}</code>
+            <code className="text-gray-900 dark:text-gray-300">{codeContent}</code>
           </pre>
         );
         codeContent = "";
@@ -26,7 +26,7 @@ export function MarkdownContent({ content }: { content: string }) {
         elements.push(
           <ul key={key} className="list-disc list-inside my-2 space-y-1 text-sm">
             {listItems.map((item, i) => (
-              <li key={i} className="text-gray-300">
+              <li key={i} className="text-gray-700 dark:text-gray-300">
                 {item.replace(/^[-*]\s+/, "")}
               </li>
             ))}
@@ -58,7 +58,7 @@ export function MarkdownContent({ content }: { content: string }) {
       if (line.startsWith("### ")) {
         flushListItems(`list-before-h3-${i}`);
         elements.push(
-          <h3 key={`h3-${i}`} className="text-sm font-bold text-white mt-3 mb-2">
+          <h3 key={`h3-${i}`} className="text-sm font-bold text-gray-900 dark:text-white mt-3 mb-2">
             {line.replace(/^### /, "")}
           </h3>
         );
@@ -68,7 +68,7 @@ export function MarkdownContent({ content }: { content: string }) {
       if (line.startsWith("## ")) {
         flushListItems(`list-before-h2-${i}`);
         elements.push(
-          <h2 key={`h2-${i}`} className="text-base font-bold text-white mt-4 mb-2">
+          <h2 key={`h2-${i}`} className="text-base font-bold text-gray-900 dark:text-white mt-4 mb-2">
             {line.replace(/^## /, "")}
           </h2>
         );
@@ -78,7 +78,7 @@ export function MarkdownContent({ content }: { content: string }) {
       if (line.startsWith("# ")) {
         flushListItems(`list-before-h1-${i}`);
         elements.push(
-          <h1 key={`h1-${i}`} className="text-lg font-bold text-white mt-4 mb-2">
+          <h1 key={`h1-${i}`} className="text-lg font-bold text-gray-900 dark:text-white mt-4 mb-2">
             {line.replace(/^# /, "")}
           </h1>
         );
@@ -104,7 +104,7 @@ export function MarkdownContent({ content }: { content: string }) {
       flushListItems(`list-before-p-${i}`);
       const formattedLine = formatInlineMarkdown(line);
       elements.push(
-        <p key={`p-${i}`} className="text-sm leading-relaxed text-gray-300 mb-2">
+        <p key={`p-${i}`} className="text-sm leading-relaxed text-gray-700 dark:text-gray-300 mb-2">
           {formattedLine}
         </p>
       );
@@ -134,7 +134,7 @@ export function MarkdownContent({ content }: { content: string }) {
           elements.push(str.substring(lastIdx, boldMatch.index));
         }
         elements.push(
-          <strong key={boldMatch.index} className="font-bold text-white">
+          <strong key={boldMatch.index} className="font-bold text-gray-900 dark:text-white">
             {boldMatch[1]}
           </strong>
         );
@@ -152,7 +152,7 @@ export function MarkdownContent({ content }: { content: string }) {
   };
 
   return (
-    <div className="prose-sm prose-invert max-w-none">
+    <div className="prose-sm max-w-none">
       {parseMarkdown(content)}
     </div>
   );

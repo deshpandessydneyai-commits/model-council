@@ -17,9 +17,9 @@ Designed to surface **disagreement between models** on hard questions rather tha
 - **Side-by-Side Verdict Table** — Structured comparison of what each model agreed/disagreed on
 - **One-Click Export** — Download entire debate as Markdown with all rounds and verdict
 - **Web Search Integration** — Optional live web context via OpenRouter's `:online` mode
-- **Model Persona System** — Assign emoji-based personas to each debater for visual clarity
+- **GPS Framework** — Stakes-aware prompting with domain detection, adversarial challenges, and bias checks
 - **Session History** — localStorage-backed debate history with restore capability
-- **Configurable Council** — Swap any model in the lineup via the setup modal
+- **Configurable Council** — Swap any model in the lineup via settings
 
 ---
 
@@ -38,6 +38,41 @@ Claude Opus checks for substantive disagreement. If found, models write final po
 Opus 4.6 synthesizes the debate into:
 - A **verdict table** (what each model agreed/disagreed on, confidence, reasoning)
 - A **final prose answer** with synthesis and open questions
+
+---
+
+## 🎯 GPS Framework — Stakes-Aware Prompting
+
+Model Council uses the **GPS Framework** (Gaslight/Push Back/Stress Test) to generate domain-aware, stakes-conscious debate prompts:
+
+### Domain Detection
+The system automatically identifies 8 question types based on keywords and context:
+- **Medical** — Health, treatment, clinical decisions
+- **Academic** — Research, theories, scholarly debate
+- **Technical** — Code, architecture, engineering decisions
+- **Legal** — Contracts, compliance, regulatory matters
+- **Creative** — Art, design, subjective aesthetic questions
+- **Policy** — Governance, regulation, societal decisions
+- **Personal** — Life choices, relationships, self-improvement
+- **Business** — Markets, strategy, organizational decisions
+
+### Stakes Levels
+Select how much weight the question carries, and the system adjusts prompting intensity:
+
+| Level | Use Case | Prompt Adjustment |
+|---|---|---|
+| **Exploratory** | Low-risk brainstorming | Focus on creative thinking, multiple angles |
+| **Implemented** | Already decided, seeking validation | Test for blind spots, alternative approaches |
+| **Critical** | Significant impact, needs rigor | Demand evidence, accountability, bias checks |
+| **Time-Critical** | Urgent decision required | Streamline analysis, prioritize key factors |
+| **Resource-Constrained** | Limited budget/time/options | Practical trade-offs, feasibility focus |
+
+### How It Works
+1. **Gaslight (Round 1)**: Main prompt sets the context and stakes
+2. **Push Back (Round 2)**: Domain-specific adversarial challenges force models to defend positions
+3. **Stress Test (Round 3)**: Bias checks and accountability prompts test reasoning rigor
+
+This ensures debates are tailored to both the domain and the stakes, producing more relevant insights.
 
 ---
 
@@ -126,7 +161,7 @@ Open **http://localhost:3000** in your browser.
 
 ## 💡 Use Cases & Examples
 
-Model Council works for anyone who needs **multiple perspectives** on a hard question. Here's how different users leverage it:
+Model Council works for anyone who needs **multiple perspectives** on a hard question. The GPS Framework ensures debates adapt to your domain and stakes. Here's how different users leverage it:
 
 ### 🔬 Research & Academia
 **Explore topics rigorously, test hypotheses, document thinking.**
