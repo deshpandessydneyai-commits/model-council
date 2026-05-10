@@ -28,7 +28,7 @@ export function DebatePhasePanel({
 
   return (
     <div
-      className="mb-8 p-6 rounded-lg border"
+      className="mb-6 p-4 rounded-lg border"
       style={{
         backgroundColor: "var(--bg-inset)",
         borderColor: "var(--bd)",
@@ -36,7 +36,7 @@ export function DebatePhasePanel({
     >
       {/* Header */}
       <h3
-        className="text-xs uppercase tracking-widest font-semibold mb-4"
+        className="text-xs uppercase tracking-widest font-semibold mb-2"
         style={{ color: "var(--t3)" }}
       >
         Debate Progress: Round {currentRound} — {gpsPhase?.phase} Phase
@@ -44,8 +44,8 @@ export function DebatePhasePanel({
 
       {/* Progress Bar */}
       {total > 0 && (
-        <div className="mb-4">
-          <div className="flex items-center gap-2 mb-2">
+        <div className="mb-3">
+          <div className="flex items-center gap-2 mb-1">
             <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
               <div
                 className="h-full bg-blue-500 transition-all duration-300"
@@ -64,15 +64,15 @@ export function DebatePhasePanel({
 
       {/* Current Phase Explanation */}
       {gpsPhase && (
-        <div className="mb-6 p-4 rounded border-l-4" style={{ borderLeftColor: "#8B5CF6", backgroundColor: "rgba(139, 92, 246, 0.05)" }}>
+        <div className="mb-3 p-2.5 rounded border-l-4" style={{ borderLeftColor: "#8B5CF6", backgroundColor: "rgba(139, 92, 246, 0.05)" }}>
           <p
-            className="text-sm font-semibold mb-1"
+            className="text-xs font-semibold mb-0.5"
             style={{ color: "var(--t1)" }}
           >
             {gpsPhase.emoji} {gpsPhase.phase} — {gpsPhase.phase === "Gather" ? "Round 1 - Independent" : gpsPhase.phase === "Probe" ? "Round 2 - Critique" : "Round 3 - Final"}
           </p>
           <p
-            className="text-sm leading-relaxed"
+            className="text-xs leading-snug"
             style={{ color: "var(--t2)" }}
           >
             {gpsPhase.phase === "Gather"
@@ -85,11 +85,11 @@ export function DebatePhasePanel({
       )}
 
       {/* All Phases Timeline */}
-      <div className="space-y-3">
+      <div className="space-y-1.5">
         {allPhases.map((phaseInfo, idx) => (
           <div
             key={phaseInfo.round}
-            className="flex items-start gap-3 p-3 rounded"
+            className="flex items-start gap-2 p-2 rounded"
             style={{
               backgroundColor:
                 currentRound === phaseInfo.round
