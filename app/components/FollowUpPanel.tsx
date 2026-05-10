@@ -1,137 +1,162 @@
 "use client";
 
-import { COUNCIL_MODELS } from "@/lib/models";
-import type { FollowUpQuestion } from "@/lib/history";
-import { X, ChevronDown, Send } from "lucide-react";
 import { useState } from "react";
+import { Send, ChevronDown, Loader } from "lucide-react";
+import type { FollowUpQuestion } from "@/lib/history";
 
-type Props = {
-  followUps: FollowUpQuestion[];
-  onSubmitFollowUp: (question: string) => void;
+interface FollowUpPanelProps {
+  followUps?: FollowUpQuestion[];
+  onSubmit?: (question: string) => void;
+  disabled?: boolean;
   isLoading?: boolean;
-  hasVerdict?: boolean;
-};
+  onClearHistory?: () => void;
+}
 
 export function FollowUpPanel({
-  followUps,
-  onSubmitFollowUp,
+  followUps = [],
+  onSubmit,
+  disabled = false,
   isLoading = false,
-  hasVerdict = false,
-}: Props) {
-  const [newQuestion, setNewQuestion] = useState("");
-  const [expandedFollowUp, setExpandedFollowUp] = useState<string | null>(null);
+  onClearHistory,
+}: FollowUpPanelProps) {
+  const [question, setQuestion] = useState("");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const handleSubmit = () => {
-    if (!newQuestion.trim() || isLoading || !hasVerdict) return;
-    onSubmitFollowUp(newQuestion);
-    setNewQuestion("");
+    if (question.trim()) {
+      onSubmit?.(question);
+      setQuestion("");
+    }
   };
 
-  if (!hasVerdict && followUps.length === 0) {
-    return null;
-  }
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && e.ctrlKey && question.trim()) {
+      handleSubmit();
+    }
+  };
 
   return (
-    <section className="mt-12 border-t border-[#E2E0DA] dark:border-gray-700 pt-8">
-      <div className="mb-6">
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
-          Follow-Up Questions
-        </h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400">
-          Ask about the verdict without re-running the council (~30 seconds)
-        </p>
-      </div>
-
-      {/* New Follow-Up Input */}
-      {hasVerdict && (
-        <div className="mb-6 space-y-3">
-          <textarea
-            value={newQuestion}
-            onChange={(e) => setNewQuestion(e.target.value)}
-            placeholder="Ask a follow-up question about the verdict..."
-            rows={3}
-            disabled={isLoading}
-            className="w-full border border-[#E2E0DA] dark:border-glass bg-[#EEEDEA] dark:bg-[#1A1A2E] p-4 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:outline-none focus:border-indigo-500 dark:focus:border-violet-500 disabled:opacity-50"
-          />
-          <button
-            onClick={handleSubmit}
-            disabled={!newQuestion.trim() || isLoading}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white font-medium transition-colors disabled:cursor-not-allowed"
-          >
-            <Send size={16} />
-            {isLoading ? "Waiting for responses..." : "Ask"}
-          </button>
-        </div>
-      )}
-
-      {/* Follow-Up History */}
+    <div
+      className="mt-8 rounded-lg border"
+      style={{
+        borderColor: "var(--bd)",
+      }}
+    >
+      {/* History Section */}
       {followUps.length > 0 && (
-        <div className="space-y-4">
-          <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-            Previous Follow-Ups
+        <div
+          className="border-b p-6"
+          style={{
+            backgroundColor: "var(--bg-inset)",
+            borderBottomColor: "var(--bd)",
+          }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h3
+              className="text-sm uppercase tracking-widest font-medium"
+              style={{ color: "var(--t3)" }}
+            >
+              Follow-Up History ({followUps.length})
+            </h3>
+            {followUps.length > 0 && (
+              <button
+                onClick={onClearHistory}
+                className="text-xs text-red-600 hover:text-red-700 transition-colors"
+              >
+                Clear
+              </button>
+            )}
           </div>
-          {followUps.map((followUp) => {
-            const isExpanded = expandedFollowUp === followUp.id;
-            return (
+
+          <div className="space-y-3">
+            {followUps.map((followUp) => (
               <div
                 key={followUp.id}
-                className="border border-[#E2E0DA] dark:border-glass rounded-lg bg-white dark:bg-[#0F0F1A] overflow-hidden"
+                className="rounded-lg border overflow-hidden"
+                style={{
+                  backgroundColor: "var(--bg-card)",
+                  borderColor: "var(--bd)",
+                }}
               >
-                {/* Header */}
+                {/* Question Header */}
                 <button
                   onClick={() =>
-                    setExpandedFollowUp(isExpanded ? null : followUp.id)
+                    setExpandedId(expandedId === followUp.id ? null : followUp.id)
                   }
-                  className="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-[#F0EFEB] dark:hover:bg-white/5 transition-colors"
+                  className="w-full px-4 py-3 flex items-start gap-3 hover:opacity-75 transition-opacity text-left"
                 >
+                  <ChevronDown
+                    size={16}
+                    style={{
+                      color: "var(--t3)",
+                      transform:
+                        expandedId === followUp.id ? "rotate(180deg)" : "rotate(0deg)",
+                      transition: "transform 0.2s",
+                    }}
+                    className="flex-shrink-0 mt-0.5"
+                  />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white line-clamp-1">
+                    <p
+                      className="text-sm font-medium line-clamp-2"
+                      style={{ color: "var(--t1)" }}
+                    >
                       {followUp.question}
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                      {new Date(followUp.timestamp).toLocaleString()}
+                    <p
+                      className="text-xs mt-1"
+                      style={{ color: "var(--t3)" }}
+                    >
+                      {new Date(followUp.timestamp).toLocaleTimeString()}
                     </p>
                   </div>
-                  <ChevronDown
-                    size={18}
-                    className={`text-gray-400 transition-transform flex-shrink-0 ml-2 ${
-                      isExpanded ? "rotate-180" : ""
-                    }`}
-                  />
                 </button>
 
                 {/* Expanded Content */}
-                {isExpanded && (
-                  <div className="border-t border-[#E2E0DA] dark:border-glass px-4 py-4 space-y-4 bg-[#F9F8F6] dark:bg-[#0A0A0F]">
+                {expandedId === followUp.id && (
+                  <div
+                    className="border-t p-4 space-y-4"
+                    style={{
+                      backgroundColor: "var(--bg)",
+                      borderTopColor: "var(--bd)",
+                    }}
+                  >
                     {/* Model Responses */}
-                    <div className="space-y-3">
-                      {COUNCIL_MODELS.map((model) => {
-                        const response = followUp.responses[model.id];
-                        if (!response) return null;
+                    {Object.entries(followUp.responses).map(([modelId, response]) => (
+                      <div key={modelId}>
+                        <h4
+                          className="text-xs uppercase tracking-widest font-semibold mb-2"
+                          style={{ color: "var(--t3)" }}
+                        >
+                          {modelId}
+                        </h4>
+                        <p
+                          className="text-sm leading-relaxed"
+                          style={{ color: "var(--t2)" }}
+                        >
+                          {response}
+                        </p>
+                      </div>
+                    ))}
 
-                        return (
-                          <div
-                            key={model.id}
-                            className="border border-[#E2E0DA] dark:border-glass rounded-lg bg-white dark:bg-[#0F0F1A] p-3"
-                          >
-                            <div className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">
-                              {model.displayName}
-                            </div>
-                            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed line-clamp-4">
-                              {response}
-                            </p>
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {/* Synthesis Response (if available) */}
+                    {/* Synthesis Response */}
                     {followUp.synthesisResponse && (
-                      <div className="border border-violet-200 dark:border-violet-800 rounded-lg bg-violet-50 dark:bg-violet-950/30 p-3">
-                        <div className="text-xs font-semibold text-violet-700 dark:text-violet-300 mb-2">
-                          Opus Synthesis
-                        </div>
-                        <p className="text-sm text-violet-900 dark:text-violet-100 leading-relaxed">
+                      <div
+                        className="mt-4 p-3 rounded-lg border-l-4"
+                        style={{
+                          backgroundColor: "var(--bg-inset)",
+                          borderLeftColor: "var(--ac)",
+                        }}
+                      >
+                        <h4
+                          className="text-xs uppercase tracking-widest font-semibold mb-2"
+                          style={{ color: "var(--t3)" }}
+                        >
+                          Synthesis
+                        </h4>
+                        <p
+                          className="text-sm leading-relaxed"
+                          style={{ color: "var(--t2)" }}
+                        >
                           {followUp.synthesisResponse}
                         </p>
                       </div>
@@ -139,10 +164,72 @@ export function FollowUpPanel({
                   </div>
                 )}
               </div>
-            );
-          })}
+            ))}
+          </div>
         </div>
       )}
-    </section>
+
+      {/* Input Section */}
+      <div
+        className="p-6"
+        style={{
+          backgroundColor: "var(--bg-card)",
+        }}
+      >
+        <h3
+          className="text-sm uppercase tracking-widest font-medium mb-4"
+          style={{ color: "var(--t3)" }}
+        >
+          {followUps.length > 0 ? "Ask Another Question" : "Ask a Follow-Up"}
+        </h3>
+
+        <div className="flex gap-3 items-end">
+          <textarea
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Ask the council a clarification question... (Ctrl+Enter to submit)"
+            disabled={disabled || isLoading}
+            className="flex-1 p-3 rounded border resize-none focus:outline-none focus:ring-2"
+            rows={2}
+            style={{
+              borderColor: "var(--bd)",
+              backgroundColor: "var(--bg-inset)",
+              color: "var(--t1)",
+              "--tw-ring-color": "var(--ac)",
+            } as React.CSSProperties}
+          />
+
+          <button
+            onClick={handleSubmit}
+            disabled={disabled || isLoading || !question.trim()}
+            className="px-4 py-3 rounded-lg font-medium text-xs uppercase tracking-wide flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50"
+            style={{
+              backgroundColor: "var(--ac)",
+              color: "white",
+            }}
+          >
+            {isLoading ? (
+              <>
+                <Loader size={14} className="animate-spin" />
+                Loading
+              </>
+            ) : (
+              <>
+                <Send size={14} />
+                Submit
+              </>
+            )}
+          </button>
+        </div>
+
+        <p
+          className="text-xs mt-2"
+          style={{ color: "var(--t3)" }}
+        >
+          Follow-up questions are answered without re-running the full debate, taking ~30 seconds
+        </p>
+      </div>
+    </div>
   );
 }

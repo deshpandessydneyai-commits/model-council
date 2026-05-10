@@ -2,8 +2,10 @@
 
 import type { CouncilModel } from "@/lib/models";
 import { Copy, Maximize2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { MarkdownContent } from "./MarkdownContent";
+import { extractModelVersion } from "@/lib/utils";
+import { getGPSPhaseInfo } from "@/lib/gps-framework";
 
 type Props = {
   model: CouncilModel;
@@ -16,33 +18,43 @@ type Props = {
 
 export function ModelCard({ model, text, variant, round, done, previousRoundText }: Props) {
   const [copied, setCopied] = useState(false);
+  const gpsPhase = useMemo(() => getGPSPhaseInfo(round), [round]);
 
-  // Determine status indicator
-  const getStatusIndicator = () => {
-    if (round === 1) return { label: "New", color: "bg-blue-100 dark:bg-blue-950 text-blue-900 dark:text-blue-100", symbol: "●" };
-    if (!text || !previousRoundText) return { label: "New", color: "bg-blue-100 dark:bg-blue-950 text-blue-900 dark:text-blue-100", symbol: "●" };
+  const status = useMemo(() => {
+    if (round === 1) {
+      return { label: "Responding", symbol: "●", bgColor: "#8B5CF6", textColor: "text-purple-700" };
+    }
+    if (!text || !previousRoundText) {
+      return { label: "Responding", symbol: "●", bgColor: "#8B5CF6", textColor: "text-purple-700" };
+    }
 
     const textLower = text.toLowerCase();
-    const prevLower = (previousRoundText || "").toLowerCase();
-
-    // Check for agreement/convergence signals
     const agreeSignals = ["agree", "valid point", "concur", "correct", "sound", "convincing", "you're right"];
     const agreedSignals = agreeSignals.filter(signal => textLower.includes(signal));
-
-    // Check for revision signals
     const reviseSignals = ["revise", "update", "change my", "reconsider", "actually,", "upon reflection", "i was wrong"];
     const revisedSignals = reviseSignals.filter(signal => textLower.includes(signal));
 
     if (agreedSignals.length > 0) {
-      return { label: "Agreed", color: "bg-green-100 dark:bg-green-950 text-green-900 dark:text-green-100", symbol: "✓" };
+      return { label: "Agreed", symbol: "✓", bgColor: "#22c55e", textColor: "text-green-700" };
     } else if (revisedSignals.length > 0) {
-      return { label: "Revised", color: "bg-yellow-100 dark:bg-yellow-950 text-yellow-900 dark:text-yellow-100", symbol: "!" };
+      return { label: "Revised", symbol: "✎", bgColor: "#f59e0b", textColor: "text-amber-700" };
     }
 
-    return { label: "New", color: "bg-blue-100 dark:bg-blue-950 text-blue-900 dark:text-blue-100", symbol: "●" };
-  };
+    return { label: "Responded", symbol: "○", bgColor: "#e5e7eb", textColor: "text-gray-700" };
+  }, [text, round, previousRoundText]);
 
-  const status = getStatusIndicator();
+  const wordCount = useMemo(() => {
+    return text?.split(/\s+/).length || 0;
+  }, [text]);
+
+  const confidence = useMemo(() => {
+    const words = wordCount;
+    if (words < 50) return 1;
+    if (words < 150) return 2;
+    if (words < 300) return 3;
+    if (words < 500) return 4;
+    return 5;
+  }, [wordCount]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(text);
@@ -51,66 +63,168 @@ export function ModelCard({ model, text, variant, round, done, previousRoundText
   };
 
   return (
-    <article className="border border-[#E2E0DA] dark:border-glass bg-white dark:bg-[#0F0F1A] rounded-lg overflow-hidden hover:bg-[#F0EFEB] dark:hover:bg-[#121220] transition-colors flex flex-col h-full">
-      {/* Header */}
-      <header className="border-b border-[#E2E0DA] dark:border-glass px-4 py-3 flex items-center justify-between bg-[#F0EFEB] dark:bg-dark-overlay/50">
-        <div className="flex items-center gap-2.5 flex-1">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{model.displayName}</h3>
-              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold ${status.color}`}>
-                <span>{status.symbol}</span>
-                <span>{status.label}</span>
-              </span>
+    <>
+      <style>{`
+        @keyframes pulse-ring {
+          0% {
+            opacity: 1;
+            transform: scale(1);
+          }
+          100% {
+            opacity: 0;
+            transform: scale(1.8);
+          }
+        }
+        @keyframes shimmer {
+          0% { background-position: -1000px 0; }
+          100% { background-position: 1000px 0; }
+        }
+      `}</style>
+
+      <article
+        className="rounded-lg overflow-hidden flex flex-col h-[400px] transition-all"
+        style={{
+          backgroundColor: "var(--bg-card)",
+          border: `1px solid var(--bd)`,
+          ...(done ? { boxShadow: `0 0 0 2px rgba(34, 197, 94, 0.1)` } : {}),
+        }}
+      >
+        {/* Header */}
+        <header
+          className="border-b px-5 py-4 flex items-center justify-between relative"
+          style={{
+            borderColor: "var(--bd)",
+            backgroundColor: "var(--bg-inset)",
+          }}
+        >
+          <div className="flex items-center gap-3 flex-1">
+            {/* Status dot */}
+            <div className="relative">
+              <div
+                className="w-3 h-3 rounded-full"
+                style={{ backgroundColor: status.bgColor }}
+              />
+              {!done && (
+                <div
+                  className="absolute inset-0 rounded-full"
+                  style={{
+                    border: `2px solid ${status.bgColor}`,
+                    animation: "pulse-ring 1s ease-out infinite",
+                  }}
+                />
+              )}
             </div>
-            <div className="text-xs text-gray-600 dark:text-gray-500 mono-meta">{model.provider}</div>
+
+            {/* Model info */}
+            <div className="flex-1">
+              <h3
+                className="text-sm font-semibold"
+                style={{ color: "var(--t1)" }}
+              >
+                {model.displayName}
+              </h3>
+              <p
+                className="text-xs mono-meta"
+                style={{ color: "var(--t3)" }}
+              >
+                {model.provider}
+              </p>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="mono-meta text-xs text-gray-500 dark:text-gray-400">
-            R{round.toString().padStart(2, "0")}
+
+          {/* GPS Phase Badge + Round indicator */}
+          <div className="flex items-center gap-2">
+            {gpsPhase && (
+              <div
+                className="text-xs px-2 py-1 rounded-full"
+                style={{
+                  backgroundColor: "rgba(139, 92, 246, 0.1)",
+                  color: "#8B5CF6",
+                  border: "1px solid rgba(139, 92, 246, 0.3)"
+                }}
+                title={gpsPhase.description}
+              >
+                {gpsPhase.emoji} {gpsPhase.phase}
+              </div>
+            )}
+            <div
+              className="text-xs font-medium mono-meta"
+              style={{ color: "var(--t3)" }}
+            >
+              R{round.toString().padStart(2, "0")}
+            </div>
           </div>
-          {done ? (
-            <span className="text-xs text-green-600 dark:text-green-400">●</span>
+        </header>
+
+        {/* Content */}
+        <div
+          className="flex-1 overflow-y-auto p-5 text-sm"
+          style={{ color: "var(--t1)" }}
+        >
+          {text ? (
+            <MarkdownContent content={text} />
           ) : (
-            <span className="text-xs text-gray-500 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 bg-violet-500 dark:bg-violet-400 rounded-full animate-pulse" />
+            <span style={{ color: "var(--t3)" }} className="italic">
+              {done ? "No response" : "Awaiting response…"}
             </span>
           )}
         </div>
-      </header>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4 min-h-[200px] max-h-[400px] scrollbar-theme">
-        {text ? (
-          <MarkdownContent content={text} />
-        ) : (
-          <span className="text-gray-600 dark:text-gray-500 italic">
-            {done ? "No response" : "Awaiting tokens…"}
-          </span>
-        )}
-      </div>
+        {/* Footer */}
+        <div
+          className="border-t px-5 py-3 flex items-center justify-between"
+          style={{
+            borderColor: "var(--bd)",
+            backgroundColor: "var(--bg-inset)",
+          }}
+        >
+          {/* Left: Word count + Confidence bar + Version */}
+          <div className="flex items-center gap-4 flex-1">
+            <div
+              className="text-xs mono-meta"
+              style={{ color: "var(--t3)" }}
+            >
+              {wordCount} words
+            </div>
 
-      {/* Footer Actions */}
-      {done && text && (
-        <div className="border-t border-[#E2E0DA] dark:border-glass px-4 py-2 flex items-center gap-2 bg-[#F0EFEB] dark:bg-dark-overlay/30">
-          <button
-            onClick={handleCopy}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded hover:bg-[#E2E0DA] dark:hover:bg-white/10 transition-colors text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-            title="Copy to clipboard"
-          >
-            <Copy size={14} />
-            {copied ? "Copied" : "Copy"}
-          </button>
-          <button
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded hover:bg-[#E2E0DA] dark:hover:bg-white/10 transition-colors text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-            title="Expand full response"
-          >
-            <Maximize2 size={14} />
-            Full
-          </button>
+            {/* Confidence bar */}
+            <div className="flex items-center gap-1">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div
+                  key={i}
+                  className="w-2 h-2 rounded-sm"
+                  style={{
+                    backgroundColor: i <= confidence ? "var(--ac)" : "var(--t4)",
+                  }}
+                />
+              ))}
+            </div>
+
+            {/* Version */}
+            <div
+              className="text-xs"
+              style={{ color: "var(--t3)" }}
+            >
+              v{extractModelVersion(model.slug).split(" ").pop()}
+            </div>
+          </div>
+
+          {/* Right: Timestamp or Copy button */}
+          {done && text && (
+            <button
+              onClick={handleCopy}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded transition-colors"
+              style={{
+                color: "var(--t3)",
+              }}
+              title="Copy to clipboard"
+            >
+              <Copy size={14} />
+              <span>{copied ? "Copied" : "Copy"}</span>
+            </button>
+          )}
         </div>
-      )}
-    </article>
+      </article>
+    </>
   );
 }

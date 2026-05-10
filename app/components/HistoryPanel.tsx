@@ -50,14 +50,14 @@ export function HistoryPanel({ open, sessions, onClose, onRestore, onDelete }: P
 
       {/* Panel */}
       <aside
-        className="fixed top-0 right-0 z-50 h-full w-[400px] bg-[#F5F4F0] dark:bg-[#0F0F1A] border-l border-[#E2E0DA] dark:border-gray-700 flex flex-col"
+        className="fixed top-0 right-0 z-50 h-full w-[400px] bg-white dark:bg-[#0F0F1A] border-l border-gray-300 dark:border-gray-700 flex flex-col"
         style={{
           transform: open ? "translateX(0)" : "translateX(100%)",
           transition: "transform 500ms cubic-bezier(0.16, 1, 0.3, 1)",
         }}
       >
         {/* Header */}
-        <div className="px-6 py-6 border-b border-[#E2E0DA] dark:border-gray-700 space-y-4">
+        <div className="px-6 py-6 border-b border-gray-300 dark:border-gray-700 space-y-4">
           <div className="flex items-center justify-between">
             <span className="mono-meta text-gray-900 dark:text-white">Session History</span>
             <button
@@ -73,7 +73,7 @@ export function HistoryPanel({ open, sessions, onClose, onRestore, onDelete }: P
               placeholder="Search sessions..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-3 py-2 border border-[#E2E0DA] dark:border-gray-700 bg-[#EEEDEA] dark:bg-[#1A1A2E] rounded text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:border-indigo-500 dark:focus:border-violet-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#1A1A2E] rounded text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:border-indigo-500 dark:focus:border-violet-500"
             />
           )}
         </div>
@@ -99,7 +99,7 @@ export function HistoryPanel({ open, sessions, onClose, onRestore, onDelete }: P
               {filteredSessions.map((session) => (
                 <li
                   key={session.id}
-                  className="group border-b border-[#E2E0DA] dark:border-gray-700 px-6 py-5 hover:bg-[#F0EFEB] dark:hover:bg-white/[0.02] transition-colors duration-300"
+                  className="group border-b border-gray-300 dark:border-gray-700 px-6 py-5 hover:bg-gray-100 dark:hover:bg-white/[0.02] transition-colors duration-300"
                 >
                   <div
                     onClick={() => onRestore(session)}
@@ -135,7 +135,7 @@ export function HistoryPanel({ open, sessions, onClose, onRestore, onDelete }: P
 
         {/* Footer */}
         {sessions.length > 0 && (
-          <div className="px-6 py-4 border-t border-[#E2E0DA] dark:border-gray-700">
+          <div className="px-6 py-4 border-t border-gray-300 dark:border-gray-700">
             <div className="mono-meta text-gray-600 dark:text-gray-400 text-xs">
               {sessions.length} session{sessions.length !== 1 ? "s" : ""} stored locally
             </div>
@@ -151,7 +151,7 @@ export function HistoryPanel({ open, sessions, onClose, onRestore, onDelete }: P
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-white dark:bg-[#0F0F1A] border border-[#E2E0DA] dark:border-gray-700 rounded-lg p-6 max-w-sm mx-4"
+            className="bg-white dark:bg-[#0F0F1A] border border-gray-300 dark:border-gray-700 rounded-lg p-6 max-w-sm mx-4"
           >
             <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Delete Session?</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
@@ -160,7 +160,7 @@ export function HistoryPanel({ open, sessions, onClose, onRestore, onDelete }: P
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setPendingDeleteId(null)}
-                className="px-4 py-2 mono-meta text-sm border border-[#E2E0DA] dark:border-gray-700 text-gray-900 dark:text-white hover:bg-[#F0EFEB] dark:hover:bg-white/5 transition-colors"
+                className="px-4 py-2 mono-meta text-sm border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
               >
                 Keep
               </button>

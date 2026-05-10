@@ -1,108 +1,196 @@
 "use client";
 
-import { Check, AlertCircle, X } from "lucide-react";
+import { useState } from "react";
+import { ChevronDown, Check, AlertCircle, X } from "lucide-react";
 import type { VerdictRow } from "@/lib/council";
+import { COUNCIL_MODELS } from "@/lib/models";
+import { extractModelVersion } from "@/lib/utils";
 
-// Helper to determine consensus level
-function getConsensusLevel(alignment: number): { label: string; bgColor: string; textColor: string; icon: React.ReactNode } {
+function getConsensusLevel(alignment: number): { label: string; bgColor: string; textColor: string; borderColor: string; icon: React.ReactNode } {
   if (alignment >= 80) {
     return {
       label: "Full Consensus",
-      bgColor: "bg-green-100 dark:bg-green-950",
-      textColor: "text-green-900 dark:text-green-100",
-      icon: <Check size={14} className="text-green-700 dark:text-green-300" />,
+      bgColor: "#f0fdf4",
+      textColor: "#166534",
+      borderColor: "#dcfce7",
+      icon: <Check size={14} />,
     };
   } else if (alignment >= 50) {
     return {
       label: "Partial Consensus",
-      bgColor: "bg-yellow-100 dark:bg-yellow-950",
-      textColor: "text-yellow-900 dark:text-yellow-100",
-      icon: <AlertCircle size={14} className="text-yellow-700 dark:text-yellow-300" />,
+      bgColor: "#fefce8",
+      textColor: "#854d0e",
+      borderColor: "#fef3c7",
+      icon: <AlertCircle size={14} />,
     };
   } else {
     return {
       label: "Disagreement",
-      bgColor: "bg-red-100 dark:bg-red-950",
-      textColor: "text-red-900 dark:text-red-100",
-      icon: <X size={14} className="text-red-700 dark:text-red-300" />,
+      bgColor: "#fef2f2",
+      textColor: "#991b1b",
+      borderColor: "#fee2e2",
+      icon: <X size={14} />,
     };
   }
 }
 
 export function VerdictTable({ rows }: { rows: VerdictRow[] }) {
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  const toggleRow = (modelId: string) => {
+    const newSet = new Set(expandedRows);
+    if (newSet.has(modelId)) {
+      newSet.delete(modelId);
+    } else {
+      newSet.add(modelId);
+    }
+    setExpandedRows(newSet);
+  };
+
   if (rows.length === 0) {
     return (
-      <div className="mono-meta text-muted">
+      <div className="mono-meta" style={{ color: "var(--t3)" }}>
         verdict table unavailable — synthesizer parse failed
       </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto rounded-lg border" style={{ borderColor: "var(--bd)" }}>
       <table className="w-full border-collapse">
         <thead>
-          <tr className="border-b border-black/10 dark:border-white/10 bg-black/2 dark:bg-white/5">
-            <th className="mono-meta text-left py-4 pr-4 text-gray-600 dark:text-gray-400">Model</th>
-            <th className="mono-meta text-left py-4 pr-4 text-gray-600 dark:text-gray-400">Consensus</th>
-            <th className="mono-meta text-left py-4 pr-4 text-gray-600 dark:text-gray-400">Agree</th>
-            <th className="mono-meta text-left py-4 pr-4 text-gray-600 dark:text-gray-400">Disagree</th>
-            <th className="mono-meta text-left py-4 pr-4 text-gray-600 dark:text-gray-400 text-center">Conf</th>
-            <th className="mono-meta text-left py-4 pr-4 text-gray-600 dark:text-gray-400 text-center">Alignment</th>
-            <th className="mono-meta text-left py-4 text-gray-600 dark:text-gray-400">Reasoning</th>
+          <tr style={{ backgroundColor: "var(--bg-inset)", borderBottomColor: "var(--bd)" }} className="border-b">
+            <th className="mono-meta text-left py-4 px-5 text-xs uppercase tracking-wide" style={{ color: "var(--t3)" }}>
+              Model
+            </th>
+            <th className="mono-meta text-left py-4 px-5 text-xs uppercase tracking-wide" style={{ color: "var(--t3)", width: "150px" }}>
+              Version
+            </th>
+            <th className="mono-meta text-left py-4 px-5 text-xs uppercase tracking-wide" style={{ color: "var(--t3)" }}>
+              Consensus
+            </th>
+            <th className="mono-meta text-left py-4 px-5 text-xs uppercase tracking-wide" style={{ color: "var(--t3)" }}>
+              Agree
+            </th>
+            <th className="mono-meta text-left py-4 px-5 text-xs uppercase tracking-wide" style={{ color: "var(--t3)" }}>
+              Disagree
+            </th>
+            <th className="mono-meta text-center py-4 px-5 text-xs uppercase tracking-wide" style={{ color: "var(--t3)" }}>
+              Confidence
+            </th>
+            <th className="mono-meta text-center py-4 px-5 text-xs uppercase tracking-wide" style={{ color: "var(--t3)" }}>
+              Alignment
+            </th>
+            <th className="mono-meta text-left py-4 px-5 text-xs uppercase tracking-wide" style={{ color: "var(--t3)" }}>
+              Reasoning
+            </th>
           </tr>
         </thead>
         <tbody>
           {rows.map((r, idx) => {
-            const isWhiteRow = idx % 2 === 0;
             const consensus = getConsensusLevel(r.positionAlignment);
+            const isEven = idx % 2 === 0;
+
             return (
               <tr
                 key={r.modelId}
-                className={`border-b border-[#E2E0DA] dark:border-white/10 align-top ${
-                  isWhiteRow ? "bg-white dark:bg-[#0A0A0A]" : "bg-[#EEEDEA] dark:bg-white/[0.02]"
-                }`}
+                className="align-top transition-colors cursor-pointer border-b hover:opacity-75"
+                style={{
+                  backgroundColor: isEven ? "var(--bg-card)" : "var(--bg-inset)",
+                  borderBottomColor: "var(--bd)",
+                }}
+                onClick={() => toggleRow(r.modelId)}
               >
-                <td className="py-5 pr-4 min-w-[160px]">
-                  <span className="font-bold text-base text-gray-900 dark:text-white leading-snug">{r.model}</span>
+                {/* Model Name */}
+                <td className="py-6 px-5 font-semibold" style={{ color: "var(--t1)" }}>
+                  <div className="flex items-center gap-2">
+                    <ChevronDown
+                      size={16}
+                      className="transition-transform"
+                      style={{
+                        color: "var(--t3)",
+                        transform: expandedRows.has(r.modelId) ? "rotate(180deg)" : "rotate(0deg)",
+                      }}
+                    />
+                    {r.model}
+                  </div>
                 </td>
-                <td className="py-5 pr-4">
-                  <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md ${consensus.bgColor} ${consensus.textColor} text-xs font-semibold whitespace-nowrap`}>
+
+                {/* Version */}
+                <td className="py-6 px-5 text-sm" style={{ color: "var(--t2)", width: "150px" }}>
+                  {extractModelVersion(COUNCIL_MODELS.find(m => m.id === r.modelId)?.slug || "")}
+                </td>
+
+                {/* Consensus Badge */}
+                <td className="py-6 px-5">
+                  <div
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold border"
+                    style={{
+                      backgroundColor: consensus.bgColor,
+                      color: consensus.textColor,
+                      borderColor: consensus.borderColor,
+                    }}
+                  >
                     {consensus.icon}
                     {consensus.label}
                   </div>
                 </td>
-                <td className="py-5 pr-4 text-sm leading-relaxed max-w-[220px] text-gray-700 dark:text-gray-300">
+
+                {/* Agree */}
+                <td className="py-6 px-5 text-sm leading-relaxed max-w-xs" style={{ color: "var(--t2)" }}>
                   {r.agree}
                 </td>
-                <td className="py-5 pr-4 text-sm leading-relaxed max-w-[220px] text-gray-700 dark:text-gray-300">
+
+                {/* Disagree */}
+                <td className="py-6 px-5 text-sm leading-relaxed max-w-xs" style={{ color: "var(--t2)" }}>
                   {r.disagree}
                 </td>
-                <td className="py-5 pr-4 text-center">
-                  <div className="inline-flex items-center gap-0.5">
-                    <span className="text-xl font-bold text-gray-900 dark:text-white">{r.confidence}</span>
-                    <span className="text-gray-400 dark:text-gray-500 text-xs">/5</span>
+
+                {/* Confidence */}
+                <td className="py-6 px-5 text-center">
+                  <div className="inline-flex items-center gap-1">
+                    <span className="text-lg font-semibold" style={{ color: "var(--t1)" }}>
+                      {r.confidence}
+                    </span>
+                    <span className="text-xs" style={{ color: "var(--t3)" }}>
+                      /5
+                    </span>
                   </div>
                 </td>
-                <td className="py-5 pr-4 text-center min-w-[90px]">
-                  <div className="inline-flex flex-col items-center gap-1">
-                    <span className="text-sm font-semibold text-gray-900 dark:text-white">{r.positionAlignment}%</span>
-                    <div className="w-14 h-1.5 bg-[#E2E0DA] dark:bg-white/10 rounded-full overflow-hidden">
+
+                {/* Alignment Bar */}
+                <td className="py-6 px-5 text-center">
+                  <div className="inline-flex flex-col items-center gap-2">
+                    <span className="text-sm font-semibold" style={{ color: "var(--t1)" }}>
+                      {r.positionAlignment}%
+                    </span>
+                    <div
+                      className="w-16 h-2 rounded-full overflow-hidden"
+                      style={{ backgroundColor: "var(--bg-inset)" }}
+                    >
                       <div
-                        className="h-full rounded-full transition-all duration-700"
+                        className="h-full rounded-full transition-all"
                         style={{
                           width: `${r.positionAlignment}%`,
                           backgroundColor:
-                            r.positionAlignment >= 80 ? "#10b981"
-                            : r.positionAlignment >= 50 ? "#f59e0b"
-                            : "#ef4444",
+                            r.positionAlignment >= 80
+                              ? "#22c55e"
+                              : r.positionAlignment >= 50
+                              ? "#f59e0b"
+                              : "#ef4444",
                         }}
                       />
                     </div>
                   </div>
                 </td>
-                <td className="py-5 text-sm leading-relaxed text-gray-700 dark:text-gray-300 max-w-[380px]">
-                  {r.reasoningTrace}
+
+                {/* Reasoning */}
+                <td className="py-6 px-5 text-sm leading-relaxed max-w-md" style={{ color: "var(--t2)" }}>
+                  {expandedRows.has(r.modelId) ? (
+                    <p style={{ color: "var(--t1)" }}>{r.reasoningTrace}</p>
+                  ) : (
+                    <p className="line-clamp-1">{r.reasoningTrace}</p>
+                  )}
                 </td>
               </tr>
             );

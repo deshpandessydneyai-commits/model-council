@@ -75,13 +75,18 @@ export function listSessions(): SavedSession[] {
   }
 }
 
-export function updateSession(id: string, updates: Partial<SavedSession>): void {
-  const all = listSessions();
-  const updated = all.map((s) => (s.id === id ? { ...s, ...updates } : s));
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-}
-
 export function deleteSession(id: string): void {
   const updated = listSessions().filter((s) => s.id !== id);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+}
+
+export function updateSession(id: string, updates: Partial<SavedSession>): SavedSession | null {
+  const sessions = listSessions();
+  const session = sessions.find((s) => s.id === id);
+  if (!session) return null;
+
+  const updated = { ...session, ...updates };
+  const withoutSession = sessions.filter((s) => s.id !== id);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify([updated, ...withoutSession]));
+  return updated;
 }

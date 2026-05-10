@@ -1,318 +1,402 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, Download, Info, AlertCircle } from "lucide-react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import type { VerdictRow } from "@/lib/council";
+import { COUNCIL_MODELS } from "@/lib/models";
+import { ChevronDown } from "lucide-react";
+import { relativeTime } from "@/lib/utils";
+import { getGPSPhaseInfo, getStakeImpact } from "@/lib/gps-framework";
+import type { StakeLevel } from "@/lib/types/stakes";
 
-type Props = {
-  finalAnswer: string;
-  consensusScore: number;
-  rows: VerdictRow[];
-  triggeredRound3: boolean;
-  disagreementReason: string;
-  roundsCompleted: number;
-  onExport: () => void;
-};
+interface FinalVerdictProps {
+  verdict: {
+    finalAnswer: string;
+    consensusScore: number;
+    disagreementReason?: string;
+  };
+  showExport?: boolean;
+  onExport?: () => void;
+  sessionId?: string;
+  markdown?: string;
+  stakeLevel?: StakeLevel;
+  detectedDomain?: string;
+  roundsCompleted?: number;
+}
 
-function ConsensusArc({ score }: { score: number }) {
-  const radius = 54;
-  const circumference = Math.PI * radius; // half circle
-  const progress = (score / 100) * circumference;
-  const color = score >= 75 ? "#22c55e" : score >= 50 ? "#f59e0b" : "#ef4444";
-  const label = score >= 75 ? "Strong Consensus" : score >= 50 ? "Partial Consensus" : "Divided Council";
+export function FinalVerdict({
+  verdict,
+  showExport = false,
+  onExport,
+  sessionId = "",
+  markdown = "",
+  stakeLevel,
+  detectedDomain,
+  roundsCompleted = 3,
+}: FinalVerdictProps) {
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(["composition"]));
+
+  const toggleSection = (section: string) => {
+    const newSet = new Set(expandedSections);
+    if (newSet.has(section)) {
+      newSet.delete(section);
+    } else {
+      newSet.add(section);
+    }
+    setExpandedSections(newSet);
+  };
+  const consensusColor =
+    verdict.consensusScore > 0.7
+      ? "#22c55e"
+      : verdict.consensusScore > 0.4
+      ? "#f59e0b"
+      : "#ef4444";
+
+  const consensusLabel =
+    verdict.consensusScore > 0.7
+      ? `High Agreement (${Math.round(verdict.consensusScore)}%+)`
+      : verdict.consensusScore > 0.4
+      ? `Partial Consensus (${Math.round(verdict.consensusScore)}%)`
+      : `Disagreement (${Math.round(verdict.consensusScore)}%)`;
+
+  // Arc gauge SVG
+  const radius = 45;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (verdict.consensusScore * circumference);
 
   return (
-    <div className="flex flex-col items-center">
-      <div className="relative w-32 h-16 overflow-hidden">
-        <svg width="128" height="72" viewBox="0 0 128 72">
-          {/* Background arc */}
-          <path
-            d="M 12 68 A 52 52 0 0 1 116 68"
-            fill="none"
-            stroke="#e5e7eb"
-            strokeWidth="10"
-            strokeLinecap="round"
-            className="dark:stroke-gray-700"
-          />
-          {/* Progress arc */}
-          <path
-            d="M 12 68 A 52 52 0 0 1 116 68"
-            fill="none"
-            stroke={color}
-            strokeWidth="10"
-            strokeLinecap="round"
-            strokeDasharray={`${(score / 100) * 163} 163`}
-            style={{ transition: "stroke-dasharray 1.2s cubic-bezier(0.16,1,0.3,1)" }}
-          />
-        </svg>
-        <div className="absolute inset-0 flex items-end justify-center pb-1">
-          <span className="text-2xl font-bold tracking-tight" style={{ color }}>{score}%</span>
+    <div
+      className="mt-8 p-8 rounded-lg border"
+      style={{
+        backgroundColor: "var(--bg-card)",
+        borderColor: "var(--bd)",
+      }}
+    >
+      {/* Header */}
+      <h2
+        className="text-xs uppercase tracking-widest font-medium mb-8"
+        style={{ color: "var(--t3)" }}
+      >
+        Final Verdict
+      </h2>
+
+      {/* Consensus Score Section */}
+      <div className="mb-8 flex items-center gap-8">
+        {/* Arc Gauge */}
+        <div className="flex flex-col items-center flex-shrink-0">
+          <svg width="120" height="120" viewBox="0 0 120 120">
+            {/* Background circle */}
+            <circle
+              cx="60"
+              cy="60"
+              r={radius}
+              fill="none"
+              stroke="var(--bd)"
+              strokeWidth="8"
+              style={{ stroke: "var(--bg-inset)" }}
+            />
+            {/* Progress arc */}
+            <circle
+              cx="60"
+              cy="60"
+              r={radius}
+              fill="none"
+              stroke={consensusColor}
+              strokeWidth="8"
+              strokeDasharray={circumference}
+              strokeDashoffset={strokeDashoffset}
+              strokeLinecap="round"
+              transform="rotate(-90 60 60)"
+              style={{
+                transition: "stroke-dashoffset 0.5s ease",
+              }}
+            />
+            {/* Center text */}
+            <text
+              x="60"
+              y="60"
+              textAnchor="middle"
+              dy="0.3em"
+              fontSize="28"
+              fontWeight="bold"
+              fill={consensusColor}
+            >
+              {Math.round(verdict.consensusScore)}%
+            </text>
+          </svg>
+          <div
+            className="text-xs uppercase tracking-wide font-medium mt-3 text-center"
+            style={{ color: consensusColor }}
+          >
+            {consensusLabel}
+          </div>
+          <div
+            className="text-xs mt-2 text-center"
+            style={{ color: "var(--t3)" }}
+          >
+            {relativeTime(new Date())}
+          </div>
+        </div>
+
+        {/* Verdict Text */}
+        <div className="flex-1">
+          <h3
+            className="text-lg font-bold mb-3"
+            style={{ color: "var(--t1)" }}
+          >
+            Council Verdict
+          </h3>
+          <p
+            className="text-sm leading-relaxed"
+            style={{ color: "var(--t2)" }}
+          >
+            {verdict.finalAnswer}
+          </p>
         </div>
       </div>
-      <span className="text-xs font-medium mt-1" style={{ color }}>{label}</span>
-    </div>
-  );
-}
 
-function extractKeyTakeaways(text: string): string[] {
-  // Extract first sentence of each of the first 3 meaningful paragraphs
-  const paragraphs = text
-    .split(/\n\n+/)
-    .map(p => p.trim())
-    .filter(p => p.length > 60 && !p.startsWith("#"));
+      {/* Disagreement Section */}
+      {verdict.disagreementReason && (
+        <div
+          className="mb-8 p-4 rounded-lg border-l-4"
+          style={{
+            backgroundColor: "var(--bg-inset)",
+            borderLeftColor: "var(--ac)",
+            color: "var(--t2)",
+          }}
+        >
+          <h4
+            className="text-xs uppercase tracking-widest font-semibold mb-2"
+            style={{ color: "var(--t3)" }}
+          >
+            Areas of Disagreement
+          </h4>
+          <p className="text-sm leading-relaxed">{verdict.disagreementReason}</p>
+        </div>
+      )}
 
-  return paragraphs.slice(0, 3).map(p => {
-    // Get first sentence
-    const match = p.match(/^(.{40,200}?[.!?])\s/);
-    return match ? match[1] : p.slice(0, 180).replace(/\*\*/g, "");
-  });
-}
+      {/* How Stakes Shaped This Verdict Section */}
+      {stakeLevel && (
+        <div
+          className="mb-8 p-6 rounded-lg border"
+          style={{
+            backgroundColor: "var(--bg-inset)",
+            borderColor: "var(--bd)",
+          }}
+        >
+          <h3
+            className="text-xs uppercase tracking-widest font-semibold mb-4"
+            style={{ color: "var(--t3)" }}
+          >
+            How Stakes Shaped This Verdict
+          </h3>
 
-function extractHeadline(text: string): string {
-  const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
-  // Look for a bold phrase or first sentence
-  const boldMatch = text.match(/\*\*([^*]{10,80})\*\*/);
-  if (boldMatch) return boldMatch[1];
-  const firstPara = lines.find(l => l.length > 40 && !l.startsWith("#"));
-  if (!firstPara) return "";
-  const sentence = firstPara.match(/^(.{30,120}[.!?])/);
-  return sentence ? sentence[1].replace(/\*\*/g, "") : firstPara.slice(0, 120).replace(/\*\*/g, "");
-}
-
-export function FinalVerdict({ finalAnswer, consensusScore, rows, triggeredRound3, disagreementReason, roundsCompleted, onExport }: Props) {
-  const [analysisOpen, setAnalysisOpen] = useState(false);
-  const [methodologyOpen, setMethodologyOpen] = useState(false);
-  const [infoOpen, setInfoOpen] = useState(false);
-
-  const headline = extractHeadline(finalAnswer);
-  const takeaways = extractKeyTakeaways(finalAnswer);
-
-  const scoreColor = consensusScore >= 75 ? "#22c55e" : consensusScore >= 50 ? "#f59e0b" : "#ef4444";
-  const scoreBg = consensusScore >= 75
-    ? "from-green-50 to-[#F5F4F0] dark:from-green-950/20 dark:to-[#0F0F1A]"
-    : consensusScore >= 50
-    ? "from-amber-50 to-[#F5F4F0] dark:from-amber-950/20 dark:to-[#0F0F1A]"
-    : "from-red-50 to-[#F5F4F0] dark:from-red-950/20 dark:to-[#0F0F1A]";
-
-  return (
-    <div className="w-full max-w-[800px] rounded-2xl overflow-hidden border border-[#E2E0DA] dark:border-glass shadow-lg dark:shadow-none">
-
-      {/* ── Hero Section ── */}
-      <div className={`bg-gradient-to-b ${scoreBg} px-8 pt-8 pb-6`}>
-
-        {/* Header row */}
-        <div className="flex items-start justify-between mb-6">
-          <div>
-            <div className="flex items-center gap-2 mb-1 relative">
-              <div className="mono-meta text-xs text-gray-400 dark:text-gray-500">Final Verdict</div>
-              <button
-                onClick={() => setInfoOpen(!infoOpen)}
-                className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                title="About this verdict"
-              >
-                <Info size={14} />
-              </button>
-              {infoOpen && (
-                <div className="absolute top-full left-0 mt-2 w-64 bg-gray-900 dark:bg-gray-950 text-white dark:text-gray-100 text-xs p-3 rounded-lg shadow-lg border border-gray-700 dark:border-gray-800 z-10">
-                  <p className="leading-relaxed">This verdict was synthesized by Claude Opus 4.6 (made by Anthropic). Two of the four debating models (Sonnet and the synthesizer) are from Anthropic, which may introduce bias toward Anthropic's perspective.</p>
-                </div>
-              )}
+          <div className="space-y-4">
+            <div>
+              <p className="text-xs font-semibold mb-2" style={{ color: "var(--t1)" }}>
+                Stakes Level: {getStakeImpact(stakeLevel)?.label}
+              </p>
+              <p className="text-xs" style={{ color: "var(--t2)" }}>
+                {getStakeImpact(stakeLevel)?.intensity} rigor applied to model responses
+              </p>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-white/10 border border-[#E2E0DA] dark:border-glass px-2.5 py-1 rounded-full">
-                Claude Opus 4.6
-              </span>
-              <span className="text-xs text-gray-400 dark:text-gray-500">·</span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">{roundsCompleted} rounds</span>
-              {triggeredRound3 && (
-                <>
-                  <span className="text-xs text-gray-400 dark:text-gray-500">·</span>
-                  <span className="text-xs text-amber-600 dark:text-amber-400">Round 3 triggered</span>
-                </>
-              )}
+
+            {roundsCompleted >= 2 && (
+              <div>
+                <p className="text-xs font-semibold mb-2" style={{ color: "var(--t1)" }}>
+                  Round 2 — Adversarial Challenge
+                </p>
+                <p className="text-xs" style={{ color: "var(--t2)" }}>
+                  Models applied {getStakeImpact(stakeLevel)?.intensity.toLowerCase()} challenge to each other's positions. This revealed weaknesses and assumptions not visible in Round 1.
+                </p>
+              </div>
+            )}
+
+            {roundsCompleted >= 3 && (
+              <div>
+                <p className="text-xs font-semibold mb-2" style={{ color: "var(--t1)" }}>
+                  Round 3 — Bias Check & Accountability
+                </p>
+                <p className="text-xs" style={{ color: "var(--t2)" }}>
+                  Models reviewed their own reasoning for cognitive biases and blind spots before finalizing positions. Final statements incorporate all challenges.
+                </p>
+              </div>
+            )}
+
+            <div className="pt-2 border-t" style={{ borderColor: "var(--bd)" }}>
+              <p className="text-xs" style={{ color: "var(--t3)" }}>
+                <strong>Impact:</strong> The {getStakeImpact(stakeLevel)?.label.toLowerCase()} stakes level determined the depth of questioning and rigor of analysis throughout the debate.
+              </p>
             </div>
           </div>
-          <button
-            onClick={onExport}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-[#E2E0DA] dark:border-glass text-gray-600 dark:text-gray-400 hover:bg-white dark:hover:bg-white/10 transition-colors"
+        </div>
+      )}
+
+      {/* Methodology & Disclosure Section */}
+      <div
+        className="mb-8 p-6 rounded-lg border"
+        style={{
+          backgroundColor: "var(--bg-inset)",
+          borderColor: "var(--bd)",
+        }}
+      >
+        {/* Header with Info Icon */}
+        <div className="flex items-center gap-2 mb-6">
+          <h3
+            className="text-xs uppercase tracking-widest font-semibold"
+            style={{ color: "var(--t3)" }}
           >
-            <Download size={12} />
-            Export
+            Methodology & Disclosure
+          </h3>
+          <button
+            onClick={() => toggleSection("biases")}
+            title="Learn about model biases and limitations"
+            className="transition-opacity hover:opacity-70 focus-visible:ring-2 focus-visible:ring-offset-2 rounded"
+            style={{
+              cursor: "pointer",
+              fontSize: "16px",
+              background: "none",
+              border: "none",
+              padding: "2px",
+              color: "var(--t3)",
+            }}
+          >
+            ⓘ
           </button>
         </div>
 
-        {/* Consensus Arc + Headline */}
-        <div className="flex items-start gap-8">
-          <div className="flex-shrink-0">
-            <ConsensusArc score={consensusScore} />
-          </div>
-          <div className="flex-1 pt-1">
-            {headline && (
-              <p className="text-lg font-semibold text-gray-900 dark:text-white leading-snug tracking-tight">
-                {headline}
-              </p>
-            )}
-            {/* Model confidence pills */}
-            <div className="flex flex-wrap gap-2 mt-4">
-              {rows.map(r => (
-                <div
-                  key={r.modelId}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border"
-                  style={{
-                    backgroundColor: r.positionAlignment >= 75 ? "#f0fdf4" : r.positionAlignment >= 50 ? "#fffbeb" : "#fef2f2",
-                    borderColor: r.positionAlignment >= 75 ? "#bbf7d0" : r.positionAlignment >= 50 ? "#fde68a" : "#fecaca",
-                    color: r.positionAlignment >= 75 ? "#15803d" : r.positionAlignment >= 50 ? "#b45309" : "#b91c1c",
-                  }}
-                >
-                  <span className="font-bold">{r.confidence}/5</span>
-                  <span className="opacity-60">·</span>
-                  <span>{r.model.split(" ")[0]}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Key Takeaways Strip ── */}
-      <div className="bg-white dark:bg-[#0F0F1A] border-t border-gray-100 dark:border-glass px-8 py-5">
-        <div className="mono-meta text-xs text-gray-400 dark:text-gray-500 mb-4">Key Takeaways</div>
-        <div className="space-y-3">
-          {takeaways.map((point, i) => (
-            <div key={i} className="flex items-start gap-3">
+        {/* Council Composition - Always visible */}
+        <div className="mb-6">
+          <h4
+            className="text-xs font-semibold mb-3"
+            style={{ color: "var(--t1)" }}
+          >
+            Council Composition
+          </h4>
+          <div className="grid grid-cols-2 gap-2">
+            {COUNCIL_MODELS.map((model) => (
               <div
-                className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-white text-xs font-bold mt-0.5"
-                style={{ backgroundColor: scoreColor }}
+                key={model.id}
+                className="text-xs"
+                style={{ color: "var(--t2)" }}
               >
-                {i + 1}
+                • <span className="font-medium">{model.displayName}</span> ({model.provider})
               </div>
-              <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{point}</p>
+            ))}
+          </div>
+          <div className="text-xs mt-3" style={{ color: "var(--t2)" }}>
+            <strong>Synthesizer:</strong> Claude Opus 4.6 (Anthropic)
+          </div>
+        </div>
+
+        {/* Synthesis Process - Expandable */}
+        <div className="mb-6">
+          <button
+            onClick={() => toggleSection("process")}
+            className="flex items-center gap-2 w-full text-left transition-colors hover:opacity-70 focus-visible:ring-2 focus-visible:ring-offset-2 rounded px-2 py-1"
+            style={{
+              background: "none",
+              border: "none",
+              padding: "4px 8px",
+              cursor: "pointer",
+            }}
+          >
+            <ChevronDown
+              size={14}
+              style={{
+                color: "var(--t3)",
+                transform: expandedSections.has("process") ? "rotate(180deg)" : "rotate(0deg)",
+                transition: "transform 0.2s",
+              }}
+            />
+            <h4
+              className="text-xs font-semibold"
+              style={{ color: "var(--t1)" }}
+            >
+              Synthesis Process
+            </h4>
+          </button>
+          {expandedSections.has("process") && (
+            <div className="mt-3 ml-6 text-xs leading-relaxed" style={{ color: "var(--t2)" }}>
+              <p className="mb-2">Claude Opus 4.6 synthesized the verdict using:</p>
+              <ul className="space-y-1.5">
+                <li>• <strong>Consensus Detection</strong> — Identifying agreement and assigning alignment scores</li>
+                <li>• <strong>Deliberation Analysis</strong> — Synthesizing disagreements into nuanced positions</li>
+                <li>• <strong>Final Answer Generation</strong> — Structured reasoning from debate outcomes</li>
+              </ul>
             </div>
-          ))}
+          )}
+        </div>
+
+        {/* Known Biases & Limitations - Expandable, starts expanded if info icon clicked */}
+        <div className="mb-6">
+          <button
+            onClick={() => toggleSection("biases")}
+            className="flex items-center gap-2 w-full text-left transition-colors hover:opacity-70 focus-visible:ring-2 focus-visible:ring-offset-2 rounded px-2 py-1"
+            style={{
+              background: "none",
+              border: "none",
+              padding: "4px 8px",
+              cursor: "pointer",
+            }}
+          >
+            <ChevronDown
+              size={14}
+              style={{
+                color: "var(--t3)",
+                transform: expandedSections.has("biases") ? "rotate(180deg)" : "rotate(0deg)",
+                transition: "transform 0.2s",
+              }}
+            />
+            <h4
+              className="text-xs font-semibold"
+              style={{ color: "var(--t1)" }}
+            >
+              Known Biases & Limitations
+            </h4>
+          </button>
+          {expandedSections.has("biases") && (
+            <div className="mt-3 ml-6 text-xs leading-relaxed space-y-3" style={{ color: "var(--t2)" }}>
+              <div>
+                <p className="font-semibold mb-1" style={{ color: "var(--t1)" }}>1. LLM Limitations</p>
+                <p>All council members are large language models with inherent risks of hallucination, confident-sounding incorrect answers, and potential fabrication of facts.</p>
+              </div>
+              <div>
+                <p className="font-semibold mb-1" style={{ color: "var(--t1)" }}>2. Training Data Cutoffs</p>
+                <p>Models trained on text up to specific dates. They lack knowledge of events after their cutoff and cannot access real-time information unless web search is enabled.</p>
+              </div>
+              <div>
+                <p className="font-semibold mb-1" style={{ color: "var(--t1)" }}>3. Anthropic Bias</p>
+                <p>Claude models reflect Anthropic's constitutional AI alignment preferences, which prioritize helpfulness, harmlessness, and honesty as defined by Anthropic.</p>
+              </div>
+              <div>
+                <p className="font-semibold mb-1" style={{ color: "var(--t1)" }}>4. Limited Real-Time Access</p>
+                <p>Models operate without real-time data streams or live market information. Verdicts on recent or rapidly evolving situations may lack crucial context.</p>
+              </div>
+              <div>
+                <p className="font-semibold mb-1" style={{ color: "var(--t1)" }}>5. Consensus ≠ Correctness</p>
+                <p>Agreement among models does not guarantee accuracy. High consensus scores may reflect shared training biases rather than ground truth.</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Citation - Always visible */}
+        <div
+          className="pt-4 border-t text-xs"
+          style={{ borderColor: "var(--bd)", color: "var(--t3)" }}
+        >
+          <p className="mb-2">
+            <strong>Generated:</strong> {new Date().toLocaleString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit"
+            })}
+          </p>
+          <p>For reproducibility, all model responses and reasoning traces are available in the transcript above.</p>
         </div>
       </div>
 
-      {/* ── Full Analysis Accordion ── */}
-      <div className="border-t border-gray-100 dark:border-glass">
-        <button
-          onClick={() => setAnalysisOpen(p => !p)}
-          className="w-full flex items-center justify-between px-8 py-4 hover:bg-[#F0EFEB] dark:hover:bg-white/5 transition-colors group"
-        >
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-semibold text-gray-900 dark:text-white">Full Analysis</span>
-            <span className="text-xs text-gray-400 dark:text-gray-500 bg-[#EEEDEA] dark:bg-white/10 px-2 py-0.5 rounded-full">
-              Claude Opus synthesis
-            </span>
-          </div>
-          <ChevronDown
-            size={16}
-            className={`text-gray-400 transition-transform duration-300 ${analysisOpen ? "rotate-180" : ""}`}
-          />
-        </button>
-
-        {analysisOpen && (
-          <div className="px-8 pb-8 bg-white dark:bg-[#0F0F1A]">
-            <div className="w-full h-px bg-[#E2E0DA] dark:bg-glass mb-6" />
-            <div className="prose prose-gray dark:prose-invert prose-sm sm:prose-base max-w-none
-              prose-headings:font-bold prose-headings:tracking-tight
-              prose-h1:text-2xl prose-h2:text-xl prose-h3:text-base
-              prose-p:text-gray-700 dark:prose-p:text-gray-300 prose-p:leading-relaxed
-              prose-li:text-gray-700 dark:prose-li:text-gray-300
-              prose-strong:text-gray-900 dark:prose-strong:text-white
-              prose-a:text-indigo-600 dark:prose-a:text-violet-400 prose-a:no-underline hover:prose-a:underline
-              prose-blockquote:border-indigo-300 dark:prose-blockquote:border-violet-600
-              prose-code:text-indigo-700 dark:prose-code:text-violet-300 prose-code:bg-[#EEEDEA] dark:prose-code:bg-[#1A1A2E] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none
-              prose-pre:bg-[#EEEDEA] dark:prose-pre:bg-[#1A1A2E] prose-pre:border prose-pre:border-[#E2E0DA] dark:prose-pre:border-glass
-              prose-table:text-sm prose-th:font-semibold prose-hr:border-[#E2E0DA] dark:prose-hr:border-gray-700">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {finalAnswer}
-              </ReactMarkdown>
-            </div>
-            {triggeredRound3 && (
-              <p className="mt-6 text-xs text-amber-600 dark:text-amber-400 mono-meta">
-                ↳ Round 3 auto-triggered — {disagreementReason}
-              </p>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* ── Methodology Section ── */}
-      <div className="border-t border-gray-100 dark:border-glass">
-        <button
-          onClick={() => setMethodologyOpen(p => !p)}
-          className="w-full flex items-center justify-between px-8 py-4 hover:bg-[#F0EFEB] dark:hover:bg-white/5 transition-colors group"
-        >
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-semibold text-gray-900 dark:text-white">Methodology</span>
-            <span className="text-xs text-gray-400 dark:text-gray-500 bg-[#EEEDEA] dark:bg-white/10 px-2 py-0.5 rounded-full">
-              Council composition & synthesis
-            </span>
-          </div>
-          <ChevronDown
-            size={16}
-            className={`text-gray-400 transition-transform duration-300 ${methodologyOpen ? "rotate-180" : ""}`}
-          />
-        </button>
-
-        {methodologyOpen && (
-          <div className="px-8 pb-8 bg-white dark:bg-[#0F0F1A]">
-            <div className="w-full h-px bg-[#E2E0DA] dark:bg-glass mb-6" />
-
-            {/* Council Composition */}
-            <div className="mb-6">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Council Members</h3>
-              <div className="space-y-2">
-                {rows.map((row) => (
-                  <div key={row.modelId} className="flex items-center justify-between text-sm">
-                    <span className="text-gray-700 dark:text-gray-300">{row.model}</span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      {row.positionAlignment >= 75 ? "✓ Strong alignment" : row.positionAlignment >= 50 ? "◐ Partial alignment" : "✗ Disagreed"}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Synthesizer Info */}
-            <div className="mb-6">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Synthesizer</h3>
-              <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                Claude Opus 4.6 (made by Anthropic) analyzed all council member responses and produced this final verdict.
-              </p>
-            </div>
-
-            {/* Verdict Stats */}
-            <div className="mb-6 grid grid-cols-2 gap-4">
-              <div className="border border-[#E2E0DA] dark:border-glass rounded-lg p-3 bg-[#F9F8F6] dark:bg-[#0A0A0F]">
-                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Rounds Completed</div>
-                <div className="text-lg font-semibold text-gray-900 dark:text-white">{roundsCompleted}</div>
-              </div>
-              <div className="border border-[#E2E0DA] dark:border-glass rounded-lg p-3 bg-[#F9F8F6] dark:bg-[#0A0A0F]">
-                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Consensus Score</div>
-                <div className="text-lg font-semibold" style={{ color: scoreColor }}>
-                  {consensusScore}%
-                </div>
-              </div>
-            </div>
-
-            {/* Bias Disclosure */}
-            <div className="p-4 rounded-lg border border-amber-200 dark:border-amber-800/40 bg-amber-50 dark:bg-amber-950/20">
-              <div className="flex gap-3">
-                <AlertCircle size={16} className="text-amber-700 dark:text-amber-400 flex-shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="text-sm font-semibold text-amber-900 dark:text-amber-200 mb-1">Potential Bias</h4>
-                  <p className="text-sm text-amber-800 dark:text-amber-300 leading-relaxed">
-                    2 of 4 council members are from Anthropic (Sonnet 4.6 and the synthesizer). If these models strongly agreed, results may favor Anthropic's perspective. Consider weighing OpenAI, Google, and xAI perspectives especially carefully if they disagreed.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
     </div>
   );
 }

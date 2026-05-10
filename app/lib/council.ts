@@ -2,7 +2,6 @@ import OpenAI from "openai";
 import { COUNCIL_MODELS, CouncilModel, SYNTHESIZER } from "./models";
 import { getStakeContext } from "./stakes-config";
 import type { StakeLevel, DomainType } from "./types/stakes";
-import { buildPersonaSystemPrompt } from "./domain-personas";
 
 const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
 
@@ -118,6 +117,11 @@ Respond ONLY with a single JSON object:
 
 Rule: return true only if at least two pairs of models substantively disagree on the answer (not stylistic, not hedging). Otherwise false.`;
 
+/** Prepend persona instructions to a base system prompt */
+function withPersona(baseSystem: string, persona: Persona | undefined): string {
+  if (!persona || !persona.systemPrefix) return baseSystem;
+  return `${persona.systemPrefix}\n\n---\n\n${baseSystem}`;
+}
 
 function formatOthers(round1: RoundOutput[], selfId: string): string {
   return round1
@@ -454,17 +458,9 @@ export async function runCouncil(
   let disagreementReason = "";
   let triggeredRound3 = false;
 
-  // Resolve domain for persona injection
-  const domain = (metadata?.domain ?? "unknown") as DomainType;
-
   // ── Round 1 ──────────────────────────────────────────────
   const r1Label = webSearch ? "Round 01 — Independent ⟡ web" : "Round 01 — Independent";
-  const r1 = await runRound(
-    client, 1, r1Label,
-    (m) => buildPersonaSystemPrompt(ROUND_1_SYSTEM, m.id, domain),
-    () => fullPrompt,
-    webSearch, onEvent
-  );
+  const r1 = await runRound(client, 1, r1Label, () => ROUND_1_SYSTEM, () => fullPrompt, webSearch, onEvent);
   allRounds.push({ label: "Round 1 — Independent", outputs: r1 });
 
   // ── Vote-Then-Debate: convergence check after Round 1 ───
@@ -481,8 +477,7 @@ export async function runCouncil(
     // ── Round 2 ────────────────────────────────────────────
     const r2Label = webSearch ? "Round 02 — Critique & Update ⟡ web" : "Round 02 — Critique & Update";
     const r2 = await runRound(
-      client, 2, r2Label,
-      (m) => buildPersonaSystemPrompt(buildEnhancedRound2Prompt(ROUND_2_SYSTEM, metadata), m.id, domain),
+      client, 2, r2Label, () => buildEnhancedRound2Prompt(ROUND_2_SYSTEM, metadata),
       (m) => `Original prompt:\n\n${fullPrompt}\n\n---\n\nYour own Round 1 answer:\n\n${
         r1.find((r) => r.modelId === m.id)?.text ?? ""
       }\n\n---\n\nThe other models' Round 1 answers:\n\n${formatOthers(r1, m.id)}`,
@@ -501,8 +496,7 @@ export async function runCouncil(
 
       const r3Label = webSearch ? "Round 03 — Final Statements ⟡ web" : "Round 03 — Final Statements";
       const r3 = await runRound(
-        client, 3, r3Label,
-        (m) => buildPersonaSystemPrompt(buildEnhancedRound3Prompt(ROUND_3_SYSTEM, metadata), m.id, domain),
+        client, 3, r3Label, () => buildEnhancedRound3Prompt(ROUND_3_SYSTEM, metadata),
         (m) => `Original prompt:\n\n${fullPrompt}\n\n---\n\nYour Round 2 answer:\n\n${
           r2.find((r) => r.modelId === m.id)?.text ?? ""
         }\n\n---\n\nThe other models' Round 2 answers:\n\n${formatOthers(r2, m.id)}`,

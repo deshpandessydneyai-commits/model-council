@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import { useEffect, useState } from "react";
 
 interface RoundStepperProps {
   currentStep: 0 | 1 | 2;
@@ -7,132 +9,128 @@ interface RoundStepperProps {
 }
 
 const steps = [
-  { label: "Independent", sublabel: "Round 1" },
-  { label: "Critique", sublabel: "Round 2" },
-  { label: "Verdict", sublabel: "Synthesis" },
+  { id: 0, label: "Independent" },
+  { id: 1, label: "Critique & Update" },
+  { id: 2, label: "Final Statements" },
 ];
 
-export const RoundStepper: React.FC<RoundStepperProps> = ({
+export function RoundStepper({
   currentStep,
   modelStatuses = {},
   completedRounds = 0,
-}) => {
-  const respondingCount = Object.values(modelStatuses).filter(
-    (s) => s === "responding"
-  ).length;
+}: RoundStepperProps) {
+  const [pulsing, setPulsing] = useState(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPulsing((p) => !p);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <>
       <style>{`
         @keyframes pulse-ring {
           0% {
-            box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4);
-          }
-          70% {
-            box-shadow: 0 0 0 8px rgba(139, 92, 246, 0);
+            opacity: 1;
+            transform: scale(1);
           }
           100% {
-            box-shadow: 0 0 0 0 rgba(139, 92, 246, 0);
+            opacity: 0;
+            transform: scale(1.5);
           }
-        }
-        .pulse-ring {
-          animation: pulse-ring 1.5s infinite;
         }
       `}</style>
 
       <div
-        className="rounded-lg border p-5"
+        className="mb-3 p-3 rounded-lg border"
         style={{
           backgroundColor: "var(--bg-inset)",
           borderColor: "var(--bd)",
         }}
       >
-        <div className="flex items-center justify-between gap-4">
-          {/* Steps container */}
-          <div className="flex flex-1 items-center">
-            {steps.map((step, idx) => (
-              <React.Fragment key={idx}>
-                {/* Step dot and label */}
-                <div className="flex flex-1 flex-col items-center gap-2">
+        <div className="flex items-center justify-between">
+          {steps.map((step, idx) => (
+            <div key={step.id} className="flex-1">
+              {/* Step dot and label */}
+              <div className="flex flex-col items-center">
+                <div className="relative mb-1">
                   {/* Dot */}
                   <div
-                    className="flex items-center justify-center rounded-full font-mono text-xs font-bold transition-all"
+                    className="w-6 h-6 rounded-full flex items-center justify-center font-semibold text-white text-xs relative"
                     style={{
-                      width: "28px",
-                      height: "28px",
                       backgroundColor:
                         idx < currentStep
                           ? "#22c55e"
                           : idx === currentStep
-                            ? "#8B5CF6"
-                            : "rgba(0,0,0,0.08)",
+                          ? "#8B5CF6"
+                          : "#e5e7eb",
                       color:
                         idx < currentStep || idx === currentStep
                           ? "white"
-                          : "var(--t4)",
-                      ...(idx === currentStep && {
-                        boxShadow: "0 0 0 4px rgba(139, 92, 246, 0.2)",
-                      }),
+                          : "#9ca3af",
+                      fontSize: "10px",
                     }}
-                    className={idx === currentStep ? "pulse-ring" : ""}
                   >
-                    {idx < currentStep ? "✓" : idx === currentStep ? "2" : idx + 3}
+                    {idx < currentStep ? "✓" : idx === currentStep && pulsing ? "●" : idx + 1}
                   </div>
 
-                  {/* Label */}
-                  <div className="text-center">
+                  {/* Pulse ring for active step */}
+                  {idx === currentStep && pulsing && (
                     <div
-                      className="text-xs font-semibold"
+                      className="absolute inset-0 rounded-full"
                       style={{
-                        color:
-                          idx <= currentStep ? "var(--t1)" : "var(--t4)",
+                        backgroundColor: "transparent",
+                        border: "2px solid #8B5CF6",
+                        animation: "pulse-ring 1s ease-out infinite",
                       }}
-                    >
-                      {step.label}
-                    </div>
-                    <div
-                      className="font-mono text-xs"
-                      style={{
-                        color:
-                          idx <= currentStep ? "var(--t3)" : "var(--t4)",
-                      }}
-                    >
-                      {step.sublabel}
-                    </div>
-                  </div>
+                    />
+                  )}
                 </div>
 
-                {/* Connector line (between steps) */}
-                {idx < steps.length - 1 && (
-                  <div
-                    className="mb-8 h-px flex-1 bg-[var(--bd)]"
-                    style={{
-                      backgroundColor:
-                        idx < currentStep
-                          ? "rgba(34, 197, 94, 0.3)"
-                          : "var(--bd)",
-                    }}
-                  />
-                )}
-              </React.Fragment>
-            ))}
-          </div>
+                {/* Step label */}
+                <div
+                  className="text-2xs font-medium text-center whitespace-nowrap"
+                  style={{
+                    color:
+                      idx <= currentStep ? "var(--t1)" : "var(--t3)",
+                    fontSize: "10px",
+                    lineHeight: "1.2",
+                  }}
+                >
+                  {step.label}
+                </div>
+              </div>
 
-          {/* Right side: Active model count (if deliberate stage) */}
-          {currentStep === 1 && respondingCount > 0 && (
-            <div
-              className="ml-4 rounded-md px-3 py-1 text-xs font-mono"
-              style={{
-                backgroundColor: "rgba(139, 92, 246, 0.1)",
-                color: "#8B5CF6",
-                border: "1px solid rgba(139, 92, 246, 0.2)",
-              }}
-            >
-              {respondingCount} responding
+              {/* Connector line to next step */}
+              {idx < steps.length - 1 && (
+                <div
+                  className="h-px mt-1.5 mx-2 flex-1"
+                  style={{
+                    backgroundColor:
+                      idx < currentStep
+                        ? "#22c55e"
+                        : "var(--bd)",
+                  }}
+                />
+              )}
             </div>
+          ))}
+        </div>
+
+        {/* Round info below */}
+        <div
+          className="text-2xs text-center mt-2"
+          style={{ color: "var(--t3)", fontSize: "10px" }}
+        >
+          {completedRounds > 0 ? (
+            <span>Completed {completedRounds} round{completedRounds !== 1 ? "s" : ""}</span>
+          ) : (
+            <span>Starting debate...</span>
           )}
         </div>
       </div>
     </>
   );
-};
+}

@@ -7,13 +7,14 @@ import { RoundSection } from "@/components/RoundSection";
 import { VerdictTable } from "@/components/VerdictTable";
 import { Toast, type Toast as ToastType } from "@/components/Toast";
 import { ModelStatusDisplay } from "@/components/ModelStatusDisplay";
-import { DebateProgress } from "@/components/DebateProgress";
 import { FollowUpPanel } from "@/components/FollowUpPanel";
 import { DebateSetupModal, type DebateConfig } from "@/components/DebateSetupModal";
 import { Header } from "@/components/Header";
+import { HelpModal } from "@/components/HelpModal";
 import { StageTabs } from "@/components/StageTabs";
 import { QuestionBanner } from "@/components/QuestionBanner";
-import { RoundStepper } from "@/components/RoundStepper";
+import { DebatePhasePanel } from "@/components/DebatePhasePanel";
+import { useSession } from "@/lib/session-context";
 import { useSetupModal } from "@/lib/setup-modal-context";
 import { useHistory } from "@/lib/history-context";
 import type { CouncilEvent, VerdictRow } from "@/lib/council";
@@ -210,9 +211,19 @@ export default function Home() {
 
   // Stage-based layout state
   const [currentStage, setCurrentStage] = useState<"pose" | "deliberate" | "verdict">("pose");
+  const [currentSessionId, setCurrentSessionId] = useState<string>("");
+  const [helpOpen, setHelpOpen] = useState(false);
 
   const [validation, setValidation] = useState<ValidationResult>({ isValid: false, message: "", severity: "error" });
   const prevRunningRef = useRef(false);
+
+  // Generate session ID when verdict is created
+  useEffect(() => {
+    if (verdict && !currentSessionId) {
+      const newSessionId = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+      setCurrentSessionId(newSessionId);
+    }
+  }, [verdict, currentSessionId]);
 
   const addToast = (message: string, type: "success" | "error" | "info" = "info", duration?: number) => {
     const id = `${Date.now()}-${Math.random()}`;
@@ -279,8 +290,10 @@ export default function Home() {
       restored[n] = { label: r.label, outputs: r.outputs, doneSet: new Set(Object.keys(r.outputs)) };
     });
     setRounds(restored);
+    setRunning(false);
     setHistoryOpen(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
+    addToast(`Restored session from ${new Date(session.timestamp).toLocaleString()}`, "success");
   }, []);
 
   const handleDeleteSession = useCallback((id: string) => {
@@ -394,6 +407,7 @@ export default function Home() {
     setError(null);
     setRounds({});
     setVerdict(null);
+    setCurrentSessionId("");
     setModelStatuses({});
     setConvergenceInfo(null);
     setCurrentRound(0);
@@ -484,6 +498,19 @@ export default function Home() {
     [rounds]
   );
 
+  // Generate markdown for export
+  const markdown = useMemo(() => {
+    if (!verdict) return "";
+    return buildMarkdown({
+      prompt,
+      rounds: orderedRounds.map((n) => ({
+        label: rounds[n].label,
+        outputs: rounds[n].outputs,
+      })),
+      verdict,
+    });
+  }, [verdict, prompt, rounds, orderedRounds]);
+
   const submitFollowUp = useCallback(async (question: string) => {
     if (!question.trim() || !verdict) return;
 
@@ -508,18 +535,23 @@ export default function Home() {
       const timeoutId = setTimeout(() => ctrl.abort(), 5 * 60 * 1000);
 
       try {
+        // Convert rounds to the format expected by the API
+        const previousRounds = orderedRounds.map((n) => ({
+          label: rounds[n].label,
+          outputs: rounds[n].outputs,
+        }));
+
         const res = await fetch("/api/council/follow-up", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             question,
-            previousContext: {
-              originalPrompt: prompt,
+            previousRounds,
+            verdict: {
               finalAnswer: verdict.finalAnswer,
               consensusScore: verdict.consensusScore,
-              roundSummaries,
             },
-            includeSynthesis: false,
+            includeContext: true,
           }),
           signal: ctrl.signal,
         });
@@ -531,7 +563,7 @@ export default function Home() {
 
         // Track responses as they come in
         const responses: Record<string, string> = {};
-        const currentModels = new Set<string>();
+        let synthesisResponse: string | undefined;
 
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
@@ -559,12 +591,16 @@ export default function Home() {
             try {
               const event = JSON.parse(jsonString) as any;
 
-              if (event.type === "model_start") {
-                currentModels.add(event.modelId);
-              } else if (event.type === "token") {
-                responses[event.modelId] = (responses[event.modelId] || "") + event.delta;
+              if (event.type === "token") {
+                const modelId = event.model || event.modelId;
+                responses[modelId] = (responses[modelId] || "") + event.text;
               } else if (event.type === "model_done") {
-                responses[event.modelId] = event.text;
+                const modelId = event.modelId;
+                responses[modelId] = event.response;
+              } else if (event.type === "synthesis_token") {
+                synthesisResponse = (synthesisResponse || "") + event.text;
+              } else if (event.type === "synthesis_done") {
+                synthesisResponse = event.response;
               } else if (event.type === "error") {
                 console.error("Follow-up error:", event.message);
               }
@@ -580,9 +616,11 @@ export default function Home() {
           question,
           timestamp: Date.now(),
           responses,
+          ...(synthesisResponse && { synthesisResponse }),
         };
 
         setFollowUps((prev) => [...prev, followUpRecord]);
+        addToast("Follow-up responses received", "success");
 
         // Update session with new follow-up
         const savedSessions = listSessions();
@@ -636,7 +674,9 @@ export default function Home() {
 
   return (
     <>
-      <DebateSetupModal
+      {/* Main content area */}
+      <div>
+        <DebateSetupModal
         isOpen={setupModalOpen}
         onClose={() => setSetupModalOpen(false)}
         onStart={handleDebateStart}
@@ -663,7 +703,7 @@ export default function Home() {
       )}
 
       {/* NEW: Sticky Header - Always visible */}
-      <Header onHistoryClick={() => setHistoryOpen(true)} />
+      <Header onHistoryClick={() => setHistoryOpen(true)} onHelpClick={() => setHelpOpen(true)} />
 
       {/* NEW: Stage Tabs - Always visible */}
       <StageTabs
@@ -680,23 +720,22 @@ export default function Home() {
         {/* POSE STAGE: Input Form */}
         {currentStage === "pose" && (
           <>
-            {/* Hero */}
-            <section className="flex items-center justify-between pb-8">
-              <div>
-                <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--t1)" }}>Model Council.</h1>
-                <p className="text-sm mt-0.5" style={{ color: "var(--t3)" }}>One prompt. Four models. A structured debate. One final verdict.</p>
-              </div>
-              <div className="text-xs hidden md:block" style={{ color: "var(--t4)" }} >A Debate Chamber For Frontier Models</div>
-            </section>
+            {/* Help Text */}
+            <div className="mb-8 p-4 rounded-lg" style={{ backgroundColor: "var(--bg-inset)", borderLeft: "3px solid var(--ac)" }}>
+              <p className="text-sm" style={{ color: "var(--t2)" }}>
+                🎯 <strong>Get diverse perspectives</strong> from frontier AI models through structured debate. Your question will be debated across 2-3 rounds with reasoning and real-time updates.
+              </p>
+            </div>
 
             {/* Input Panel */}
-            <section className="mt-8">
-          <div className="mono-meta text-gray-500 dark:text-gray-400 mb-3 text-sm">Ask the Council</div>
+            <section className="mt-0">
+          <div className="text-sm font-medium mb-3" style={{ color: "var(--t2)" }}>
+            Debate with: <span style={{ color: "var(--t3)" }}>{COUNCIL_MODELS.map(m => m.displayName).join(", ")}</span>
+          </div>
           <textarea
             value={prompt}
             onChange={(e) => {
               setPrompt(e.target.value);
-              // Auto-expand: reset height then set to scrollHeight, capped at 8 rows (~192px)
               e.target.style.height = "auto";
               e.target.style.height = Math.min(e.target.scrollHeight, 192) + "px";
             }}
@@ -801,7 +840,7 @@ export default function Home() {
 
           {/* Config Options */}
           <div className="mt-6 space-y-4">
-            <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Options</div>
+            <div className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Options</div>
             <div className="space-y-3">
               <label className="flex items-start gap-3 cursor-pointer">
                 <input
@@ -812,7 +851,7 @@ export default function Home() {
                   className="w-4 h-4 mt-1"
                 />
                 <div className="flex-1">
-                  <span className="text-base text-gray-900 dark:text-white block">🔍 Web Search</span>
+                  <span className="text-sm text-gray-900 dark:text-white block font-medium">🔍 Web Search</span>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Search the web for current information (adds ~30 seconds per round)</p>
                 </div>
               </label>
@@ -825,8 +864,8 @@ export default function Home() {
                   className="w-4 h-4 mt-1"
                 />
                 <div className="flex-1">
-                  <span className="text-base text-gray-900 dark:text-white block">⚡ Force Round 3</span>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Trigger final statements even if models agree</p>
+                  <span className="text-sm text-gray-900 dark:text-white block font-medium">⚡ Force Final Round</span>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Usually 2 rounds of debate. Check this to force a 3rd round of final statements even if models already agree</p>
                 </div>
               </label>
             </div>
@@ -836,34 +875,34 @@ export default function Home() {
           {validation.isValid && prompt.trim() && (() => {
             const est = estimateDebate(prompt, forceR3, detectedDomain !== "unknown");
             return (
-              <div className="mt-5 flex items-center justify-center gap-1.5 flex-wrap">
-                <div className="flex items-center gap-4 px-5 py-2.5 rounded-full bg-[#EEEDEA] dark:bg-white/5 border border-[#E2E0DA] dark:border-glass text-xs text-gray-500 dark:text-gray-400">
-                  <span className="flex items-center gap-1.5">
-                    <span className="text-gray-400">⏱</span>
-                    <span className="font-medium text-gray-700 dark:text-gray-300">{est.timeLabel}</span>
+              <div className="mt-6 flex items-center justify-center gap-2 flex-wrap">
+                <div className="flex items-center gap-6 px-6 py-3 rounded-lg border" style={{ backgroundColor: "var(--bg-inset)", borderColor: "var(--bd)" }}>
+                  <span className="flex items-center gap-2">
+                    <span className="text-lg">⏱</span>
+                    <span className="font-semibold text-sm" style={{ color: "var(--t1)" }}>{est.timeLabel}</span>
                   </span>
-                  <span className="w-px h-3 bg-[#D4D2CB] dark:bg-gray-600" />
-                  <span className="flex items-center gap-1.5">
-                    <span className="text-gray-400">💰</span>
-                    <span className="font-medium text-gray-700 dark:text-gray-300">{est.costLabel}</span>
+                  <span style={{ width: "1px", height: "20px", backgroundColor: "var(--bd)" }} />
+                  <span className="flex items-center gap-2">
+                    <span className="text-lg">💰</span>
+                    <span className="font-semibold text-sm" style={{ color: "var(--t1)" }}>{est.costLabel}</span>
                   </span>
-                  <span className="w-px h-3 bg-[#D4D2CB] dark:bg-gray-600" />
-                  <span className="flex items-center gap-1.5">
-                    <span className="text-gray-400">🔄</span>
-                    <span className="font-medium text-gray-700 dark:text-gray-300">{est.roundsLabel}</span>
+                  <span style={{ width: "1px", height: "20px", backgroundColor: "var(--bd)" }} />
+                  <span className="flex items-center gap-2">
+                    <span className="text-lg">🔄</span>
+                    <span className="font-semibold text-sm" style={{ color: "var(--t1)" }}>{est.roundsLabel}</span>
                   </span>
                   {detectedDomain !== "unknown" && (
                     <>
-                      <span className="w-px h-3 bg-[#D4D2CB] dark:bg-gray-600" />
-                      <span className="flex items-center gap-1.5">
-                        <span className="text-gray-400">🎯</span>
-                        <span className="font-medium text-indigo-600 dark:text-violet-400 capitalize">{detectedDomain} council</span>
+                      <span style={{ width: "1px", height: "20px", backgroundColor: "var(--bd)" }} />
+                      <span className="flex items-center gap-2">
+                        <span className="text-lg">🎯</span>
+                        <span className="font-semibold text-sm capitalize" style={{ color: "var(--ac)" }}>{detectedDomain} council</span>
                       </span>
                     </>
                   )}
                 </div>
-                <p className="w-full text-center text-xs text-gray-400 dark:text-gray-500 mt-1">
-                  Estimates vary with model load and response length
+                <p className="w-full text-center text-xs" style={{ color: "var(--t3)" }}>
+                  Estimates vary with model load
                 </p>
               </div>
             );
@@ -878,33 +917,34 @@ export default function Home() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: "8px",
-              padding: "14px 32px",
-              borderRadius: "8px",
-              backgroundColor: running || !prompt.trim() || (validation.severity === "error" && !validation.isValid) ? "#9ca3af" : "#4338ca",
+              gap: "12px",
+              padding: "18px 40px",
+              borderRadius: "12px",
+              backgroundColor: running || !prompt.trim() || (validation.severity === "error" && !validation.isValid) ? "var(--t4)" : "var(--ac)",
               color: "#ffffff",
               border: "none",
-              fontSize: "16px",
+              fontSize: "18px",
               fontWeight: "bold",
               cursor: running || !prompt.trim() || (validation.severity === "error" && !validation.isValid) ? "not-allowed" : "pointer",
-              boxShadow: running || !prompt.trim() || (validation.severity === "error" && !validation.isValid) ? "none" : "0 10px 25px rgba(0,0,0,0.1)",
+              boxShadow: running || !prompt.trim() || (validation.severity === "error" && !validation.isValid) ? "none" : "0 12px 32px rgba(0,0,0,0.15)",
               transition: "all 0.3s ease",
               opacity: running || !prompt.trim() || (validation.severity === "error" && !validation.isValid) ? 0.6 : 1,
               flex: 1,
             }}
             onMouseEnter={(e) => {
               if (!running && prompt.trim() && !(validation.severity === "error" && !validation.isValid)) {
-                e.currentTarget.style.backgroundColor = "#3730a3";
-                e.currentTarget.style.boxShadow = "0 15px 35px rgba(0,0,0,0.15)";
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow = "0 16px 40px rgba(0,0,0,0.2)";
               }
             }}
             onMouseLeave={(e) => {
               if (!running && prompt.trim() && !(validation.severity === "error" && !validation.isValid)) {
-                e.currentTarget.style.backgroundColor = "#4338ca";
-                e.currentTarget.style.boxShadow = "0 10px 25px rgba(0,0,0,0.1)";
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "0 12px 32px rgba(0,0,0,0.15)";
               }
             }}
           >
+            <span>{running ? "⏳" : "⚡"}</span>
             {running ? "Convening..." : "Start Council"}
           </button>
           </div>
@@ -932,6 +972,7 @@ export default function Home() {
             <section className="mb-8">
               <QuestionBanner
                 question={prompt}
+                stakeLevel={stakeLevel}
                 domains={
                   [
                     detectedDomain !== "unknown" ? detectedDomain : null,
@@ -942,23 +983,39 @@ export default function Home() {
               />
             </section>
 
-            {/* Round Stepper */}
+            {/* Consolidated Debate Phase Panel */}
             <section className="mb-8">
-              <RoundStepper
-                currentStep={currentRound > 2 ? 2 : (currentRound > 1 ? 1 : 0)}
+              <DebatePhasePanel
+                currentRound={currentRound}
                 modelStatuses={modelStatuses}
-                completedRounds={currentRound}
+              />
+            </section>
+          </>
+        )}
+
+        {/* VERDICT STAGE ONLY: Question & Progress at Top */}
+        {currentStage === "verdict" && !running && (
+          <>
+            {/* Question Banner */}
+            <section className="mb-8">
+              <QuestionBanner
+                question={prompt}
+                stakeLevel={stakeLevel}
+                domains={
+                  [
+                    detectedDomain !== "unknown" ? detectedDomain : null,
+                    webSearch ? "web" : null,
+                    forceR3 ? "round-3" : null,
+                  ].filter(Boolean) as string[]
+                }
               />
             </section>
 
-            {/* Progress Indicator */}
+            {/* Consolidated Debate Phase Panel */}
             <section className="mb-8">
-              <DebateProgress
+              <DebatePhasePanel
                 currentRound={currentRound}
-                modelStatus={modelStatuses}
-                roundOutputs={rounds[currentRound]?.outputs ?? {}}
-                domain={detectedDomain}
-                onCancel={() => abortRef.current?.abort()}
+                modelStatuses={{}}
               />
             </section>
           </>
@@ -968,14 +1025,15 @@ export default function Home() {
         {(currentStage === "deliberate" || currentStage === "verdict") && orderedRounds.length > 0 && (
           <section>
             {orderedRounds.map((n) => {
+              const roundData = rounds[n];
+              if (!roundData) return null;
               const isRunningRound = running;
-              // After verdict: collapsed by default, expand on demand
               const isExpanded = isRunningRound || (expandedRounds[n] ?? false);
-              const allDone = COUNCIL_MODELS.every(m => rounds[n].doneSet.has(m.id));
+              const allDone = COUNCIL_MODELS.every(m => roundData.doneSet.has(m.id));
 
               return (
                 <div key={n} className="mb-8">
-                  {/* Round Header — clickable to collapse/expand after verdict */}
+                  {/* Round Header */}
                   <div
                     className={`flex items-center justify-between mb-4 ${!isRunningRound ? "cursor-pointer group" : ""}`}
                     onClick={() => {
@@ -985,7 +1043,7 @@ export default function Home() {
                     }}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="mono-meta text-gray-500 dark:text-gray-400 text-sm">{rounds[n].label}</div>
+                      <div className="mono-meta text-gray-500 dark:text-gray-400 text-sm">{roundData.label}</div>
                       {allDone && !isRunningRound && (
                         <span className="text-xs text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 px-2 py-0.5 rounded-full">
                           {COUNCIL_MODELS.length} responses
@@ -1023,8 +1081,8 @@ export default function Home() {
                   {isExpanded && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {COUNCIL_MODELS.map((model) => {
-                        const text = rounds[n].outputs[model.id] ?? "";
-                        const done = rounds[n].doneSet.has(model.id);
+                        const text = roundData.outputs[model.id] ?? "";
+                        const done = roundData.doneSet.has(model.id);
                         return (
                           <div key={`${n}-${model.id}`}>
                             <div className="border border-[#E2E0DA] dark:border-glass bg-white dark:bg-[#0F0F1A] rounded-lg overflow-hidden hover:bg-[#F0EFEB] dark:hover:bg-[#121220] transition-colors flex flex-col h-full">
@@ -1071,20 +1129,22 @@ export default function Home() {
         {(currentStage === "deliberate" || currentStage === "verdict") && convergenceInfo && (
           <section className="mt-16">
             <div
-              className={`border px-6 py-4 flex items-center gap-4 ${
-                convergenceInfo.converged
-                  ? "bg-green-50 border-green-200"
-                  : "bg-black/[0.02] border-black/10"
-              }`}
+              className="border px-6 py-4 flex items-center gap-4"
+              style={{
+                backgroundColor: convergenceInfo.converged ? "#f0fdf4" : "var(--bg-inset)",
+                borderColor: convergenceInfo.converged ? "#16a34a" : "var(--bd)",
+              }}
             >
-              <span className="text-lg">{convergenceInfo.converged ? "✓" : "↔"}</span>
+              <span className="text-lg" style={{ color: convergenceInfo.converged ? "#16a34a" : "var(--t2)" }}>
+                {convergenceInfo.converged ? "✓" : "↔"}
+              </span>
               <div>
-                <div className={`text-sm font-medium ${convergenceInfo.converged ? "text-green-800" : "text-black"}`}>
+                <div className="text-sm font-medium" style={{ color: convergenceInfo.converged ? "#16a34a" : "var(--t1)" }}>
                   {convergenceInfo.converged
                     ? "Models converged — Round 2 skipped"
                     : "Models diverge — proceeding to critique round"}
                 </div>
-                <div className="mono-meta text-xs text-muted mt-1">
+                <div className="mono-meta text-xs mt-1" style={{ color: "var(--t3)" }}>
                   {convergenceInfo.reason}
                 </div>
               </div>
@@ -1092,65 +1152,50 @@ export default function Home() {
           </section>
         )}
 
-        {/* VERDICT STAGE: Final Verdict Section */}
+        {/* VERDICT STAGE: Model Positions & Final Verdict */}
         {currentStage === "verdict" && (
           <>
-            {/* Question Banner - Repeated for context */}
-            {!running && (
-              <section className="mb-8 mt-16">
-                <QuestionBanner
-                  question={prompt}
-                  domains={
-                    [
-                      detectedDomain !== "unknown" ? detectedDomain : null,
-                      webSearch ? "web" : null,
-                      forceR3 ? "round-3" : null,
-                    ].filter(Boolean) as string[]
-                  }
-                />
-              </section>
-            )}
-
-            {/* Round Stepper - Completed */}
-            {!running && (
-              <section className="mb-8">
-                <RoundStepper
-                  currentStep={2}
-                  modelStatuses={{}}
-                  completedRounds={currentRound}
-                />
-              </section>
-            )}
-
             {/* Model Positions Table */}
-            <section className="mt-16">
-              <div className="mono-meta text-gray-500 dark:text-gray-400 mb-4 text-xs">Model Positions</div>
-              <VerdictTable rows={verdict.rows} />
-            </section>
+            {verdict && (
+              <section className="mt-16">
+                <div className="mono-meta text-gray-500 dark:text-gray-400 mb-4 text-xs">Model Positions</div>
+                <VerdictTable rows={verdict.rows} />
+              </section>
+            )}
 
             {/* Final Verdict — Hero + Takeaways + Full Analysis */}
-            <section className="mt-12 mb-16 flex justify-center">
-              <FinalVerdict
-                finalAnswer={verdict.finalAnswer}
-                consensusScore={verdict.consensusScore}
-                rows={verdict.rows}
-                triggeredRound3={verdict.triggeredRound3}
-                disagreementReason={verdict.disagreementReason}
-                roundsCompleted={verdict.roundsCompleted}
-                onExport={exportMd}
-              />
-            </section>
+            {verdict && (
+              <section className="mt-12 mb-16 flex justify-center">
+                <FinalVerdict
+                  verdict={{
+                    finalAnswer: verdict.finalAnswer,
+                    consensusScore: verdict.consensusScore,
+                    disagreementReason: verdict.disagreementReason,
+                  }}
+                  sessionId={currentSessionId}
+                  markdown={markdown}
+                  stakeLevel={stakeLevel}
+                  detectedDomain={detectedDomain !== "unknown" ? detectedDomain : undefined}
+                  roundsCompleted={verdict.roundsCompleted}
+                />
+              </section>
+            )}
 
             {/* Follow-Up Questions */}
             <FollowUpPanel
               followUps={followUps}
-              onSubmitFollowUp={submitFollowUp}
+              onSubmit={submitFollowUp}
               isLoading={followUpRunning}
-              hasVerdict={!!verdict}
+              disabled={!verdict}
+              onClearHistory={() => setFollowUps([])}
             />
           </>
         )}
       </div>
+      </div>
+
+      {/* Help Modal */}
+      <HelpModal isOpen={helpOpen} onClose={() => setHelpOpen(false)} />
 
       {/* Toast Notifications */}
       <Toast toasts={toasts} onRemove={removeToast} />

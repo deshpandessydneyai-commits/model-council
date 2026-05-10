@@ -10,14 +10,13 @@ type ThemeContextType = {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [isDark, setIsDark] = useState(true);
+  const [isDark, setIsDark] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   // Initialize theme from localStorage on component mount
   useEffect(() => {
     const savedTheme = localStorage.getItem("model-council-theme");
-    const isLight = savedTheme === "light";
-    const isDarkTheme = !isLight;
+    const isDarkTheme = savedTheme === "dark";
 
     setIsDark(isDarkTheme);
 
@@ -57,7 +56,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   if (!mounted) {
     // Return children during SSR and hydration
-    return <ThemeContext.Provider value={{ isDark: true, toggleTheme }}>{children}</ThemeContext.Provider>;
+    return <ThemeContext.Provider value={{ isDark: false, toggleTheme }}>{children}</ThemeContext.Provider>;
   }
 
   return (

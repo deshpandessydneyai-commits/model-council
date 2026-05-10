@@ -1,8 +1,10 @@
-import React from "react";
+"use client";
+
+import { Dot } from "lucide-react";
 
 interface StageTabsProps {
   currentStage: "pose" | "deliberate" | "verdict";
-  onStageChange: (stage: "pose" | "deliberate" | "verdict") => void;
+  onStageChange?: (stage: "pose" | "deliberate" | "verdict") => void;
   roundInfo?: {
     currentRound?: number;
     totalRounds?: number;
@@ -11,85 +13,72 @@ interface StageTabsProps {
 }
 
 const stages = [
-  { id: "pose", label: "Pose", number: "①" },
-  { id: "deliberate", label: "Deliberate", number: "②" },
-  { id: "verdict", label: "Verdict", number: "③" },
-] as const;
+  { id: "pose", label: "Your Question", description: "Ask", number: 1 },
+  { id: "deliberate", label: "Watch Debate", description: "Models thinking", number: 2 },
+  { id: "verdict", label: "See Verdict", description: "Final consensus", number: 3 },
+];
 
-export const StageTabs: React.FC<StageTabsProps> = ({
+export function StageTabs({
   currentStage,
   onStageChange,
   roundInfo,
-}) => {
+}: StageTabsProps) {
   return (
     <div
       className="border-b"
       style={{
-        borderColor: "var(--bd)",
         backgroundColor: "var(--bg)",
+        borderColor: "var(--bd)",
       }}
     >
-      <div className="flex items-center justify-between px-8 py-0">
+      <div className="flex items-center justify-between h-[52px] px-8">
         {/* Left: Stage tabs */}
-        <div className="flex">
+        <div className="flex items-center gap-1">
           {stages.map((stage) => (
             <button
               key={stage.id}
-              onClick={() => onStageChange(stage.id as "pose" | "deliberate" | "verdict")}
-              className="border-b-2 px-6 py-3 text-xs font-medium uppercase tracking-widest transition-colors"
+              onClick={() => onStageChange?.(stage.id as any)}
+              className="px-8 py-4 text-sm uppercase tracking-wider font-medium transition-all relative hover:opacity-80 focus-visible:ring-2 focus-visible:ring-offset-2 flex items-center gap-3"
               style={{
-                borderColor:
-                  currentStage === stage.id
-                    ? "var(--ac)"
-                    : "transparent",
                 color:
                   currentStage === stage.id
-                    ? "var(--ac)"
+                    ? "var(--t1)"
                     : "var(--t3)",
               }}
+              tabIndex={0}
+              title={stage.label}
             >
-              {stage.number} {stage.label}
+              <span className="inline-block text-lg">{["①", "②", "③"][stage.number - 1]}</span>
+              <div className="flex flex-col items-start">
+                <span className="text-sm font-semibold uppercase">{stage.label}</span>
+                <span className="text-xs opacity-60" style={{ fontWeight: "normal" }}>{stage.description}</span>
+              </div>
+              {currentStage === stage.id && (
+                <div
+                  className="absolute bottom-0 left-0 right-0 h-[2px]"
+                  style={{ backgroundColor: "var(--ac)" }}
+                />
+              )}
             </button>
           ))}
         </div>
 
-        {/* Right: Metadata */}
+        {/* Right: Round info */}
         {roundInfo && (
-          <div className="flex items-center gap-3">
-            {/* Green dot */}
-            <div className="flex items-center gap-2">
-              <div
-                className="h-2 w-2 rounded-full"
-                style={{
-                  backgroundColor: currentStage === "deliberate" ? "#22c55e" : "var(--t4)",
-                }}
-              />
-              <span
-                className="text-xs font-mono"
-                style={{ color: "var(--t3)" }}
-              >
-                {currentStage === "deliberate"
-                  ? `Round ${roundInfo.currentRound || 1}`
-                  : "Ready"}
-              </span>
-            </div>
-
-            {/* Divider */}
-            <div
-              className="h-3 w-px"
-              style={{ backgroundColor: "var(--bd)" }}
-            />
-
-            {/* Time remaining */}
-            <span
-              className="text-xs font-mono"
-              style={{ color: "var(--t4)" }}
-            >
-              {roundInfo.estimatedTimeRemaining || "—"}
-            </span>
+          <div
+            className="flex items-center gap-3 text-xs"
+            style={{ color: "var(--t3)" }}
+          >
+            <Dot size={12} className="fill-current" />
+            {roundInfo.currentRound && (
+              <span>Round {roundInfo.currentRound}</span>
+            )}
+            {roundInfo.estimatedTimeRemaining && (
+              <span>~{roundInfo.estimatedTimeRemaining}</span>
+            )}
           </div>
         )}
       </div>
     </div>
   );
-};
+}
