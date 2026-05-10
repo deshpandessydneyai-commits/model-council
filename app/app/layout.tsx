@@ -28,15 +28,12 @@ export default function RootLayout({
   // The actual page will override this via context if needed
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
-      <body className="min-h-full flex bg-[#F5F4F0] dark:bg-[#0A0A0A] text-gray-900 dark:text-white dark-theme">
+      <body className="min-h-full flex flex-col" style={{ backgroundColor: "var(--bg)", color: "var(--t1)" }}>
         <ThemeProvider>
           <SetupModalProvider>
             <HistoryProvider>
-              {/* Sidebar */}
-              <Sidebar currentPage="home" />
-
-              {/* Main content area */}
-              <div className="flex-1 ml-64 flex flex-col">
+              {/* Main content area - full width with header/tabs */}
+              <div className="flex flex-col flex-1">
                 <main className="flex-1">{children}</main>
                 <Footer />
               </div>

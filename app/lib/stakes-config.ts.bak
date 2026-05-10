@@ -5,7 +5,7 @@ export const stakeContexts: Record<string, StakeContext> = {
     label: 'Exploratory',
     description: 'Intellectual exploration, curiosity-driven, low pressure',
     mainPrompt: `You are providing an intellectual analysis of this question.
-This is exploratory in nature-the goal is thorough understanding rather than implementation.
+This is exploratory in nature—the goal is thorough understanding rather than implementation.
 Feel free to explore nuances, trade-offs, and alternative perspectives without pressure for a single "right answer."`,
 
     adversarialPrompt: (domain: DomainType) => {
@@ -62,7 +62,7 @@ Feel free to explore nuances, trade-offs, and alternative perspectives without p
     mainPrompt: `This recommendation will be implemented in the real world.
 Real outcomes and consequences depend on the accuracy of this analysis.
 Provide thorough analysis that accounts for practical implementation challenges, unintended side effects, and stakeholder impact.
-Assume this advice will be followed-be appropriately cautious and complete.`,
+Assume this advice will be followed—be appropriately cautious and complete.`,
 
     adversarialPrompt: (domain: DomainType) => {
       const domainSpecific: Record<DomainType, string> = {

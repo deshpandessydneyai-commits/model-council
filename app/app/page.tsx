@@ -10,6 +10,10 @@ import { ModelStatusDisplay } from "@/components/ModelStatusDisplay";
 import { DebateProgress } from "@/components/DebateProgress";
 import { FollowUpPanel } from "@/components/FollowUpPanel";
 import { DebateSetupModal, type DebateConfig } from "@/components/DebateSetupModal";
+import { Header } from "@/components/Header";
+import { StageTabs } from "@/components/StageTabs";
+import { QuestionBanner } from "@/components/QuestionBanner";
+import { RoundStepper } from "@/components/RoundStepper";
 import { useSetupModal } from "@/lib/setup-modal-context";
 import { useHistory } from "@/lib/history-context";
 import type { CouncilEvent, VerdictRow } from "@/lib/council";
@@ -203,6 +207,10 @@ export default function Home() {
   const [followUps, setFollowUps] = useState<FollowUpQuestion[]>([]);
   const [followUpRunning, setFollowUpRunning] = useState(false);
   const followUpAbortRef = useRef<AbortController | null>(null);
+
+  // Stage-based layout state
+  const [currentStage, setCurrentStage] = useState<"pose" | "deliberate" | "verdict">("pose");
+
   const [validation, setValidation] = useState<ValidationResult>({ isValid: false, message: "", severity: "error" });
   const prevRunningRef = useRef(false);
 
@@ -235,6 +243,17 @@ export default function Home() {
       setValidation({ isValid: false, message: "", severity: "error" });
     }
   }, [prompt]);
+
+  // Manage stage transitions based on running state and verdict
+  useEffect(() => {
+    if (verdict) {
+      setCurrentStage("verdict");
+    } else if (running) {
+      setCurrentStage("deliberate");
+    } else if (!running && !verdict) {
+      setCurrentStage("pose");
+    }
+  }, [running, verdict]);
 
   useEffect(() => {
     if (prevRunningRef.current && !running) {
@@ -643,43 +662,35 @@ export default function Home() {
         </div>
       )}
 
-      {/* Sticky Header - Shows when council is running */}
-      {running && (
-        <div className="fixed top-0 left-64 right-0 z-30 bg-[#F5F4F0]/95 dark:bg-[#0A0A0A]/95 border-b border-[#E2E0DA] dark:border-glass px-6 py-4 backdrop-blur-sm shadow-sm">
-          <div className="max-w-[1600px] mx-auto">
-            {/* Label row */}
-            <div className="flex items-center justify-between mb-2">
-              <div className="mono-meta text-xs text-gray-400 dark:text-gray-500">Debating</div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                {detectedDomain !== "unknown" && (
-                  <span className="text-xs bg-indigo-50 dark:bg-violet-900/20 text-indigo-600 dark:text-violet-400 border border-indigo-100 dark:border-violet-800 px-2 py-0.5 rounded-full capitalize">
-                    🎯 {detectedDomain}
-                  </span>
-                )}
-                {webSearch && <span className="text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800 px-2 py-0.5 rounded-full">🔍 Web</span>}
-                {forceR3 && <span className="text-xs bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-800 px-2 py-0.5 rounded-full">⚡ Round 3</span>}
+      {/* NEW: Sticky Header - Always visible */}
+      <Header onHistoryClick={() => setHistoryOpen(true)} />
+
+      {/* NEW: Stage Tabs - Always visible */}
+      <StageTabs
+        currentStage={currentStage}
+        onStageChange={setCurrentStage}
+        roundInfo={{
+          currentRound: currentRound,
+          estimatedTimeRemaining:
+            running && currentRound > 0 ? "~2 min remaining" : undefined,
+        }}
+      />
+
+      <div className="max-w-[1600px] mx-auto px-8 pb-32 pt-8">
+        {/* POSE STAGE: Input Form */}
+        {currentStage === "pose" && (
+          <>
+            {/* Hero */}
+            <section className="flex items-center justify-between pb-8">
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--t1)" }}>Model Council.</h1>
+                <p className="text-sm mt-0.5" style={{ color: "var(--t3)" }}>One prompt. Four models. A structured debate. One final verdict.</p>
               </div>
-            </div>
-            {/* Prominent question */}
-            <p className="text-base font-semibold text-gray-900 dark:text-white leading-snug line-clamp-2">{prompt}</p>
-          </div>
-        </div>
-      )}
+              <div className="text-xs hidden md:block" style={{ color: "var(--t4)" }} >A Debate Chamber For Frontier Models</div>
+            </section>
 
-      <div className={`max-w-[1600px] mx-auto px-6 pb-32 ${running ? "pt-28" : "pt-6"}`}>
-        {/* Hero - Hide when running */}
-        {!running && (
-          <section className="flex items-center justify-between pt-6 pb-4">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Model Council.</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">One prompt. Four models. A structured debate. One final verdict.</p>
-            </div>
-            <div className="mono-meta text-xs text-gray-400 dark:text-gray-500 hidden md:block">A Debate Chamber For Frontier Models</div>
-          </section>
-        )}
-
-        {/* Input Panel - Prominent when idle, compact when running */}
-        <section className={running ? "hidden" : "mt-8"}>
+            {/* Input Panel */}
+            <section className="mt-8">
           <div className="mono-meta text-gray-500 dark:text-gray-400 mb-3 text-sm">Ask the Council</div>
           <textarea
             value={prompt}
@@ -910,24 +921,51 @@ export default function Home() {
               <div className="whitespace-pre-wrap text-red-300">{error}</div>
             </div>
           )}
-        </section>
-
-
-        {/* Progress Indicator */}
-        {running && (
-          <section className="mb-8">
-            <DebateProgress
-              currentRound={currentRound}
-              modelStatus={modelStatuses}
-              roundOutputs={rounds[currentRound]?.outputs ?? {}}
-              domain={detectedDomain}
-              onCancel={() => abortRef.current?.abort()}
-            />
-          </section>
+            </section>
+          </>
         )}
 
-        {/* Rounds - 2x2 Grid, shown while running and collapsed after verdict */}
-        {orderedRounds.length > 0 && (
+        {/* DELIBERATE STAGE: Running Debate */}
+        {currentStage === "deliberate" && (
+          <>
+            {/* Question Banner */}
+            <section className="mb-8">
+              <QuestionBanner
+                question={prompt}
+                domains={
+                  [
+                    detectedDomain !== "unknown" ? detectedDomain : null,
+                    webSearch ? "web" : null,
+                    forceR3 ? "round-3" : null,
+                  ].filter(Boolean) as string[]
+                }
+              />
+            </section>
+
+            {/* Round Stepper */}
+            <section className="mb-8">
+              <RoundStepper
+                currentStep={currentRound > 2 ? 2 : (currentRound > 1 ? 1 : 0)}
+                modelStatuses={modelStatuses}
+                completedRounds={currentRound}
+              />
+            </section>
+
+            {/* Progress Indicator */}
+            <section className="mb-8">
+              <DebateProgress
+                currentRound={currentRound}
+                modelStatus={modelStatuses}
+                roundOutputs={rounds[currentRound]?.outputs ?? {}}
+                domain={detectedDomain}
+                onCancel={() => abortRef.current?.abort()}
+              />
+            </section>
+          </>
+        )}
+
+        {/* DELIBERATE & VERDICT: Rounds - 2x2 Grid */}
+        {(currentStage === "deliberate" || currentStage === "verdict") && orderedRounds.length > 0 && (
           <section>
             {orderedRounds.map((n) => {
               const isRunningRound = running;
@@ -1029,8 +1067,8 @@ export default function Home() {
           </section>
         )}
 
-        {/* Convergence Banner */}
-        {convergenceInfo && (
+        {/* DELIBERATE & VERDICT: Convergence Banner */}
+        {(currentStage === "deliberate" || currentStage === "verdict") && convergenceInfo && (
           <section className="mt-16">
             <div
               className={`border px-6 py-4 flex items-center gap-4 ${
@@ -1054,9 +1092,36 @@ export default function Home() {
           </section>
         )}
 
-        {/* Verdict */}
-        {verdict && (
+        {/* VERDICT STAGE: Final Verdict Section */}
+        {currentStage === "verdict" && (
           <>
+            {/* Question Banner - Repeated for context */}
+            {!running && (
+              <section className="mb-8 mt-16">
+                <QuestionBanner
+                  question={prompt}
+                  domains={
+                    [
+                      detectedDomain !== "unknown" ? detectedDomain : null,
+                      webSearch ? "web" : null,
+                      forceR3 ? "round-3" : null,
+                    ].filter(Boolean) as string[]
+                  }
+                />
+              </section>
+            )}
+
+            {/* Round Stepper - Completed */}
+            {!running && (
+              <section className="mb-8">
+                <RoundStepper
+                  currentStep={2}
+                  modelStatuses={{}}
+                  completedRounds={currentRound}
+                />
+              </section>
+            )}
+
             {/* Model Positions Table */}
             <section className="mt-16">
               <div className="mono-meta text-gray-500 dark:text-gray-400 mb-4 text-xs">Model Positions</div>
