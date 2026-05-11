@@ -78,78 +78,111 @@ export function FinalVerdict({
         Final Verdict
       </h2>
 
-      {/* Consensus Score Section */}
-      <div className="mb-8 flex items-center gap-8">
-        {/* Arc Gauge */}
-        <div className="flex flex-col items-center flex-shrink-0">
-          <svg width="120" height="120" viewBox="0 0 120 120">
-            {/* Background circle */}
-            <circle
-              cx="60"
-              cy="60"
-              r={radius}
-              fill="none"
-              stroke="var(--bd)"
-              strokeWidth="8"
-              style={{ stroke: "var(--bg-inset)" }}
-            />
-            {/* Progress arc */}
-            <circle
-              cx="60"
-              cy="60"
-              r={radius}
-              fill="none"
-              stroke={consensusColor}
-              strokeWidth="8"
-              strokeDasharray={circumference}
-              strokeDashoffset={strokeDashoffset}
-              strokeLinecap="round"
-              transform="rotate(-90 60 60)"
-              style={{
-                transition: "stroke-dashoffset 0.5s ease",
-              }}
-            />
-            {/* Center text */}
-            <text
-              x="60"
-              y="60"
-              textAnchor="middle"
-              dy="0.3em"
-              fontSize="28"
-              fontWeight="bold"
-              fill={consensusColor}
+      {/* Consensus Score & Executive Summary Section */}
+      <div className="mb-8">
+        <div className="flex items-start gap-8 mb-8">
+          {/* Arc Gauge */}
+          <div className="flex flex-col items-center flex-shrink-0">
+            <svg width="120" height="120" viewBox="0 0 120 120">
+              {/* Background circle */}
+              <circle
+                cx="60"
+                cy="60"
+                r={radius}
+                fill="none"
+                stroke="var(--bd)"
+                strokeWidth="8"
+                style={{ stroke: "var(--bg-inset)" }}
+              />
+              {/* Progress arc */}
+              <circle
+                cx="60"
+                cy="60"
+                r={radius}
+                fill="none"
+                stroke={consensusColor}
+                strokeWidth="8"
+                strokeDasharray={circumference}
+                strokeDashoffset={strokeDashoffset}
+                strokeLinecap="round"
+                transform="rotate(-90 60 60)"
+                style={{
+                  transition: "stroke-dashoffset 0.5s ease",
+                }}
+              />
+              {/* Center text */}
+              <text
+                x="60"
+                y="60"
+                textAnchor="middle"
+                dy="0.3em"
+                fontSize="28"
+                fontWeight="bold"
+                fill={consensusColor}
+              >
+                {Math.round(verdict.consensusScore)}%
+              </text>
+            </svg>
+            <div
+              className="text-xs uppercase tracking-wide font-medium mt-3 text-center"
+              style={{ color: consensusColor }}
             >
-              {Math.round(verdict.consensusScore)}%
-            </text>
-          </svg>
-          <div
-            className="text-xs uppercase tracking-wide font-medium mt-3 text-center"
-            style={{ color: consensusColor }}
-          >
-            {consensusLabel}
+              {consensusLabel}
+            </div>
+            <div
+              className="text-xs mt-2 text-center"
+              style={{ color: "var(--t3)" }}
+            >
+              {relativeTime(new Date())}
+            </div>
           </div>
-          <div
-            className="text-xs mt-2 text-center"
-            style={{ color: "var(--t3)" }}
-          >
-            {relativeTime(new Date())}
-          </div>
-        </div>
 
-        {/* Verdict Text */}
-        <div className="flex-1">
-          <h3
-            className="text-lg font-bold mb-3"
-            style={{ color: "var(--t1)" }}
-          >
-            Council Verdict
-          </h3>
-          <p
-            className="text-sm leading-relaxed"
-            style={{ color: "var(--t2)" }}
-          >
-            {verdict.finalAnswer}
-          </p>
+          {/* Executive Summary Box */}
+          <div className="flex-1 p-6 rounded-lg border-2" style={{ backgroundColor: "var(--bg-inset)", borderColor: "var(--ac)" }}>
+            <h3
+              className="text-xs uppercase tracking-widest font-semibold mb-4"
+              style={{ color: "var(--t3)" }}
+            >
+              Executive Summary
+            </h3>
+            <div className="prose prose-sm max-w-none" style={{ color: "var(--t1)" }}>
+              {verdict.finalAnswer.split('\n\n').map((paragraph, idx) => {
+                // Check if paragraph starts with markdown heading syntax
+                const isHeading = paragraph.match(/^#+\s/);
+                const isBulletList = paragraph.match(/^[\s]*[-•*]/m);
+
+                if (isHeading) {
+                  const headingLevel = paragraph.match(/^(#+)/)[1].length;
+                  const headingText = paragraph.replace(/^#+\s/, '');
+                  const headingClass = headingLevel === 1 ? 'text-lg font-bold mb-3 mt-4' :
+                                      headingLevel === 2 ? 'text-base font-bold mb-2 mt-3' :
+                                      'text-sm font-semibold mb-2 mt-2';
+                  return (
+                    <h4 key={idx} className={headingClass} style={{ color: "var(--t1)" }}>
+                      {headingText}
+                    </h4>
+                  );
+                } else if (isBulletList) {
+                  const items = paragraph.split('\n').filter(line => line.trim());
+                  return (
+                    <ul key={idx} className="list-disc list-inside mb-3 space-y-1" style={{ color: "var(--t2)" }}>
+                      {items.map((item, itemIdx) => (
+                        <li key={itemIdx} className="text-sm leading-relaxed">
+                          {item.replace(/^[\s]*[-•*]\s?/, '')}
+                        </li>
+                      ))}
+                    </ul>
+                  );
+                } else {
+                  return (
+                    <p key={idx} className="text-sm leading-relaxed mb-3" style={{ color: "var(--t2)" }}>
+                      {paragraph}
+                    </p>
+                  );
+                }
+              })}
+            </div>
+          </div>
         </div>
       </div>
 

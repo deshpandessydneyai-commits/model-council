@@ -13,7 +13,7 @@ import { Header } from "@/components/Header";
 import { HelpModal } from "@/components/HelpModal";
 import { StageTabs } from "@/components/StageTabs";
 import { QuestionBanner } from "@/components/QuestionBanner";
-import { DebatePhasePanel } from "@/components/DebatePhasePanel";
+import { DebateProgressBar } from "@/components/DebateProgressBar";
 import { useSession } from "@/lib/session-context";
 import { useSetupModal } from "@/lib/setup-modal-context";
 import { useHistory } from "@/lib/history-context";
@@ -716,6 +716,9 @@ export default function Home() {
         }}
       />
 
+      {/* Compact Debate Progress Bar - Shows during debate */}
+      {running && <DebateProgressBar currentRound={currentRound} modelStatuses={modelStatuses} isRunning={running} />}
+
       <div className="max-w-[1600px] mx-auto px-8 pb-32 pt-8">
         {/* POSE STAGE: Input Form */}
         {currentStage === "pose" && (
@@ -982,14 +985,6 @@ export default function Home() {
                 }
               />
             </section>
-
-            {/* Consolidated Debate Phase Panel */}
-            <section className="mb-8">
-              <DebatePhasePanel
-                currentRound={currentRound}
-                modelStatuses={modelStatuses}
-              />
-            </section>
           </>
         )}
 
@@ -1008,14 +1003,6 @@ export default function Home() {
                     forceR3 ? "round-3" : null,
                   ].filter(Boolean) as string[]
                 }
-              />
-            </section>
-
-            {/* Consolidated Debate Phase Panel */}
-            <section className="mb-8">
-              <DebatePhasePanel
-                currentRound={currentRound}
-                modelStatuses={{}}
               />
             </section>
           </>

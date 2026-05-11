@@ -35,7 +35,7 @@ function getConsensusLevel(alignment: number): { label: string; bgColor: string;
 }
 
 export function VerdictTable({ rows }: { rows: VerdictRow[] }) {
-  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(() => new Set(rows.map(r => r.modelId)));
 
   const toggleRow = (modelId: string) => {
     const newSet = new Set(expandedRows);
